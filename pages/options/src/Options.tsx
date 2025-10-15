@@ -1,42 +1,20 @@
 import "@src/Options.css";
-import { t } from "@extension/i18n";
-import {
-  PROJECT_URL_OBJECT,
-  useStorage,
-  withErrorBoundary,
-  withSuspense,
-} from "@extension/shared";
+import { useStorage, withErrorBoundary, withSuspense } from "@extension/shared";
 import { exampleThemeStorage } from "@extension/storage";
-import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from "@extension/ui";
+import { cn, ErrorDisplay, LoadingSpinner } from "@extension/ui";
+import { SettingsDashboard } from "./components/SettingsDashboard";
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
-  const logo = isLight
-    ? "options/logo_horizontal.svg"
-    : "options/logo_horizontal_dark.svg";
-
-  const goGithubSite = () => chrome.tabs.create(PROJECT_URL_OBJECT);
 
   return (
     <div
       className={cn(
-        "App",
-        isLight ? "bg-slate-50 text-gray-900" : "bg-gray-800 text-gray-100",
+        "w-full h-screen overflow-hidden",
+        isLight ? "bg-slate-50" : "bg-gray-900",
       )}
     >
-      <button onClick={goGithubSite}>
-        <img
-          src={chrome.runtime.getURL(logo)}
-          className="App-logo"
-          alt="logo"
-        />
-      </button>
-      <p>
-        Edit <code>pages/options/src/Options.tsx</code>
-      </p>
-      <ToggleButton onClick={exampleThemeStorage.toggle}>
-        {t("toggleTheme")}
-      </ToggleButton>
+      <SettingsDashboard theme={isLight ? "light" : "dark"} />
     </div>
   );
 };
