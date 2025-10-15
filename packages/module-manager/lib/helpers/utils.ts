@@ -1,26 +1,37 @@
-import { DEFAULT_CHOICES_VALUES, EXIT_PROMPT_ERROR, MODULE_CONFIG } from '../const.js';
-import { colorfulLog } from '@extension/shared';
-import { select } from '@inquirer/prompts';
-import { readdirSync } from 'node:fs';
-import type { DELETE_CHOICE_QUESTION, RECOVER_CHOICE_QUESTION } from '../const.js';
+import {
+  DEFAULT_CHOICES_VALUES,
+  EXIT_PROMPT_ERROR,
+  MODULE_CONFIG,
+} from "../const.js";
+import { colorfulLog } from "@extension/shared";
+import { select } from "@inquirer/prompts";
+import { readdirSync } from "node:fs";
+import type {
+  DELETE_CHOICE_QUESTION,
+  RECOVER_CHOICE_QUESTION,
+} from "../const.js";
 import type {
   ChoicesType,
   CliEntriesType,
   InputConfigType,
   ModuleNameType,
   WritableModuleConfigValuesType,
-} from '../types.js';
-import type { ConditionalPickDeep, Entries, ManifestType } from '@extension/shared';
-import type { Arguments } from 'yargs';
+} from "../types.js";
+import type {
+  ConditionalPickDeep,
+  Entries,
+  ManifestType,
+} from "@extension/shared";
+import type { Arguments } from "yargs";
 
 export const isFolderEmpty = (path: string) => !readdirSync(path).length;
 
 export const promptSelection = async (inputConfig: InputConfigType) =>
-  select(inputConfig).catch(err => {
+  select(inputConfig).catch((err) => {
     if (err.name === EXIT_PROMPT_ERROR) {
       process.exit(0);
     } else {
-      colorfulLog(err.message, 'error');
+      colorfulLog(err.message, "error");
     }
   }) as Promise<string>;
 
@@ -29,23 +40,31 @@ export const processModuleConfig = (
   moduleName: ModuleNameType,
   isRecovering?: boolean,
 ) => {
-  if (moduleName === 'content-runtime' || moduleName === 'devtools-panel' || moduleName === 'tests') {
+  if (
+    moduleName === "content-runtime" ||
+    moduleName === "devtools-panel" ||
+    moduleName === "tests"
+  ) {
     return;
   }
 
   const moduleConfigValues = MODULE_CONFIG[moduleName];
-  const moduleConfigEntriesOfKeys = Object.entries(moduleConfigValues) as Entries<typeof moduleConfigValues>;
+  const moduleConfigEntriesOfKeys = Object.entries(
+    moduleConfigValues,
+  ) as Entries<typeof moduleConfigValues>;
 
-  if (moduleName === 'content' || moduleName === 'content-ui') {
+  if (moduleName === "content" || moduleName === "content-ui") {
     if (isRecovering) {
-      (moduleConfigValues as WritableModuleConfigValuesType<typeof moduleName>).content_scripts.map(script =>
+      (
+        moduleConfigValues as WritableModuleConfigValuesType<typeof moduleName>
+      ).content_scripts.map((script) =>
         manifestObject.content_scripts?.push(script),
       );
     } else {
       const outputFileName = new RegExp(`${moduleName}/+`);
 
       manifestObject.content_scripts = manifestObject.content_scripts?.filter(
-        script => !outputFileName.test(script.js ? script.js[0] : ''),
+        (script) => !outputFileName.test(script.js ? script.js[0] : ""),
       );
     }
     return;
@@ -57,13 +76,20 @@ export const processModuleConfig = (
     if (manifestValue) {
       if (manifestValue instanceof Array) {
         const arrayValues = Object.values(
-          moduleConfigValues[key as ConditionalPickDeep<keyof typeof moduleConfigValues, typeof moduleName>],
+          moduleConfigValues[
+            key as ConditionalPickDeep<
+              keyof typeof moduleConfigValues,
+              typeof moduleName
+            >
+          ],
         );
 
         if (isRecovering) {
           manifestObject[key] = manifestValue.concat(arrayValues);
         } else {
-          manifestObject[key] = manifestValue.filter((value: string) => !arrayValues.includes(value));
+          manifestObject[key] = manifestValue.filter(
+            (value: string) => !arrayValues.includes(value),
+          );
         }
       } else {
         delete manifestObject[key];
@@ -81,7 +107,7 @@ export const checkCliArgsIsValid = <T extends Arguments>(argv: T) => {
 
   if (Array.isArray(values)) {
     for (const value of values) {
-      if (!DEFAULT_CHOICES_VALUES.some(moduleName => value === moduleName)) {
+      if (!DEFAULT_CHOICES_VALUES.some((moduleName) => value === moduleName)) {
         throw new Error(`All values after --${key} must be names of pages`);
       }
     }
@@ -96,7 +122,7 @@ export const processSelection = async (
   moduleName?: ModuleNameType,
 ) => {
   if (!choices.length) {
-    colorfulLog('No options available', 'warning');
+    colorfulLog("No options available", "warning");
     process.exit(0);
   }
 

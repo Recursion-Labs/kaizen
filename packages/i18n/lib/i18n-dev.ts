@@ -1,8 +1,11 @@
 // IT WILL BE ADJUSTED TO YOUR LANGUAGE DURING BUILD TIME, DON'T MOVE BELOW IMPORT TO OTHER LINE
-import localeJSON from '../locales/en/messages.json' with { type: 'json' };
-import type { I18nValueType, LocalesJSONType } from './types.js';
+import localeJSON from "../locales/en/messages.json" with { type: "json" };
+import type { I18nValueType, LocalesJSONType } from "./types.js";
 
-const translate = (key: keyof LocalesJSONType, substitutions?: string | string[]) => {
+const translate = (
+  key: keyof LocalesJSONType,
+  substitutions?: string | string[],
+) => {
   const localeValues = localeJSON[key] as I18nValueType;
   let message = localeValues.message;
   /**
@@ -15,7 +18,7 @@ const translate = (key: keyof LocalesJSONType, substitutions?: string | string[]
   if (localeValues.placeholders) {
     Object.entries(localeValues.placeholders).forEach(([key, { content }]) => {
       if (content) {
-        message = message.replace(new RegExp(`\\$${key}\\$`, 'gi'), content);
+        message = message.replace(new RegExp(`\\$${key}\\$`, "gi"), content);
       }
     });
   }
@@ -23,12 +26,16 @@ const translate = (key: keyof LocalesJSONType, substitutions?: string | string[]
   if (!substitutions) {
     return message;
   } else if (Array.isArray(substitutions)) {
-    return substitutions.reduce((acc, cur, idx) => acc.replace(`$${idx++}`, cur), message);
+    return substitutions.reduce(
+      (acc, cur, idx) => acc.replace(`$${idx++}`, cur),
+      message,
+    );
   }
 
   return message.replace(/\$(\d+)/, substitutions);
 };
 
-const removePlaceholder = (message: string) => message.replace(/\$\d+/g, '');
+const removePlaceholder = (message: string) => message.replace(/\$\d+/g, "");
 
-export const t = (...args: Parameters<typeof translate>) => removePlaceholder(translate(...args));
+export const t = (...args: Parameters<typeof translate>) =>
+  removePlaceholder(translate(...args));

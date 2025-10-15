@@ -1,16 +1,29 @@
-import { streamFileToZip } from '@extension/dev-utils';
-import fg from 'fast-glob';
-import { unzipSync, Zip } from 'fflate';
-import { rimraf } from 'rimraf';
-import { createWriteStream, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import type { ModuleNameType } from '../types.js';
+import { streamFileToZip } from "@extension/dev-utils";
+import fg from "fast-glob";
+import { unzipSync, Zip } from "fflate";
+import { rimraf } from "rimraf";
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, resolve } from "node:path";
+import type { ModuleNameType } from "../types.js";
 
-const zipAndDeleteModuleTest = async (moduleName: ModuleNameType, archivePath: string, testsPath: string) => {
+const zipAndDeleteModuleTest = async (
+  moduleName: ModuleNameType,
+  archivePath: string,
+  testsPath: string,
+) => {
   const moduleTestName = `page-${moduleName}.test.ts`;
   const moduleTestsPath = resolve(testsPath, moduleTestName);
 
-  await zipFolder(testsPath, resolve(archivePath, `${moduleName}.test.zip`), [moduleTestName]);
+  await zipFolder(testsPath, resolve(archivePath, `${moduleName}.test.zip`), [
+    moduleTestName,
+  ]);
   void rimraf([moduleTestsPath]);
 };
 
@@ -22,7 +35,10 @@ export const zipAndDeleteModule = async (
 ) => {
   const modulePath = resolve(pagesPath, moduleName);
 
-  await zipFolder(resolve(pagesPath, moduleName), resolve(archivePath, `${moduleName}.zip`));
+  await zipFolder(
+    resolve(pagesPath, moduleName),
+    resolve(archivePath, `${moduleName}.zip`),
+  );
   void rimraf([modulePath]);
 
   if (testsPath && existsSync(testsPath)) {
@@ -30,7 +46,10 @@ export const zipAndDeleteModule = async (
   }
 };
 
-export const zipAndDeleteTests = async (testsPath: string, archivePath: string) => {
+export const zipAndDeleteTests = async (
+  testsPath: string,
+  archivePath: string,
+) => {
   await zipFolder(testsPath, resolve(archivePath, `tests.zip`));
   void rimraf(testsPath);
 };
@@ -50,10 +69,14 @@ export const unZipAndDeleteModule = (zipFilePath: string, destPath: string) => {
   unlinkSync(zipFilePath);
 };
 
-export const zipFolder = async (folderPath: string, out: string, filesToInclude?: string[]) => {
+export const zipFolder = async (
+  folderPath: string,
+  out: string,
+  filesToInclude?: string[],
+) => {
   const fileList = await fg(
-    ['!node_modules', '!dist', '!**/*/node_modules', '!**/*/dist'].concat(
-      filesToInclude?.length ? filesToInclude : ['**/*'],
+    ["!node_modules", "!dist", "!**/*/node_modules", "!**/*/dist"].concat(
+      filesToInclude?.length ? filesToInclude : ["**/*"],
     ),
     {
       cwd: folderPath,
@@ -86,7 +109,7 @@ export const zipFolder = async (folderPath: string, out: string, filesToInclude?
         zip,
         () => {
           output.end();
-          rejectPromise(new Error('Aborted'));
+          rejectPromise(new Error("Aborted"));
         },
         rejectPromise,
       );
