@@ -1,7 +1,8 @@
-import { IS_FIREFOX } from '@extension/env';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { basename, resolve, sep } from 'node:path';
-import type { PluginOption } from 'vite';
+import { IS_FIREFOX } from "@extension/env";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { basename, resolve, sep } from "node:path";
+import type { PluginOption } from "vite";
+import type { OutputOptions, OutputBundle } from "rollup";
 
 /**
  * Extract content directory from output directory for Firefox
@@ -9,7 +10,7 @@ import type { PluginOption } from 'vite';
  */
 const extractContentDir = (outputDir: string) => {
   const parts = outputDir.split(sep);
-  const distIndex = parts.indexOf('dist');
+  const distIndex = parts.indexOf("dist");
 
   if (distIndex !== -1 && distIndex < parts.length - 1) {
     return parts.slice(distIndex + 1);
@@ -31,31 +32,35 @@ const safeWriteFileSync = (path: string, data: string) => {
  * Make an entry point file for content script cache busting
  */
 export const makeEntryPointPlugin = (): PluginOption => ({
-  name: 'make-entry-point-plugin',
-  generateBundle(options, bundle) {
+  name: "make-entry-point-plugin",
+  generateBundle(options: OutputOptions, bundle: OutputBundle) {
     const outputDir = options.dir;
 
     if (!outputDir) {
-      throw new Error('Output directory not found');
+      throw new Error("Output directory not found");
     }
 
-    for (const module of Object.values(bundle)) {
-      const fileName = module.fileName;
-      const newFileName = fileName.replace('.js', '_dev.js');
+    for (const rawModule of Object.values(bundle) as any[]) {
+      const module: any = rawModule;
+      const fileName = String(module.fileName);
+      const newFileName = fileName.replace(".js", "_dev.js");
 
       switch (module.type) {
-        case 'asset':
-          if (fileName.endsWith('.map')) {
-            const originalFileName = fileName.replace('.map', '');
-            const replacedSource = String(module.source).replaceAll(originalFileName, newFileName);
+        case "asset":
+          if (fileName.endsWith(".map")) {
+            const originalFileName = fileName.replace(".map", "");
+            const replacedSource = String(module.source).replaceAll(
+              originalFileName,
+              newFileName,
+            );
 
-            module.source = '';
+            module.source = "";
             safeWriteFileSync(resolve(outputDir, newFileName), replacedSource);
             break;
           }
           break;
 
-        case 'chunk': {
+        case "chunk": {
           safeWriteFileSync(resolve(outputDir, newFileName), module.code);
           const newFileNameBase = basename(newFileName);
 

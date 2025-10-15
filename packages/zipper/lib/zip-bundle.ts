@@ -1,8 +1,8 @@
-import { streamFileToZip } from '@extension/dev-utils';
-import fg from 'fast-glob';
-import { Zip } from 'fflate';
-import { createWriteStream, existsSync, mkdirSync } from 'node:fs';
-import { posix, resolve } from 'node:path';
+import { streamFileToZip } from "@extension/dev-utils";
+import fg from "fast-glob";
+import { Zip } from "fflate";
+import { createWriteStream, existsSync, mkdirSync } from "node:fs";
+import { posix, resolve } from "node:path";
 
 const toMB = (bytes: number): number => bytes / 1024 / 1024;
 
@@ -13,7 +13,9 @@ const ensureBuildDirectoryExists = (buildDirectory: string): void => {
 };
 
 const logPackageSize = (size: number, startTime: number): void => {
-  console.log(`Zip Package size: ${toMB(size).toFixed(2)} MB in ${Date.now() - startTime}ms`);
+  console.log(
+    `Zip Package size: ${toMB(size).toFixed(2)} MB in ${Date.now() - startTime}ms`,
+  );
 };
 
 export const zipBundle = async (
@@ -35,8 +37,8 @@ export const zipBundle = async (
 
   const fileList = await fg(
     [
-      '**/*', // Pick all nested files
-      ...(!withMaps ? ['!**/(*.js.map|*.css.map)'] : []), // Exclude source maps conditionally
+      "**/*", // Pick all nested files
+      ...(!withMaps ? ["!**/(*.js.map|*.css.map)"] : []), // Exclude source maps conditionally
     ],
     {
       cwd: distDirectory,
@@ -78,7 +80,7 @@ export const zipBundle = async (
           aborted = true;
           zip.terminate();
         },
-        error => pReject(`Error reading file ${absPath}: ${error.message}`),
+        (error) => pReject(`Error reading file ${absPath}: ${error.message}`),
       );
     }
 

@@ -29,7 +29,8 @@
     "@extension/tailwindcss-config": "workspace:*",
     "@extension/tsconfig": "workspace:*",
     "@extension/vite-config": "workspace:*",
-    "sass": "^1.89.0"
+    "sass": "^1.89.0",
+    "vite": "^6.3.6"
   },
   "postcss": {
     "plugins": {

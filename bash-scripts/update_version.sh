@@ -8,7 +8,7 @@ if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     current_version=$(grep -o "\"version\": \"[^\"]*" "$0" | cut -d"\"" -f4)
 
     # Update the version
-    perl -i -pe"s/$current_version/'$1'/" "$0"
+    perl -i -pe"s/$current_version/'$1'/' "$0"
   '  {} \;
 
   echo "Updated versions to $1";

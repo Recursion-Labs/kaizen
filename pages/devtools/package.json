@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@extension/tsconfig": "workspace:*",
-    "@extension/vite-config": "workspace:*"
+    "@extension/vite-config": "workspace:*",
+    "vite": "^6.3.6"
   }
 }
