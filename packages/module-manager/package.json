@@ -11,9 +11,6 @@
     "lint:fix": "pnpm lint --fix",
     "format": "prettier . --write --ignore-path ../../.prettierignore"
   },
-  "dependencies": {
-    "fflate": "^0.8.2"
-  },
   "devDependencies": {
     "@extension/dev-utils": "workspace:*",
     "@extension/shared": "workspace:*",

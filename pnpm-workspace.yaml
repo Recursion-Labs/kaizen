@@ -2,6 +2,7 @@ packages:
   - chrome-extension
   - pages/*
   - packages/*
+  - tests/*
 
 onlyBuiltDependencies:
   - '@parcel/watcher'

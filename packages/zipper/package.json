@@ -22,9 +22,6 @@
     "format": "prettier . --write --ignore-path ../../.prettierignore",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "fflate": "^0.8.2"
-  },
   "devDependencies": {
     "@extension/tsconfig": "workspace:*",
     "@extension/dev-utils": "workspace:*",

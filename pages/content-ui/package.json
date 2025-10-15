@@ -1,29 +1,35 @@
 {
-  "name": "@extension/dev-utils",
+  "name": "@extension/content-ui",
   "version": "0.5.0",
-  "description": "chrome extension - dev utils",
+  "description": "chrome extension - content ui",
   "type": "module",
   "private": true,
-  "sideEffects": false,
+  "sideEffects": true,
   "files": [
     "dist/**"
   ],
-  "types": "index.mts",
-  "main": "dist/index.mjs",
   "scripts": {
     "clean:bundle": "rimraf dist",
     "clean:node_modules": "pnpx rimraf node_modules",
     "clean:turbo": "rimraf .turbo",
     "clean": "pnpm clean:bundle && pnpm clean:node_modules && pnpm clean:turbo",
-    "ready": "tsc -b",
+    "build": "tsx build.mts",
+    "dev": "tsx build.mts",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
-    "type-check": "tsc --noEmit",
-    "postinstall": "pnpm ready"
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@extension/shared": "workspace:*",
+    "@extension/ui": "workspace:*",
+    "@extension/i18n": "workspace:*",
+    "@extension/env": "workspace:*"
   },
   "devDependencies": {
+    "@extension/hmr": "workspace:*",
+    "@extension/tailwindcss-config": "workspace:*",
     "@extension/tsconfig": "workspace:*",
-    "@extension/shared": "workspace:*"
+    "@extension/vite-config": "workspace:*"
   }
 }
