@@ -1,7 +1,7 @@
 {
-  "name": "chrome-extension",
+  "name": "@kaizen/chrome-extension",
   "version": "0.5.0",
-  "description": "chrome extension - core settings",
+  "description": "Kaizen Chrome extension - core settings and manifest",
   "type": "module",
   "private": true,
   "sideEffects": false,
