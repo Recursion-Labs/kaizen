@@ -3,14 +3,19 @@ import { GeneralSettings } from "./panels/GeneralSettings";
 import { HelpSettings } from "./panels/HelpSettings";
 import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
 import { ModelsSettings } from "./panels/ModelsSettings";
+import { BehaviorEngineSettings } from "./panels/BehaviorEngineSettings";
+import { ChatAssistantSettings } from "./panels/ChatAssistantSettings";
 import { cn } from "@extension/ui";
 import { useState } from "react";
 
 type SettingsSection =
-  | "general"
+  | "overview"
+  | "behavior-engine"
+  | "chat-assistant"
   | "models"
   | "knowledge-graph"
   | "analytics"
+  | "general"
   | "help";
 
 interface SettingsDashboardProps {
@@ -21,20 +26,32 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
   theme,
 }) => {
   const [activeSection, setActiveSection] =
-    useState<SettingsSection>("general");
+    useState<SettingsSection>("overview");
 
   const navItems = [
     {
-      id: "general" as const,
-      label: "General",
-      icon: "⚙️",
-      description: "Preferences & behavior",
+      id: "overview" as const,
+      label: "Overview",
+      icon: "📋",
+      description: "Project & features",
+    },
+    {
+      id: "behavior-engine" as const,
+      label: "Behavior Engine",
+      icon: "🧠",
+      description: "Tracking & analytics",
+    },
+    {
+      id: "chat-assistant" as const,
+      label: "Chat Assistant",
+      icon: "💬",
+      description: "AI & responses",
     },
     {
       id: "models" as const,
       label: "AI Models",
       icon: "🤖",
-      description: "Configure local AI",
+      description: "Configure Gemini Nano",
     },
     {
       id: "knowledge-graph" as const,
@@ -49,6 +66,12 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
       description: "Usage & insights",
     },
     {
+      id: "general" as const,
+      label: "General",
+      icon: "⚙️",
+      description: "Preferences & settings",
+    },
+    {
       id: "help" as const,
       label: "Help",
       icon: "📚",
@@ -58,14 +81,20 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
 
   const renderPanel = () => {
     switch (activeSection) {
-      case "general":
+      case "overview":
         return <GeneralSettings theme={theme} />;
+      case "behavior-engine":
+        return <BehaviorEngineSettings theme={theme} />;
+      case "chat-assistant":
+        return <ChatAssistantSettings theme={theme} />;
       case "models":
         return <ModelsSettings theme={theme} />;
       case "knowledge-graph":
         return <KnowledgeGraphSettings theme={theme} />;
       case "analytics":
         return <AnalyticsSettings theme={theme} />;
+      case "general":
+        return <GeneralSettings theme={theme} />;
       case "help":
         return <HelpSettings theme={theme} />;
       default:
