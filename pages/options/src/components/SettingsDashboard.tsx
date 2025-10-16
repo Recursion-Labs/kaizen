@@ -1,10 +1,10 @@
+import { AnalyticsSettings } from "./panels/AnalyticsSettings";
+import { GeneralSettings } from "./panels/GeneralSettings";
+import { HelpSettings } from "./panels/HelpSettings";
+import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
+import { ModelsSettings } from "./panels/ModelsSettings";
 import { cn } from "@extension/ui";
 import { useState } from "react";
-import { GeneralSettings } from "./panels/GeneralSettings";
-import { ModelsSettings } from "./panels/ModelsSettings";
-import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
-import { AnalyticsSettings } from "./panels/AnalyticsSettings";
-import { HelpSettings } from "./panels/HelpSettings";
 
 type SettingsSection =
   | "general"
@@ -74,11 +74,11 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden">
       {/* Sidebar Navigation */}
       <aside
         className={cn(
-          "w-64 h-full flex-shrink-0 border-r",
+          "w-64 h-screen flex-shrink-0 border-r",
           theme === "light"
             ? "bg-white border-slate-200"
             : "bg-gray-800 border-gray-700",
@@ -182,10 +182,10 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-y-auto">
+      <main className="flex-1 h-screen overflow-y-auto">
         <div
           className={cn(
-            "min-h-full",
+            "min-h-screen w-full",
             theme === "light" ? "bg-slate-50" : "bg-gray-900",
           )}
         >

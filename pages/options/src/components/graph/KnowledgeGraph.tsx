@@ -141,7 +141,7 @@ export const KnowledgeGraphComponent: React.FC<
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full min-h-[500px]">
       <canvas
         ref={canvasRef}
         className={cn(

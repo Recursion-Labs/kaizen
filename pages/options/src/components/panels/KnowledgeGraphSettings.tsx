@@ -1,9 +1,9 @@
+import { GraphControls } from "../graph/GraphControls";
+import { GraphStats } from "../graph/GraphStats";
+import { KnowledgeGraphComponent } from "../graph/KnowledgeGraph";
 import { cn } from "@extension/ui";
 import { useState } from "react";
 import type React from "react";
-import { KnowledgeGraphComponent } from "../graph/KnowledgeGraph";
-import { GraphControls } from "../graph/GraphControls";
-import { GraphStats } from "../graph/GraphStats";
 
 interface KnowledgeGraphSettingsProps {
   theme: "light" | "dark";

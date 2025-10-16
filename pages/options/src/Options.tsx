@@ -1,8 +1,8 @@
 import "@src/Options.css";
+import { SettingsDashboard } from "./components/SettingsDashboard";
 import { useStorage, withErrorBoundary, withSuspense } from "@extension/shared";
 import { exampleThemeStorage } from "@extension/storage";
 import { cn, ErrorDisplay, LoadingSpinner } from "@extension/ui";
-import { SettingsDashboard } from "./components/SettingsDashboard";
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
@@ -10,7 +10,7 @@ const Options = () => {
   return (
     <div
       className={cn(
-        "w-full h-screen overflow-hidden",
+        "w-screen h-screen overflow-hidden",
         isLight ? "bg-slate-50" : "bg-gray-900",
       )}
     >

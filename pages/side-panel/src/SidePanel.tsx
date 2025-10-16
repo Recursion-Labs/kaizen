@@ -1,8 +1,8 @@
 import "@src/SidePanel.css";
+import { ChatInterface } from "./components/ChatInterface";
 import { useStorage, withErrorBoundary, withSuspense } from "@extension/shared";
 import { exampleThemeStorage } from "@extension/storage";
 import { cn, ErrorDisplay, LoadingSpinner } from "@extension/ui";
-import { ChatInterface } from "./components/ChatInterface";
 
 const SidePanel = () => {
   const { isLight } = useStorage(exampleThemeStorage);
