@@ -1,13 +1,13 @@
 {
-  "name": "chrome-extension-boilerplate-react-vite",
+  "name": "kaizen",
   "version": "0.5.0",
-  "description": "chrome extension boilerplate",
+  "description": "A privacy-first Chrome extension that uses local AI for browsing assistance",
   "license": "MIT",
   "private": true,
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite.git"
+    "url": "https://github.com/Recursion-Labs/kaizen.git"
   },
   "type": "module",
   "scripts": {
@@ -32,8 +32,8 @@
     "format": "turbo format --continue -- --cache --cache-location node_modules/.cache/.prettiercache",
     "prepare": "husky",
     "update-version": "bash bash-scripts/update_version.sh",
-    "copy-env": "bash bash-scripts/copy_env.sh",
-    "set-global-env": "bash bash-scripts/set_global_env.sh",
+    "copy-env": "node --experimental-specifier-resolution=node scripts/copy-env.cjs || bash bash-scripts/copy_env.sh",
+    "set-global-env": "node --experimental-specifier-resolution=node scripts/set-global-env.cjs || bash bash-scripts/set_global_env.sh",
     "module-manager": "pnpm -F module-manager start",
     "postinstall": "pnpm copy-env"
   },
@@ -79,9 +79,8 @@
     "tslib": "^2.8.1",
     "tsx": "^4.19.4",
     "turbo": "^2.5.3",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.32.1",
-    "vite": "^6.3.6",
     "vite-plugin-node-polyfills": "^0.23.0"
   },
   "lint-staged": {

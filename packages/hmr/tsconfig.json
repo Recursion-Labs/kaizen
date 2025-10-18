@@ -3,7 +3,14 @@
   "compilerOptions": {
     "outDir": "dist",
     "baseUrl": ".",
-    "types": ["chrome", "node"]
+    "types": ["chrome", "node"],
+    "typeRoots": [
+      "./types",
+      "../node_modules/@types",
+      "../../node_modules/@types"
+    ],
+    "strict": false,
+    "noImplicitAny": false
   },
-  "include": ["index.mts", "rollup.config.ts", "lib"]
+  "include": ["index.mts", "rollup.config.ts", "lib", "types"]
 }

@@ -2,6 +2,7 @@ import { IS_FIREFOX } from "@extension/env";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, resolve, sep } from "node:path";
 import type { PluginOption } from "vite";
+import type { OutputOptions, OutputBundle } from "rollup";
 
 /**
  * Extract content directory from output directory for Firefox
@@ -32,7 +33,7 @@ const safeWriteFileSync = (path: string, data: string) => {
  */
 export const makeEntryPointPlugin = (): PluginOption => ({
   name: "make-entry-point-plugin",
-  generateBundle(options, bundle) {
+  generateBundle(options: OutputOptions, bundle: OutputBundle) {
     const outputDir = options.dir;
 
     if (!outputDir) {

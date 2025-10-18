@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "Chrome extension boilerplate developed with Vite, React and Typescript"
+    "message": "A privacy-first Chrome extension that uses local AI to summarize tabs, manage groups, and provide browsing assistance without sending data to the cloud"
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Chrome extension boilerplate"
+    "message": "Kaizen"
   },
   "toggleTheme": {
     "message": "Toggle theme"

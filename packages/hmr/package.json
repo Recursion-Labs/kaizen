@@ -25,6 +25,7 @@
   "devDependencies": {
     "@extension/env": "workspace:*",
     "@extension/tsconfig": "workspace:*",
+    "vite": "^6.3.6",
     "@rollup/plugin-sucrase": "^5.0.2",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.25.4",
