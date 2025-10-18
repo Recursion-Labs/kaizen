@@ -40,9 +40,8 @@ export const makeEntryPointPlugin = (): PluginOption => ({
       throw new Error("Output directory not found");
     }
 
-    for (const rawModule of Object.values(bundle) as any[]) {
-      const module: any = rawModule;
-      const fileName = String(module.fileName);
+    for (const module of Object.values(bundle)) {
+      const fileName = module.fileName;
       const newFileName = fileName.replace(".js", "_dev.js");
 
       switch (module.type) {

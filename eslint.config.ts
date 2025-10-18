@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { fixupConfigRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
@@ -6,9 +7,11 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reactPlugin from 'eslint-plugin-react';
 import { browser, es2020, node } from 'globals';
+// eslint-disable-next-line import-x/no-deprecated
 import { config, configs as tsConfigs, parser as tsParser } from 'typescript-eslint';
 import type { FixupConfigArray } from '@eslint/compat';
 
+// eslint-disable-next-line import-x/no-deprecated
 export default config(
   // Shared configs
   js.configs.recommended,

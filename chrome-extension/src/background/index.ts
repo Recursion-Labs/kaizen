@@ -38,3 +38,5 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     });
   }
 });
+  "Edit 'chrome-extension/src/background/index.ts' and save to reload.",
+);
