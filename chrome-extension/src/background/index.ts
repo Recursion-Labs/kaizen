@@ -7,7 +7,7 @@ exampleThemeStorage.get().then((theme) => {
 
 console.log("Background loaded");
 console.log(
-  "Edit 'chrome-extension/src/background/index.ts' and save to reload."
+  "Edit 'chrome-extension/src/background/index.ts' and save to reload.",
 );
 
 // Open side panel when extension icon is clicked
@@ -27,7 +27,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Handle context menu clicks
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener((info) => {
   if (info.menuItemId === "openPopup") {
     // Open popup window
     chrome.windows.create({
@@ -38,5 +38,3 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     });
   }
 });
-  "Edit 'chrome-extension/src/background/index.ts' and save to reload.",
-);
