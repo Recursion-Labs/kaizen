@@ -35,6 +35,11 @@ export class ShoppingDetector {
     };
   }
 
+  /** Getter to access monitored domains safely */
+  getMonitoredDomains(): string[] {
+    return this.config.monitoredDomains;
+  }
+
   /**
    * Record a tab visit
    * @param tabId - Chrome tab ID
@@ -57,27 +62,16 @@ export class ShoppingDetector {
     this.sessions.set(domain, session);
   }
 
-  /**
-   * Check if a domain is showing impulsive behavior
-   * @param domain - domain to check
-   */
   isImpulsive(domain: string): boolean {
     const session = this.sessions.get(domain);
     if (!session) return false;
     return session.visitCount >= this.config.visitThreshold;
   }
 
-  /**
-   * Reset session for a domain
-   * @param domain - domain to reset
-   */
   reset(domain: string) {
     this.sessions.delete(domain);
   }
 
-  /**
-   * Helper to extract hostname from URL
-   */
   private extractDomain(url: string): string {
     try {
       return new URL(url).hostname.replace("www.", "");
