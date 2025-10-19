@@ -1,10 +1,10 @@
 import { AnalyticsSettings } from "./panels/AnalyticsSettings";
+import { BehaviorEngineSettings } from "./panels/BehaviorEngineSettings";
+import { ChatAssistantSettings } from "./panels/ChatAssistantSettings";
 import { GeneralSettings } from "./panels/GeneralSettings";
 import { HelpSettings } from "./panels/HelpSettings";
 import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
 import { ModelsSettings } from "./panels/ModelsSettings";
-import { BehaviorEngineSettings } from "./panels/BehaviorEngineSettings";
-import { ChatAssistantSettings } from "./panels/ChatAssistantSettings";
 import { cn } from "@extension/ui";
 import { useState } from "react";
 
