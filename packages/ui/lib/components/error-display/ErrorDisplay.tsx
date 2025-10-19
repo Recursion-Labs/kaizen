@@ -1,6 +1,6 @@
-import { ErrorHeader } from "@/lib/components/error-display/ErrorHeader";
-import { ErrorResetButton } from "@/lib/components/error-display/ErrorResetButton";
-import { ErrorStackTraceList } from "@/lib/components/error-display/ErrorStackTraceList";
+import { ErrorHeader } from "./ErrorHeader";
+import { ErrorResetButton } from "./ErrorResetButton";
+import { ErrorStackTraceList } from "./ErrorStackTraceList";
 
 export const ErrorDisplay = ({
   error,

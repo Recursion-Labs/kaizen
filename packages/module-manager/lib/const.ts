@@ -13,7 +13,6 @@ export const DEFAULT_CHOICES = [
     value: "content-runtime",
   },
   { name: "Background Script", value: "background" },
-  { name: "New Tab Override", value: "new-tab" },
   { name: "Popup (On Extension Icon Click)", value: "popup" },
   { name: "DevTools (Include DevTools Panel)", value: "devtools" },
   { name: "Side Panel", value: "side-panel" },
@@ -27,7 +26,7 @@ export const HELP_EXAMPLES = [
   ["-d content-ui content-runtime", "Delete content-ui and content-runtime"],
   ["--de content devtools", "Delete everything exclude content and devtools"],
   ["-r options side-panel", "Recover options and side-panel"],
-  ["--re popup new-tab", "Recover everything exclude popup and new-tab"],
+  ["--re popup devtools", "Recover everything exclude popup and devtools"],
 ] as const;
 
 export const CLI_OPTIONS = [
@@ -82,11 +81,6 @@ export const MODULE_CONFIG = {
     background: {
       service_worker: "background.js",
       type: "module",
-    },
-  },
-  "new-tab": {
-    chrome_url_overrides: {
-      newtab: "new-tab/index.html",
     },
   },
   popup: {
