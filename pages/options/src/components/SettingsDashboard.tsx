@@ -1,21 +1,23 @@
 import { AnalyticsSettings } from "./panels/AnalyticsSettings";
-import { BehaviorEngineSettings } from "./panels/BehaviorEngineSettings";
-import { ChatAssistantSettings } from "./panels/ChatAssistantSettings";
+import { BehaviorRecognitionPanel } from "./panels/BehaviorRecognitionPanel";
 import { GeneralSettings } from "./panels/GeneralSettings";
 import { HelpSettings } from "./panels/HelpSettings";
 import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
-import { ModelsSettings } from "./panels/ModelsSettings";
-import { cn } from "@extension/ui";
-import { useState } from "react";
+import { OverviewPanel } from "./panels/OverviewPanel";
+import { SmartNudgesPanel } from "./panels/SmartNudgesPanel";
+import { exampleThemeStorage } from "@extension/storage";
+import { AIOverlayCircle, cn, ThemeToggle } from "@extension/ui";
+import * as LucideIcons from "lucide-react";
+import { useEffect, useState } from "react";
+import type React from "react";
 
 type SettingsSection =
   | "overview"
-  | "behavior-engine"
-  | "chat-assistant"
-  | "models"
-  | "knowledge-graph"
-  | "analytics"
-  | "general"
+  | "behavior-recognition"
+  | "smart-nudges"
+  | "reports-analytics"
+  | "pattern-insights"
+  | "customization-privacy"
   | "help";
 
 interface SettingsDashboardProps {
@@ -27,54 +29,62 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
 }) => {
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("overview");
+  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
+
+  // Sync theme changes to storage
+  useEffect(() => {
+    const syncTheme = async () => {
+      await exampleThemeStorage.set(currentTheme);
+    };
+    syncTheme();
+  }, [currentTheme]);
+
+  const handleThemeToggle = () => {
+    const newTheme = currentTheme === "light" ? "dark" : "light";
+    setCurrentTheme(newTheme);
+  };
 
   const navItems = [
     {
       id: "overview" as const,
       label: "Overview",
-      icon: "📋",
-      description: "Project & features",
+      icon: <LucideIcons.Home className="h-6 w-6" />,
+      description: "Welcome & quick stats",
     },
     {
-      id: "behavior-engine" as const,
-      label: "Behavior Engine",
-      icon: "🧠",
-      description: "Tracking & analytics",
+      id: "behavior-recognition" as const,
+      label: "Behavior Recognition",
+      icon: <LucideIcons.Brain className="h-6 w-6" />,
+      description: "Pattern detection engine",
     },
     {
-      id: "chat-assistant" as const,
-      label: "Chat Assistant",
-      icon: "💬",
-      description: "AI & responses",
+      id: "smart-nudges" as const,
+      label: "Smart Nudges",
+      icon: <LucideIcons.MessageCircle className="h-6 w-6" />,
+      description: "Customize notifications",
     },
     {
-      id: "models" as const,
-      label: "AI Models",
-      icon: "🤖",
-      description: "Configure Gemini Nano",
+      id: "reports-analytics" as const,
+      label: "Reports & Analytics",
+      icon: <LucideIcons.BarChart3 className="h-6 w-6" />,
+      description: "Time tracking & insights",
     },
     {
-      id: "knowledge-graph" as const,
-      label: "Knowledge Graph",
-      icon: "🔗",
-      description: "Graph & visualization",
+      id: "pattern-insights" as const,
+      label: "Pattern Insights",
+      icon: <LucideIcons.Search className="h-6 w-6" />,
+      description: "Discovered habits",
     },
     {
-      id: "analytics" as const,
-      label: "Analytics",
-      icon: "📊",
-      description: "Usage & insights",
-    },
-    {
-      id: "general" as const,
-      label: "General",
-      icon: "⚙️",
-      description: "Preferences & settings",
+      id: "customization-privacy" as const,
+      label: "Customization & Privacy",
+      icon: <LucideIcons.Settings className="h-6 w-6" />,
+      description: "Settings & data controls",
     },
     {
       id: "help" as const,
       label: "Help",
-      icon: "📚",
+      icon: <LucideIcons.HelpCircle className="h-6 w-6" />,
       description: "Documentation & support",
     },
   ];
@@ -82,23 +92,21 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
   const renderPanel = () => {
     switch (activeSection) {
       case "overview":
-        return <GeneralSettings theme={theme} />;
-      case "behavior-engine":
-        return <BehaviorEngineSettings theme={theme} />;
-      case "chat-assistant":
-        return <ChatAssistantSettings theme={theme} />;
-      case "models":
-        return <ModelsSettings theme={theme} />;
-      case "knowledge-graph":
-        return <KnowledgeGraphSettings theme={theme} />;
-      case "analytics":
+        return <OverviewPanel theme={theme} />;
+      case "behavior-recognition":
+        return <BehaviorRecognitionPanel theme={theme} />;
+      case "smart-nudges":
+        return <SmartNudgesPanel theme={theme} />;
+      case "reports-analytics":
         return <AnalyticsSettings theme={theme} />;
-      case "general":
+      case "pattern-insights":
+        return <KnowledgeGraphSettings theme={theme} />;
+      case "customization-privacy":
         return <GeneralSettings theme={theme} />;
       case "help":
         return <HelpSettings theme={theme} />;
       default:
-        return <GeneralSettings theme={theme} />;
+        return <OverviewPanel theme={theme} />;
     }
   };
 
@@ -120,45 +128,53 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
             theme === "light" ? "border-slate-200" : "border-gray-700",
           )}
         >
-          <div className="flex items-center space-x-3">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center",
-                "bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg",
-              )}
-            >
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h1
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
                 className={cn(
-                  "text-xl font-bold",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  "w-10 h-10 rounded-lg flex items-center justify-center",
+                  "bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg",
                 )}
               >
-                Kaizen
-              </h1>
-              <p
-                className={cn(
-                  "text-xs",
-                  theme === "light" ? "text-gray-500" : "text-gray-400",
-                )}
-              >
-                Settings
-              </p>
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1
+                  className={cn(
+                    "text-xl font-bold",
+                    theme === "light" ? "text-gray-900" : "text-white",
+                  )}
+                >
+                  Kaizen
+                </h1>
+                <p
+                  className={cn(
+                    "text-xs",
+                    theme === "light" ? "text-gray-500" : "text-gray-400",
+                  )}
+                >
+                  Settings
+                </p>
+              </div>
             </div>
+            {/* Animated Theme Toggle */}
+            <ThemeToggle
+              theme={currentTheme}
+              onToggle={handleThemeToggle}
+              className="ml-auto"
+            />
           </div>
         </div>
 
@@ -180,7 +196,9 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                     : "text-gray-300 hover:bg-gray-700/50",
               )}
             >
-              <span className="text-2xl flex-shrink-0">{item.icon}</span>
+              <div className="text-blue-600 dark:text-blue-400 flex-shrink-0">
+                {item.icon}
+              </div>
               <div className="flex-1 text-left">
                 <div
                   className={cn(
@@ -221,6 +239,9 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
           {renderPanel()}
         </div>
       </main>
+
+      {/* AI Overlay Circle with Chrome AI APIs */}
+      <AIOverlayCircle />
     </div>
   );
 };

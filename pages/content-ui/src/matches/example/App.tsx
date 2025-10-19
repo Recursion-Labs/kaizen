@@ -1,5 +1,5 @@
 import { t } from "@extension/i18n";
-import { ToggleButton } from "@extension/ui";
+import { exampleThemeStorage } from "@extension/storage";
 import { useEffect } from "react";
 
 export default function App() {
@@ -16,7 +16,12 @@ export default function App() {
         </strong>{" "}
         and save to reload.
       </div>
-      <ToggleButton className={"mt-0"}>{t("toggleTheme")}</ToggleButton>
+      <button
+        onClick={() => exampleThemeStorage.toggle()}
+        className="mt-0 rounded bg-gray-200 px-3 py-1 text-xs font-medium text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+      >
+        {t("toggleTheme")}
+      </button>
     </div>
   );
 }
