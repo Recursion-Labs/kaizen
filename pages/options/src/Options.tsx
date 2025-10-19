@@ -6,12 +6,14 @@ import { cn, ErrorDisplay, LoadingSpinner } from "@extension/ui";
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
+  const isDark = !isLight;
 
   return (
     <div
       className={cn(
         "w-screen h-screen overflow-hidden",
         isLight ? "bg-slate-50" : "bg-gray-900",
+        isDark && "dark",
       )}
     >
       <SettingsDashboard theme={isLight ? "light" : "dark"} />

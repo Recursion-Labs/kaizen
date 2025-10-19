@@ -145,7 +145,7 @@ export interface AITranslatorCreateOptions {
 export interface AITranslatorCapabilities extends APICapabilities {
   languagePairAvailable: (
     source: string,
-    target: string,
+    target: string
   ) => Promise<APIAvailability>;
 }
 

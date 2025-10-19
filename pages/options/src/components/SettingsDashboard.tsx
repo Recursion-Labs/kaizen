@@ -8,7 +8,7 @@ import { SmartNudgesPanel } from "./panels/SmartNudgesPanel";
 import { exampleThemeStorage } from "@extension/storage";
 import { AIOverlayCircle, cn, ThemeToggle } from "@extension/ui";
 import * as LucideIcons from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type React from "react";
 
 type SettingsSection =
@@ -29,19 +29,9 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
 }) => {
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("overview");
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(theme);
-
-  // Sync theme changes to storage
-  useEffect(() => {
-    const syncTheme = async () => {
-      await exampleThemeStorage.set(currentTheme);
-    };
-    syncTheme();
-  }, [currentTheme]);
 
   const handleThemeToggle = () => {
-    const newTheme = currentTheme === "light" ? "dark" : "light";
-    setCurrentTheme(newTheme);
+    exampleThemeStorage.toggle();
   };
 
   const navItems = [
@@ -171,7 +161,7 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
             </div>
             {/* Animated Theme Toggle */}
             <ThemeToggle
-              theme={currentTheme}
+              theme={theme}
               onToggle={handleThemeToggle}
               className="ml-auto"
             />
@@ -196,7 +186,12 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                     : "text-gray-300 hover:bg-gray-700/50",
               )}
             >
-              <div className="text-blue-600 dark:text-blue-400 flex-shrink-0">
+              <div
+                className={cn(
+                  "flex-shrink-0",
+                  theme === "light" ? "text-blue-600" : "text-blue-400",
+                )}
+              >
                 {item.icon}
               </div>
               <div className="flex-1 text-left">
