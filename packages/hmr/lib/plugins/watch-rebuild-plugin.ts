@@ -4,8 +4,8 @@ import { WebSocket } from "ws";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { PluginConfigType } from "../types.js";
-import type { PluginOption } from "vite";
 import type { OutputOptions, OutputBundle } from "rollup";
+import type { PluginOption } from "vite";
 
 const injectionsPath = resolve(import.meta.dirname, "..", "injections");
 
@@ -68,8 +68,7 @@ export const watchRebuildPlugin = (config: PluginConfigType): PluginOption => {
       ws.send(MessageInterpreter.send({ type: BUILD_COMPLETE, id }));
     },
     generateBundle(_options: OutputOptions, bundle: OutputBundle) {
-      for (const rawModule of Object.values(bundle) as any[]) {
-        const module: any = rawModule;
+      for (const module of Object.values(bundle)) {
         if (module.type === "chunk") {
           module.code =
             `(function() {let __HMR_ID = "${id}";\n` +

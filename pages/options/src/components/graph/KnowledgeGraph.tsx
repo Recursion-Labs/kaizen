@@ -116,7 +116,7 @@ export const KnowledgeGraphComponent: React.FC<
       ctx.textBaseline = "middle";
       ctx.fillText(node.label, node.x, node.y);
     });
-  }, [layout, theme]);
+  }, [layout, theme, mockNodes, mockEdges]);
 
   const getNodeColor = (type: string, theme: string) => {
     const colors = {

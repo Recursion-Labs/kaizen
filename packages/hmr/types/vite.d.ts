@@ -1,3 +1,3 @@
 declare module "vite" {
-  export type PluginOption = any;
+  export type PluginOption = import("vite").PluginOption;
 }

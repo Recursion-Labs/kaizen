@@ -1,8 +1,8 @@
 import { IS_FIREFOX } from "@extension/env";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, resolve, sep } from "node:path";
-import type { PluginOption } from "vite";
 import type { OutputOptions, OutputBundle } from "rollup";
+import type { PluginOption } from "vite";
 
 /**
  * Extract content directory from output directory for Firefox
