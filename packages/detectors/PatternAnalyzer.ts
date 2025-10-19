@@ -1,13 +1,17 @@
 // RAG based Pattern Analyzer for detecting specific user behaviors based on browsing data.
 
-import { TimeTracker } from "./TimeTracker";
-import { DoomScrolling } from "./Doomscrolling";
-import { ShoppingDetector } from "./ShoppingDetector";
+import type { DoomScrolling } from "./Doomscrolling";
+import type { ShoppingDetector } from "./ShoppingDetector";
+import type { TimeTracker } from "./TimeTracker";
 
 export type InsightSeverity = "low" | "medium" | "high";
 
 export interface PatternInsight {
-  type: "focusLoss" | "doomscrollingHabit" | "shoppingImpulse" | "multiTabOveruse";
+  type:
+    | "focusLoss"
+    | "doomscrollingHabit"
+    | "shoppingImpulse"
+    | "multiTabOveruse";
   description: string;
   severity: InsightSeverity;
   timestamp: number;
@@ -31,7 +35,7 @@ export class PatternAnalyzer {
     timeTracker: TimeTracker,
     doomScrolling: DoomScrolling,
     shoppingDetector: ShoppingDetector,
-    config?: Partial<PatternAnalyzerConfig>
+    config?: Partial<PatternAnalyzerConfig>,
   ) {
     this.timeTracker = timeTracker;
     this.doomScrolling = doomScrolling;
@@ -65,7 +69,7 @@ export class PatternAnalyzer {
     }
 
     // Check doomscrolling behavior
-    longTabs.forEach(tabId => {
+    longTabs.forEach((tabId) => {
       if (this.doomScrolling.isDoomScrolling(tabId)) {
         newInsights.push({
           type: "doomscrollingHabit",
@@ -77,7 +81,7 @@ export class PatternAnalyzer {
     });
 
     // Check impulsive shopping behavior
-    this.shoppingDetector.getMonitoredDomains().forEach(domain => {
+    this.shoppingDetector.getMonitoredDomains().forEach((domain) => {
       if (this.shoppingDetector.isImpulsive(domain)) {
         newInsights.push({
           type: "shoppingImpulse",
@@ -89,11 +93,14 @@ export class PatternAnalyzer {
     });
 
     // Detect combined focus loss
-    const shoppingTabsCount = this.shoppingDetector.getMonitoredDomains().filter(d => this.shoppingDetector.isImpulsive(d)).length;
+    const shoppingTabsCount = this.shoppingDetector
+      .getMonitoredDomains()
+      .filter((d) => this.shoppingDetector.isImpulsive(d)).length;
     if (longTabs.length > 2 && shoppingTabsCount > 1) {
       newInsights.push({
         type: "focusLoss",
-        description: "Signs of focus loss detected due to multiple long tabs and shopping impulses.",
+        description:
+          "Signs of focus loss detected due to multiple long tabs and shopping impulses.",
         severity: "high",
         timestamp: now,
       });
