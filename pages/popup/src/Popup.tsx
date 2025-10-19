@@ -7,7 +7,7 @@ import {
   withSuspense,
 } from "@extension/shared";
 import { exampleThemeStorage } from "@extension/storage";
-import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from "@extension/ui";
+import { cn, ErrorDisplay, LoadingSpinner } from "@extension/ui";
 
 const notificationOptions = {
   type: "basic",
@@ -77,7 +77,12 @@ const Popup = () => {
         >
           {t("injectButton")}
         </button>
-        <ToggleButton>{t("toggleTheme")}</ToggleButton>
+        <button
+          onClick={() => exampleThemeStorage.toggle()}
+          className="rounded bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+        >
+          {t("toggleTheme")}
+        </button>
       </header>
     </div>
   );
