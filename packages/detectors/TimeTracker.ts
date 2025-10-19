@@ -27,7 +27,7 @@ export class TimeTracker {
   }
 
   startTabSession(tabId: number, url: string) {
-    if (this.config.excludedSites.some(site => url.includes(site))) return;
+    if (this.config.excludedSites.some((site) => url.includes(site))) return;
     if (!this.sessions.has(tabId)) {
       this.sessions.set(tabId, {
         tabId,
