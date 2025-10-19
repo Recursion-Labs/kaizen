@@ -9,8 +9,11 @@
   },
   "include": [
     "eslint.config.ts",
-    "packages/**/*.{ts,tsx}"
+    "packages/**/*.{ts,tsx}",
+    "packages/detectors/**/*.ts",
+    "packages/interventions/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", "build"]
 }
+
 
