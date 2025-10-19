@@ -1,10 +1,11 @@
 // InterventionStrategy.ts
 // Decides when and what nudge to trigger based on behavioral signals from detectors.
 
-import { DoomScrolling } from "../detectors/Doomscrolling";
-import { ShoppingDetector } from "../detectors/ShoppingDetector";
-import { TimeTracker } from "../detectors/TimeTracker";
-import { NudgeGenerator, Nudge } from "./NudgeGenerator";
+import { NudgeGenerator } from "./NudgeGenerator";
+import type { Nudge } from "./NudgeGenerator";
+import type { DoomScrolling } from "../detectors/Doomscrolling";
+import type { ShoppingDetector } from "../detectors/ShoppingDetector";
+import type { TimeTracker } from "../detectors/TimeTracker";
 
 export interface InterventionDecision {
   trigger: boolean;
@@ -25,7 +26,7 @@ export class InterventionStrategy {
   constructor(
     doomscrolling: DoomScrolling,
     shopping: ShoppingDetector,
-    timetracker: TimeTracker
+    timetracker: TimeTracker,
   ) {
     this.doomscrolling = doomscrolling;
     this.shopping = shopping;
@@ -105,7 +106,11 @@ export class InterventionStrategy {
    * (Optional) Helper to get session duration in ms from TimeTracker
    */
   private getSessionDuration(tabId: number): number | undefined {
-    const session = (this.timetracker as any).sessions?.get(tabId);
+    const session = (
+      this.timetracker as unknown as {
+        sessions?: Map<number, { startTime: number; accumulatedTime?: number }>;
+      }
+    ).sessions?.get(tabId);
     if (!session) return undefined;
     return Date.now() - session.startTime + (session.accumulatedTime || 0);
   }
