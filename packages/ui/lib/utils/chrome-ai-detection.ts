@@ -22,51 +22,51 @@ export const detectChromeAI = (): {
 
   const apis: Record<string, AIAPIStatus> = {
     summarizer: {
-      available: !!(window.ai && "summarizer" in window.ai),
+      available: Boolean(window.ai && "summarizer" in window.ai),
       apiName: "Summarizer API",
-      message: !!(window.ai && "summarizer" in window.ai)
+      message: window.ai && "summarizer" in window.ai
         ? "✅ Available"
         : "❌ Not available - Enable chrome://flags/#summarization-api-for-gemini-nano",
     },
     proofreader: {
-      available: !!(window.ai && "proofreader" in window.ai),
+      available: Boolean(window.ai && "proofreader" in window.ai),
       apiName: "Proofreader API",
-      message: !!(window.ai && "proofreader" in window.ai)
+      message: window.ai && "proofreader" in window.ai
         ? "✅ Available"
         : "❌ Not available - Requires Chrome Canary with flags",
     },
     translator: {
-      available: !!(window.ai && "translator" in window.ai),
+      available: Boolean(window.ai && "translator" in window.ai),
       apiName: "Translator API",
-      message: !!(window.ai && "translator" in window.ai)
+      message: window.ai && "translator" in window.ai
         ? "✅ Available"
         : "❌ Not available - Enable chrome://flags/#translation-api",
     },
     writer: {
-      available: !!(window.ai && "writer" in window.ai),
+      available: Boolean(window.ai && "writer" in window.ai),
       apiName: "Writer API",
-      message: !!(window.ai && "writer" in window.ai)
+      message: window.ai && "writer" in window.ai
         ? "✅ Available"
         : "❌ Not available - Requires Chrome Canary with flags",
     },
     rewriter: {
-      available: !!(window.ai && "rewriter" in window.ai),
+      available: Boolean(window.ai && "rewriter" in window.ai),
       apiName: "Rewriter API",
-      message: !!(window.ai && "rewriter" in window.ai)
+      message: window.ai && "rewriter" in window.ai
         ? "✅ Available"
         : "❌ Not available - Requires Chrome Canary with flags",
     },
     languageDetector: {
-      available: !!(window.ai && "languageDetector" in window.ai),
+      available: Boolean(window.ai && "languageDetector" in window.ai),
       apiName: "Language Detector API",
-      message: !!(window.ai && "languageDetector" in window.ai)
+      message: window.ai && "languageDetector" in window.ai
         ? "✅ Available"
         : "❌ Not available - Requires Chrome Canary with flags",
     },
     prompt: {
-      available: !!(window.ai && "languageModel" in window.ai),
+      available: Boolean(window.ai && "languageModel" in window.ai),
       apiName: "Prompt API (Gemini Nano)",
-      message: !!(window.ai && "languageModel" in window.ai)
+      message: window.ai && "languageModel" in window.ai
         ? "✅ Available"
         : "❌ Not available - Enable chrome://flags/#prompt-api-for-gemini-nano",
     },

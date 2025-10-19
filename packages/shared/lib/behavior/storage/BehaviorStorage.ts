@@ -9,7 +9,7 @@ import type {
   SiteActivity,
   BehaviorReport,
   StoredBehaviorData,
-} from "../types";
+} from "../types.js";
 
 const DB_NAME = "KaizenBehaviorDB";
 const DB_VERSION = 1;

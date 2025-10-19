@@ -329,9 +329,9 @@ export const AIOverlayCircle: React.FC<AIOverlayCircleProps> = ({
               {/* Output Area */}
               {outputText && (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     Result
-                  </label>
+                  </div>
                   <div
                     className={cn(
                       "rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm",

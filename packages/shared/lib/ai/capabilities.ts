@@ -3,7 +3,7 @@
  * Detects and validates Chrome Built-in AI API availability
  */
 
-import type { APIAvailability, APICapabilities } from "./types";
+import type { APIAvailability, APICapabilities } from "./types.js";
 
 export interface AIAPIStatus {
   available: boolean;
