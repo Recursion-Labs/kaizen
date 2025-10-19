@@ -24,7 +24,10 @@ export class NudgeGenerator {
 
   constructor() {
     // Check if Gemini Nano or any local AI runtime is available.
-    this.useGemini = typeof (window as any).ai !== "undefined" && !!(window as any).ai?.languageModel;
+    this.useGemini =
+      typeof (window as { ai?: { languageModel?: unknown } }).ai !==
+        "undefined" &&
+      !!(window as { ai?: { languageModel?: unknown } }).ai?.languageModel;
   }
 
   /**
@@ -33,7 +36,17 @@ export class NudgeGenerator {
   async generateNudge(context: NudgeContext): Promise<Nudge> {
     if (this.useGemini) {
       try {
-        const model = await (window as any).ai.languageModel.create({
+        const model = await (
+          window as unknown as {
+            ai: {
+              languageModel: {
+                create: (config: {
+                  systemPrompt: string;
+                }) => Promise<{ prompt: (text: string) => Promise<string> }>;
+              };
+            };
+          }
+        ).ai.languageModel.create({
           systemPrompt: `
             You are an empathetic digital wellness assistant. 
             Create one short, mindful nudge to help the user pause or reflect.
@@ -43,9 +56,13 @@ export class NudgeGenerator {
 
         const prompt = this.composePrompt(context);
         const response = await model.prompt(prompt);
-        return this.wrapNudge(response || this.getFallbackNudge(context));
+        // Ensure that wrapNudge receives only a string
+        return this.wrapNudge(response ?? "");
       } catch (error) {
-        console.warn("[NudgeGenerator] Gemini model failed, using fallback:", error);
+        console.warn(
+          "[NudgeGenerator] Gemini model failed, using fallback:",
+          error,
+        );
         return this.getFallbackNudge(context);
       }
     }
@@ -73,7 +90,10 @@ export class NudgeGenerator {
   private getFallbackNudge(context: NudgeContext): Nudge {
     const { behaviorType, intensity, domain } = context;
 
-    const messages: Record<typeof behaviorType, Record<typeof intensity, string>> = {
+    const messages: Record<
+      typeof behaviorType,
+      Record<typeof intensity, string>
+    > = {
       doomscrolling: {
         low: "Take a short breath — you've been scrolling a while.",
         moderate: "Maybe pause for a minute? The world can wait.",
@@ -81,12 +101,14 @@ export class NudgeGenerator {
       },
       shopping: {
         low: "Double-check: do you really need this item?",
-        moderate: "Pause before you purchase — thoughtful choices save peace and money.",
+        moderate:
+          "Pause before you purchase — thoughtful choices save peace and money.",
         high: "Step back for a bit. Impulse fades, clarity returns.",
       },
       overtime: {
         low: "You’ve been focused a while — hydrate or stretch for a moment?",
-        moderate: "Long hours can dull clarity. Rest a bit, then resume stronger.",
+        moderate:
+          "Long hours can dull clarity. Rest a bit, then resume stronger.",
         high: "You've crossed your healthy limit — take a short break now.",
       },
       general: {
@@ -104,15 +126,15 @@ export class NudgeGenerator {
         behaviorType === "shopping"
           ? "Mindful Shopping"
           : behaviorType === "doomscrolling"
-          ? "Mindful Scrolling"
-          : "Take a Breather",
+            ? "Mindful Scrolling"
+            : "Take a Breather",
       message: domain ? `${message} (${domain})` : message,
       category:
         intensity === "high"
           ? "warning"
           : intensity === "moderate"
-          ? "reminder"
-          : "encouragement",
+            ? "reminder"
+            : "encouragement",
       timestamp: Date.now(),
     };
   }
