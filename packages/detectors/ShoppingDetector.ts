@@ -29,7 +29,7 @@ export class ShoppingDetector {
         "walmart.com",
         "target.com",
         "bestbuy.com",
-        "aliexpress.com"
+        "aliexpress.com",
       ],
       ...config,
     };
@@ -50,7 +50,10 @@ export class ShoppingDetector {
     if (!this.config.monitoredDomains.includes(domain)) return;
 
     const now = Date.now();
-    const session = this.sessions.get(domain) || { visitCount: 0, startTime: now };
+    const session = this.sessions.get(domain) || {
+      visitCount: 0,
+      startTime: now,
+    };
 
     // Reset session if time window exceeded
     if (now - session.startTime > this.config.timeWindow) {
