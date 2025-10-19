@@ -1,6 +1,6 @@
 // Chrome notification manager for sending user alerts.
 
-import { Nudge } from "./NudgeGenerator";
+import type { Nudge } from "./NudgeGenerator";
 
 export class NotificationManager {
   /**
@@ -18,7 +18,10 @@ export class NotificationManager {
         });
         return;
       } catch (error) {
-        console.warn("[NotificationManager] Chrome notification failed:", error);
+        console.warn(
+          "[NotificationManager] Chrome notification failed:",
+          error,
+        );
       }
     }
 
