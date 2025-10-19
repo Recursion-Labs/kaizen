@@ -36,7 +36,7 @@ export interface KnowledgeGraph {
 
 export interface GraphLayout {
   name: "force" | "circle" | "grid" | "concentric";
-  options?: any;
+  options?: Record<string, unknown>;
 }
 
 export interface GraphInteraction {

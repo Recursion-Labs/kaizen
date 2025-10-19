@@ -1,7 +1,7 @@
 import { cn } from "@extension/ui";
 import type React from "react";
 
-interface BehaviorEngineSettingsProps {
+interface EngineProps {
   theme: "light" | "dark";
 }
 
@@ -66,9 +66,7 @@ const FeatureSection: React.FC<{
   </div>
 );
 
-export const BehaviorEngineSettings: React.FC<BehaviorEngineSettingsProps> = ({
-  theme,
-}) => {
+export const Engine: React.FC<EngineProps> = ({ theme }) => {
   const detectors = [
     "Doomscrolling detection - Tracks extended scrolling sessions",
     "Shopping behavior - Identifies impulsive shopping patterns",

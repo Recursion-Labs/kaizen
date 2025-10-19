@@ -13,7 +13,7 @@ import {
 import { useState, useEffect } from "react";
 import type React from "react";
 
-interface OverviewPanelProps {
+interface OverviewProps {
   theme: "light" | "dark";
 }
 
@@ -24,7 +24,7 @@ interface QuickStats {
   focusStreak: number; // days
 }
 
-const OverviewPanel: React.FC<OverviewPanelProps> = () => {
+const Overview: React.FC<OverviewProps> = () => {
   const [stats, setStats] = useState<QuickStats>({
     timeOnlineToday: 0,
     patternsDetected: 0,
@@ -262,4 +262,4 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   </button>
 );
 
-export { OverviewPanel };
+export { Overview };

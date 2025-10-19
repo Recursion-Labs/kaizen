@@ -1,10 +1,13 @@
-import { AnalyticsSettings } from "./panels/AnalyticsSettings";
-import { BehaviorRecognitionPanel } from "./panels/BehaviorRecognitionPanel";
-import { GeneralSettings } from "./panels/GeneralSettings";
-import { HelpSettings } from "./panels/HelpSettings";
-import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
-import { OverviewPanel } from "./panels/OverviewPanel";
-import { SmartNudgesPanel } from "./panels/SmartNudgesPanel";
+import {
+  Analytics,
+  Dashboard,
+  Detection,
+  Settings,
+  Help,
+  Insights,
+  Overview,
+  Nudges,
+} from "./panels";
 import { exampleThemeStorage } from "@extension/storage";
 import { AIOverlayCircle, cn, ThemeToggle } from "@extension/ui";
 import * as LucideIcons from "lucide-react";
@@ -13,11 +16,12 @@ import type React from "react";
 
 type SettingsSection =
   | "overview"
-  | "behavior-recognition"
-  | "smart-nudges"
-  | "reports-analytics"
-  | "pattern-insights"
-  | "customization-privacy"
+  | "behavior"
+  | "engine"
+  | "nudges"
+  | "analytics"
+  | "insights"
+  | "settings"
   | "help";
 
 interface SettingsDashboardProps {
@@ -42,61 +46,69 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
       description: "Welcome & quick stats",
     },
     {
-      id: "behavior-recognition" as const,
-      label: "Behavior Recognition",
+      id: "behavior" as const,
+      label: "Behavior",
+      icon: <LucideIcons.Activity className="h-6 w-6" />,
+      description: "Track habits & insights",
+    },
+    {
+      id: "engine" as const,
+      label: "Detection",
       icon: <LucideIcons.Brain className="h-6 w-6" />,
-      description: "Pattern detection engine",
+      description: "Pattern detection",
     },
     {
-      id: "smart-nudges" as const,
-      label: "Smart Nudges",
+      id: "nudges" as const,
+      label: "Nudges",
       icon: <LucideIcons.MessageCircle className="h-6 w-6" />,
-      description: "Customize notifications",
+      description: "Smart notifications",
     },
     {
-      id: "reports-analytics" as const,
-      label: "Reports & Analytics",
+      id: "analytics" as const,
+      label: "Analytics",
       icon: <LucideIcons.BarChart3 className="h-6 w-6" />,
-      description: "Time tracking & insights",
+      description: "Time & reports",
     },
     {
-      id: "pattern-insights" as const,
-      label: "Pattern Insights",
+      id: "insights" as const,
+      label: "Insights",
       icon: <LucideIcons.Search className="h-6 w-6" />,
-      description: "Discovered habits",
+      description: "Knowledge graph",
     },
     {
-      id: "customization-privacy" as const,
-      label: "Customization & Privacy",
+      id: "settings" as const,
+      label: "Settings",
       icon: <LucideIcons.Settings className="h-6 w-6" />,
-      description: "Settings & data controls",
+      description: "Customize & privacy",
     },
     {
       id: "help" as const,
       label: "Help",
       icon: <LucideIcons.HelpCircle className="h-6 w-6" />,
-      description: "Documentation & support",
+      description: "Documentation",
     },
   ];
 
   const renderPanel = () => {
     switch (activeSection) {
       case "overview":
-        return <OverviewPanel theme={theme} />;
-      case "behavior-recognition":
-        return <BehaviorRecognitionPanel theme={theme} />;
-      case "smart-nudges":
-        return <SmartNudgesPanel theme={theme} />;
-      case "reports-analytics":
-        return <AnalyticsSettings theme={theme} />;
-      case "pattern-insights":
-        return <KnowledgeGraphSettings theme={theme} />;
-      case "customization-privacy":
-        return <GeneralSettings theme={theme} />;
+        return <Overview theme={theme} />;
+      case "behavior":
+        return <Dashboard theme={theme} />;
+      case "engine":
+        return <Detection theme={theme} />;
+      case "nudges":
+        return <Nudges theme={theme} />;
+      case "analytics":
+        return <Analytics theme={theme} />;
+      case "insights":
+        return <Insights theme={theme} />;
+      case "settings":
+        return <Settings theme={theme} />;
       case "help":
-        return <HelpSettings theme={theme} />;
+        return <Help theme={theme} />;
       default:
-        return <OverviewPanel theme={theme} />;
+        return <Overview theme={theme} />;
     }
   };
 

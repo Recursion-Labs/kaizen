@@ -1,11 +1,11 @@
 import { cn } from "@extension/ui";
 import type React from "react";
 
-interface GeneralSettingsProps {
+interface SettingsProps {
   theme: "light" | "dark";
 }
 
-export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ theme }) => (
+export const Settings: React.FC<SettingsProps> = ({ theme }) => (
   <div className="p-8 max-w-4xl mx-auto">
     <div className="mb-8">
       <h2

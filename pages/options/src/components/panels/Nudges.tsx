@@ -2,7 +2,7 @@ import { Wind, Smile, Target, MessageCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import type React from "react";
 
-interface SmartNudgesPanelProps {
+interface NudgesProps {
   theme: "light" | "dark";
 }
 
@@ -25,7 +25,7 @@ interface RecentNudge {
   userAction: "dismissed" | "acknowledged" | "acted";
 }
 
-const SmartNudgesPanel: React.FC<SmartNudgesPanelProps> = () => {
+const Nudges: React.FC<NudgesProps> = () => {
   const [settings, setSettings] = useState<NudgeSettings>({
     enabled: true,
     tone: "calm",
@@ -468,4 +468,4 @@ const ToneCard: React.FC<ToneCardProps> = ({ tone, selected, onClick }) => {
   );
 };
 
-export { SmartNudgesPanel };
+export { Nudges };

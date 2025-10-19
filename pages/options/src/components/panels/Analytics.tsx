@@ -1,7 +1,7 @@
 import { cn } from "@extension/ui";
 import type React from "react";
 
-interface AnalyticsSettingsProps {
+interface AnalyticsProps {
   theme: "light" | "dark";
 }
 
@@ -228,7 +228,7 @@ const TopSitesCard: React.FC<{
   </div>
 );
 
-export const AnalyticsSettings: React.FC<AnalyticsSettingsProps> = ({
+export const Analytics: React.FC<AnalyticsSettingsProps> = ({
   theme,
 }) => {
   const metrics = mockAnalytics.today;

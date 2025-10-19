@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
-interface BehaviorRecognitionPanelProps {
+interface DetectionProps {
   theme: "light" | "dark";
 }
 
@@ -23,9 +23,7 @@ interface PatternConfig {
   detectedToday: number;
 }
 
-const BehaviorRecognitionPanel: React.FC<
-  BehaviorRecognitionPanelProps
-> = () => {
+const Detection: React.FC<DetectionProps> = () => {
   const [patterns, setPatterns] = useState<PatternConfig[]>([
     {
       id: "doomscrolling",
@@ -322,4 +320,4 @@ const PatternCard: React.FC<PatternCardProps> = ({
   </div>
 );
 
-export { BehaviorRecognitionPanel };
+export { Detection };

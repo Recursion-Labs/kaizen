@@ -5,13 +5,11 @@ import { cn } from "@extension/ui";
 import { useState } from "react";
 import type React from "react";
 
-interface KnowledgeGraphSettingsProps {
+interface InsightsProps {
   theme: "light" | "dark";
 }
 
-export const KnowledgeGraphSettings: React.FC<KnowledgeGraphSettingsProps> = ({
-  theme,
-}) => {
+export const Insights: React.FC<InsightsProps> = ({ theme }) => {
   const [layout, setLayout] = useState<
     "force" | "circle" | "grid" | "concentric"
   >("force");

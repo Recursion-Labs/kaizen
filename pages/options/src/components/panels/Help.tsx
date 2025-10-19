@@ -1,11 +1,11 @@
 import { cn } from "@extension/ui";
 import type React from "react";
 
-interface ModelsSettingsProps {
+interface HelpProps {
   theme: "light" | "dark";
 }
 
-export const ModelsSettings: React.FC<ModelsSettingsProps> = ({ theme }) => (
+export const Help: React.FC<HelpSettingsProps> = ({ theme }) => (
   <div className="p-8 max-w-4xl mx-auto">
     <h2
       className={cn(
@@ -13,7 +13,7 @@ export const ModelsSettings: React.FC<ModelsSettingsProps> = ({ theme }) => (
         theme === "light" ? "text-gray-900" : "text-white",
       )}
     >
-      AI Models
+      Help & Support
     </h2>
     <p
       className={cn(
@@ -21,7 +21,7 @@ export const ModelsSettings: React.FC<ModelsSettingsProps> = ({ theme }) => (
         theme === "light" ? "text-gray-500" : "text-gray-400",
       )}
     >
-      Configure local AI models (Gemini Nano)
+      Documentation and support resources
     </p>
   </div>
 );
