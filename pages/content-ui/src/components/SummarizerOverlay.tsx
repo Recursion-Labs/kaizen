@@ -119,7 +119,7 @@ const SummarizerOverlay: React.FC<SummarizerOverlayProps> = ({ onClose }) => {
           if (e.key === "Escape") onClose();
         }}
         aria-label="Close overlay"
-      />
+      ></div>
 
       {/* Panel */}
       <div className="fixed right-0 top-0 z-[100000] h-screen w-full max-w-2xl overflow-y-auto bg-white shadow-2xl dark:bg-gray-900">
@@ -275,3 +275,5 @@ export const showSummarizer = () => {
     />,
   );
 };
+
+export default SummarizerOverlay;

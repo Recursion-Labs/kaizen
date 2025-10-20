@@ -38,7 +38,7 @@ import type {
   AIProofreaderResult,
 } from "@extension/shared";
 
-export class AIOverlayManager {
+class AIOverlayManager {
   private static instance: AIOverlayManager;
 
   // Session storage
@@ -138,7 +138,7 @@ export class AIOverlayManager {
         console.log("[Kaizen AI] ✓ Prompt API ready");
       } else if (availability === "downloading") {
         console.log(
-          "[Kaizen AI] ⏳ LanguageModel is downloading, will be available soon",
+          "[Kaizen AI] ⏳ LanguageModel is downloading, will be available soon.",
         );
         // Try to create session anyway - it might work if download completes
         try {
@@ -252,7 +252,7 @@ export class AIOverlayManager {
         return;
       }
 
-      // Try availability check - may require arguments in newer versions
+      // Check availability - Translator API may return "downloadable" even when ready
       let availability: string;
       try {
         availability = await Translator.availability({
@@ -260,23 +260,16 @@ export class AIOverlayManager {
           targetLanguage: "es",
         });
       } catch {
-        // Fallback to no arguments if the API changed
-        try {
-          availability = await Translator.availability();
-        } catch (fallbackError) {
-          console.warn(
-            "[Kaizen AI] Translator availability check failed:",
-            fallbackError,
-          );
-          availability = "unavailable";
-        }
+        // Fallback without parameters
+        availability = await Translator.availability();
       }
 
       this.capabilities.set("translator", { available: availability });
 
-      // We'll create translator sessions on-demand since they need language pairs
       if (availability === "available") {
-        console.log("[Kaizen AI] ✓ Translator API available");
+        console.log("[Kaizen AI] ✓ Translator API ready");
+      } else if (availability === "downloadable") {
+        console.log("[Kaizen AI] ✓ Translator API ready (downloadable)");
       } else {
         console.log(`[Kaizen AI] Translator API: ${availability}`);
       }
@@ -581,7 +574,36 @@ export class AIOverlayManager {
    */
   isAvailable(api: string): boolean {
     const caps = this.capabilities.get(api) as { available?: string };
-    return caps?.available === "available";
+    const availability = caps?.available;
+    // For translator, both "available" and "downloadable" mean we can use it
+    if (api === "translator") {
+      return availability === "available" || availability === "downloadable";
+    }
+    return availability === "available";
+  }
+
+  /**
+   * Quick check if Translator API is available (doesn't require full initialization)
+   */
+  async isTranslatorAvailable(): Promise<boolean> {
+    if (typeof Translator === "undefined") {
+      return false;
+    }
+
+    try {
+      const availability = await Translator.availability({
+        sourceLanguage: "en",
+        targetLanguage: "es",
+      });
+      return availability === "available" || availability === "downloadable";
+    } catch {
+      try {
+        const availability = await Translator.availability();
+        return availability === "available" || availability === "downloadable";
+      } catch {
+        return false;
+      }
+    }
   }
 
   /**
@@ -650,9 +672,14 @@ export class AIOverlayManager {
         console.log("[Kaizen AI] ✓ Test completed successfully");
       } else {
         console.log(
-          `[Kaizen AI] ❌ LanguageModel not available: ${availability}`,
+          `[Kaizen AI] ❌ LanguageModel not available: ${availability},`,
         );
       }
+
+      // Check Translator availability
+      console.log("[Kaizen AI] Checking Translator availability...");
+      const translatorAvailable = await this.isTranslatorAvailable();
+      console.log(`[Kaizen AI] Translator available: ${translatorAvailable}`);
     } catch (error) {
       console.error("[Kaizen AI] ❌ Debug failed:", error);
     }
@@ -670,3 +697,5 @@ window.debugAI = async () => {
   const manager = AIOverlayManager.getInstance();
   await manager.debugAI();
 };
+
+export { AIOverlayManager };
