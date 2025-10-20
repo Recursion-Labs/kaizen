@@ -18,7 +18,6 @@ import {
 import { useState, useEffect } from "react";
 import type React from "react";
 
-
 interface DashboardProps {
   theme: "light" | "dark";
 }
@@ -85,14 +84,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
           "sticky top-0 z-10 border-b",
           theme === "light"
             ? "bg-white border-gray-200"
-            : "bg-gray-800 border-gray-700"
+            : "bg-gray-800 border-gray-700",
         )}
       >
         <div className="px-6 py-4">
           <h1
             className={cn(
               "text-2xl font-bold mb-4",
-              theme === "light" ? "text-gray-900" : "text-white"
+              theme === "light" ? "text-gray-900" : "text-white",
             )}
           >
             Behavior Analytics
@@ -110,7 +109,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
                       : "bg-blue-900/30 text-blue-400"
                     : theme === "light"
                       ? "text-gray-600 hover:bg-gray-50"
-                      : "text-gray-400 hover:bg-gray-700/50"
+                      : "text-gray-400 hover:bg-gray-700/50",
                 )}
               >
                 {tab.icon}
@@ -273,13 +272,13 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             "rounded-lg border p-6",
             theme === "light"
               ? "border-gray-200 bg-white"
-              : "border-gray-700 bg-gray-800"
+              : "border-gray-700 bg-gray-800",
           )}
         >
           <h3
             className={cn(
               "mb-4 text-lg font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white"
+              theme === "light" ? "text-gray-900" : "text-white",
             )}
           >
             Today's Activity
@@ -290,14 +289,14 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             <div className="flex justify-between text-sm">
               <span
                 className={cn(
-                  theme === "light" ? "text-gray-700" : "text-gray-300"
+                  theme === "light" ? "text-gray-700" : "text-gray-300",
                 )}
               >
                 Productive: {formatTime(todayMetrics.productiveTime)}
               </span>
               <span
                 className={cn(
-                  theme === "light" ? "text-gray-700" : "text-gray-300"
+                  theme === "light" ? "text-gray-700" : "text-gray-300",
                 )}
               >
                 Distracted: {formatTime(todayMetrics.distractedTime)}
@@ -345,20 +344,20 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
           "rounded-lg border p-6",
           theme === "light"
             ? "border-blue-200 bg-blue-50"
-            : "border-blue-800 bg-blue-900/20"
+            : "border-blue-800 bg-blue-900/20",
         )}
       >
         <div className="flex items-start space-x-3">
           <div
             className={cn(
               "mt-1 rounded-full p-2",
-              theme === "light" ? "bg-blue-100" : "bg-blue-900/40"
+              theme === "light" ? "bg-blue-100" : "bg-blue-900/40",
             )}
           >
             <Brain
               className={cn(
                 "h-5 w-5",
-                theme === "light" ? "text-blue-600" : "text-blue-400"
+                theme === "light" ? "text-blue-600" : "text-blue-400",
               )}
             />
           </div>
@@ -366,7 +365,7 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             <h4
               className={cn(
                 "mb-2 font-semibold",
-                theme === "light" ? "text-blue-900" : "text-blue-100"
+                theme === "light" ? "text-blue-900" : "text-blue-100",
               )}
             >
               AI Insight
@@ -374,7 +373,7 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             <p
               className={cn(
                 "text-sm",
-                theme === "light" ? "text-blue-800" : "text-blue-200"
+                theme === "light" ? "text-blue-800" : "text-blue-200",
               )}
             >
               You're most productive between 9-11 AM. Consider scheduling
@@ -422,14 +421,14 @@ const StatCard: React.FC<StatCardProps> = ({
         "rounded-lg border p-4 transition-shadow hover:shadow-md",
         theme === "light"
           ? "border-gray-200 bg-white"
-          : "border-gray-700 bg-gray-800"
+          : "border-gray-700 bg-gray-800",
       )}
     >
       <div className={cn("mb-2", colorClasses[color])}>{icon}</div>
       <p
         className={cn(
           "mb-1 text-sm",
-          theme === "light" ? "text-gray-600" : "text-gray-400"
+          theme === "light" ? "text-gray-600" : "text-gray-400",
         )}
       >
         {label}
@@ -437,7 +436,7 @@ const StatCard: React.FC<StatCardProps> = ({
       <p
         className={cn(
           "text-2xl font-bold",
-          theme === "light" ? "text-gray-900" : "text-white"
+          theme === "light" ? "text-gray-900" : "text-white",
         )}
       >
         {value}
@@ -457,7 +456,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ label, value, theme }) => (
     <p
       className={cn(
         "text-sm",
-        theme === "light" ? "text-gray-600" : "text-gray-400"
+        theme === "light" ? "text-gray-600" : "text-gray-400",
       )}
     >
       {label}
@@ -465,7 +464,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ label, value, theme }) => (
     <p
       className={cn(
         "text-xl font-semibold",
-        theme === "light" ? "text-gray-900" : "text-white"
+        theme === "light" ? "text-gray-900" : "text-white",
       )}
     >
       {value}

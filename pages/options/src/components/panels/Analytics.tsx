@@ -228,9 +228,7 @@ const TopSitesCard: React.FC<{
   </div>
 );
 
-export const Analytics: React.FC<AnalyticsSettingsProps> = ({
-  theme,
-}) => {
+export const Analytics: React.FC<AnalyticsSettingsProps> = ({ theme }) => {
   const metrics = mockAnalytics.today;
 
   return (
