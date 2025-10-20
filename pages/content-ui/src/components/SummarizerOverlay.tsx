@@ -1,39 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 
 interface SummarizerOverlayProps {
   onClose: () => void;
 }
 
-export const SummarizerOverlay: React.FC<SummarizerOverlayProps> = ({
-  onClose,
-}) => {
+const SummarizerOverlay: React.FC<SummarizerOverlayProps> = ({ onClose }) => {
   const [summary, setSummary] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [summaryType, setSummaryType] = useState<
-    "key-points" | "tl;dr" | "detailed"
+    "key-points" | "tl;dr" | "teaser"
   >("key-points");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    generateSummary();
-  }, [summaryType]);
-
-  const generateSummary = async () => {
+  const generateSummary = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Check if Summarizer API is available
-      if (!window.ai?.summarizer) {
+      // Check if Summarizer API is available (Chrome 138+)
+      if (typeof Summarizer === "undefined") {
         throw new Error("Summarizer API not available");
+      }
+
+      const availability = await Summarizer.availability();
+      if (availability !== "available") {
+        throw new Error(`Summarizer not ready: ${availability}`);
       }
 
       // Get page content
       const pageContent = extractPageContent();
 
       // Create summarizer
-      const summarizer = await window.ai.summarizer.create({
+      const summarizer = await Summarizer.create({
         type: summaryType,
         format: "markdown",
         length: summaryType === "tl;dr" ? "short" : "medium",
@@ -50,7 +49,11 @@ export const SummarizerOverlay: React.FC<SummarizerOverlayProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [summaryType]);
+
+  useEffect(() => {
+    generateSummary();
+  }, [generateSummary]);
 
   const extractPageContent = (): string => {
     // Extract main content from the page
@@ -154,7 +157,7 @@ export const SummarizerOverlay: React.FC<SummarizerOverlayProps> = ({
 
           {/* Summary Type Selector */}
           <div className="mt-4 flex space-x-2">
-            {(["key-points", "tl;dr", "detailed"] as const).map((type) => (
+            {(["key-points", "tl;dr", "teaser"] as const).map((type) => (
               <button
                 key={type}
                 onClick={() => setSummaryType(type)}
@@ -168,7 +171,7 @@ export const SummarizerOverlay: React.FC<SummarizerOverlayProps> = ({
                   ? "Key Points"
                   : type === "tl;dr"
                     ? "TL;DR"
-                    : "Detailed"}
+                    : "Teaser"}
               </button>
             ))}
           </div>
@@ -272,23 +275,3 @@ export const showSummarizer = () => {
     />,
   );
 };
-
-// Type augmentation for Chrome AI APIs
-declare global {
-  interface Window {
-    ai?: {
-      summarizer?: {
-        capabilities(): Promise<{
-          available: "readily" | "after-download" | "no";
-        }>;
-        create(options?: {
-          type?: "key-points" | "tl;dr" | "teaser" | "headline";
-          format?: "plain-text" | "markdown";
-          length?: "short" | "medium" | "long";
-        }): Promise<{
-          summarize(text: string): Promise<string>;
-        }>;
-      };
-    };
-  }
-}
