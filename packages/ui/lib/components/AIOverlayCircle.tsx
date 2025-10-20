@@ -108,10 +108,13 @@ export const AIOverlayCircle: React.FC<AIOverlayCircleProps> = ({
     setOutputText("");
 
     try {
-      // Check if AI APIs are available
-      if (!window.ai) {
+      // Check if LanguageModel API is available (Chrome 138+)
+      if (
+        typeof (globalThis as typeof globalThis & { LanguageModel?: unknown })
+          .LanguageModel === "undefined"
+      ) {
         setOutputText(
-          "Chrome AI APIs not available. Please use Chrome Canary with AI features enabled.",
+          "Chrome AI APIs not available. Please use Chrome Canary 138+ with AI features enabled.",
         );
         setIsProcessing(false);
         return;
@@ -154,7 +157,7 @@ export const AIOverlayCircle: React.FC<AIOverlayCircleProps> = ({
   };
 
   const handleSummarizer = async (): Promise<string> => {
-    const summarizer = await window.ai!.summarizer.create({
+    const summarizer = await Summarizer.create({
       type: "key-points",
       format: "markdown",
       length: "medium",
@@ -163,15 +166,15 @@ export const AIOverlayCircle: React.FC<AIOverlayCircleProps> = ({
   };
 
   const handleProofreader = async (): Promise<string> => {
-    const proofreader = await window.ai!.proofreader.create();
-    const corrections = await proofreader.proofread(inputText);
-    return corrections.length > 0
-      ? `Found ${corrections.length} issue(s):\n${corrections.map((c) => `- ${c.suggestion}`).join("\n")}`
+    const proofreader = await Proofreader.create();
+    const result = await proofreader.proofread(inputText);
+    return result.corrections.length > 0
+      ? `Found ${result.corrections.length} issue(s):\n${result.corrections.map((c) => `- ${c.suggestion}`).join("\n")}`
       : "No issues found!";
   };
 
   const handleTranslator = async (): Promise<string> => {
-    const translator = await window.ai!.translator.create({
+    const translator = await Translator.create({
       sourceLanguage: "en",
       targetLanguage: "es", // Example: English to Spanish
     });
@@ -179,28 +182,30 @@ export const AIOverlayCircle: React.FC<AIOverlayCircleProps> = ({
   };
 
   const handleWriter = async (): Promise<string> => {
-    const writer = await window.ai!.writer.create({
-      tone: "professional",
+    const writer = await Writer.create({
+      tone: "formal",
       length: "medium",
     });
     return await writer.write(inputText);
   };
 
   const handleRewriter = async (): Promise<string> => {
-    const rewriter = await window.ai!.rewriter.create({
-      tone: "professional",
+    const rewriter = await Rewriter.create({
+      tone: "as-is",
       format: "as-is",
     });
     return await rewriter.rewrite(inputText);
   };
 
   const handleLanguageDetector = async (): Promise<string> => {
-    const detector = await window.ai!.languageDetector.detect(inputText);
-    return `Detected language: ${detector.language} (${Math.round(detector.confidence * 100)}% confidence)`;
+    const detector = await LanguageDetector.create();
+    const results = await detector.detect(inputText);
+    const result = results[0];
+    return `Detected language: ${result.detectedLanguage} (${Math.round(result.confidence * 100)}% confidence)`;
   };
 
   const handlePrompt = async (): Promise<string> => {
-    const session = await window.ai!.languageModel.create({
+    const session = await LanguageModel.create({
       temperature: 0.7,
       topK: 40,
     });

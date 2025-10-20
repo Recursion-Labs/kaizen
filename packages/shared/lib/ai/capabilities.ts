@@ -1,17 +1,23 @@
 /**
  * AI Capabilities Checker
  * Detects and validates Chrome Built-in AI API availability
+ *
+ * Note: Uses new LanguageModel API (Chrome 138+)
+ * window.ai is deprecated. See: https://developer.chrome.com/docs/ai/prompt-api
  */
 
-import type { APIAvailability, APICapabilities } from "./types.js";
+import type { APIAvailability } from "./types.js";
 
-export interface AIAPIStatus {
+// Import to ensure global declarations are available
+import "./types.js";
+
+interface AIAPIStatus {
   available: boolean;
   capability: APIAvailability;
   error?: string;
 }
 
-export interface AllAICapabilities {
+interface AllAICapabilities {
   promptAPI: AIAPIStatus;
   summarizer: AIAPIStatus;
   writer: AIAPIStatus;
@@ -21,16 +27,16 @@ export interface AllAICapabilities {
   languageDetector: AIAPIStatus;
 }
 
-/**
- * Check if Chrome AI APIs are available
- */
-export async function detectChromeAI(): Promise<{
+const detectChromeAI = async (): Promise<{
   isAvailable: boolean;
   apis: AllAICapabilities;
   overallMessage: string;
   setupGuide?: string;
-}> {
-  if (typeof window === "undefined" || !window.ai) {
+}> => {
+  // Check for new LanguageModel API (Chrome 138+)
+  const hasNewAPI = typeof LanguageModel !== "undefined";
+
+  if (!hasNewAPI) {
     return {
       isAvailable: false,
       apis: getUnavailableAPIs(),
@@ -60,150 +66,182 @@ export async function detectChromeAI(): Promise<{
     overallMessage: `${availableCount}/7 Chrome AI APIs available`,
     setupGuide: availableCount === 0 ? getSetupGuide() : undefined,
   };
-}
+};
 
-async function checkPromptAPI(): Promise<AIAPIStatus> {
+const checkPromptAPI = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.languageModel) {
-      return { available: false, capability: "no", error: "API not found" };
+    // Use new LanguageModel API (Chrome 138+)
+    if (typeof LanguageModel !== "undefined") {
+      const availability = await LanguageModel.availability();
+      return {
+        available: availability === "available",
+        capability: availability,
+      };
     }
 
-    const capabilities = await window.ai.languageModel.capabilities();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: false,
+      capability: "unavailable",
+      error: "LanguageModel API not found",
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-async function checkSummarizer(): Promise<AIAPIStatus> {
+const checkSummarizer = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.summarizer) {
-      return { available: false, capability: "no", error: "API not found" };
+    if (typeof Summarizer === "undefined") {
+      return {
+        available: false,
+        capability: "unavailable",
+        error: "Summarizer API not found",
+      };
     }
 
-    const capabilities = await window.ai.summarizer.capabilities();
+    const availability = await Summarizer.availability();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: availability === "available",
+      capability: availability,
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-async function checkWriter(): Promise<AIAPIStatus> {
+const checkWriter = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.writer) {
-      return { available: false, capability: "no", error: "API not found" };
+    if (typeof Writer === "undefined") {
+      return {
+        available: false,
+        capability: "unavailable",
+        error: "Writer API not found",
+      };
     }
 
-    const capabilities = await window.ai.writer.capabilities();
+    const availability = await Writer.availability();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: availability === "available",
+      capability: availability,
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-async function checkRewriter(): Promise<AIAPIStatus> {
+const checkRewriter = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.rewriter) {
-      return { available: false, capability: "no", error: "API not found" };
+    if (typeof Rewriter === "undefined") {
+      return {
+        available: false,
+        capability: "unavailable",
+        error: "Rewriter API not found",
+      };
     }
 
-    const capabilities = await window.ai.rewriter.capabilities();
+    const availability = await Rewriter.availability();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: availability === "available",
+      capability: availability,
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-async function checkTranslator(): Promise<AIAPIStatus> {
+const checkTranslator = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.translator) {
-      return { available: false, capability: "no", error: "API not found" };
+    if (typeof Translator === "undefined") {
+      return {
+        available: false,
+        capability: "unavailable",
+        error: "Translator API not found",
+      };
     }
 
-    const capabilities = await window.ai.translator.capabilities();
+    const availability = await Translator.availability();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: availability === "available",
+      capability: availability,
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-async function checkProofreader(): Promise<AIAPIStatus> {
+const checkProofreader = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.proofreader) {
-      return { available: false, capability: "no", error: "API not found" };
+    if (typeof Proofreader === "undefined") {
+      return {
+        available: false,
+        capability: "unavailable",
+        error: "Proofreader API not found",
+      };
     }
 
-    const capabilities = await window.ai.proofreader.capabilities();
+    const availability = await Proofreader.availability();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: availability === "available",
+      capability: availability,
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-async function checkLanguageDetector(): Promise<AIAPIStatus> {
+const checkLanguageDetector = async (): Promise<AIAPIStatus> => {
   try {
-    if (!window.ai?.languageDetector) {
-      return { available: false, capability: "no", error: "API not found" };
+    if (typeof LanguageDetector === "undefined") {
+      return {
+        available: false,
+        capability: "unavailable",
+        error: "LanguageDetector API not found",
+      };
     }
 
-    const capabilities = await window.ai.languageDetector.capabilities();
+    const availability = await LanguageDetector.availability();
     return {
-      available: capabilities.available === "readily",
-      capability: capabilities.available,
+      available: availability === "available",
+      capability: availability,
     };
   } catch (error) {
     return {
       available: false,
-      capability: "no",
+      capability: "unavailable",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
+};
 
-function getUnavailableAPIs(): AllAICapabilities {
-  const unavailable: AIAPIStatus = { available: false, capability: "no" };
+const getUnavailableAPIs = (): AllAICapabilities => {
+  const unavailable: AIAPIStatus = {
+    available: false,
+    capability: "unavailable",
+  };
   return {
     promptAPI: unavailable,
     summarizer: unavailable,
@@ -213,15 +251,15 @@ function getUnavailableAPIs(): AllAICapabilities {
     proofreader: unavailable,
     languageDetector: unavailable,
   };
-}
+};
 
-export function getSetupGuide(): string {
-  return `
+const getSetupGuide = (): string =>
+  `
 # Chrome AI Setup Guide
 
 To use Chrome Built-in AI APIs, follow these steps:
 
-1. **Install Chrome Canary** (v121+)
+1. **Install Chrome Canary** (v138+)
    Download: https://www.google.com/chrome/canary/
 
 2. **Enable AI Features**
@@ -239,10 +277,12 @@ To use Chrome Built-in AI APIs, follow these steps:
 4. **Verify Installation**
    Open DevTools Console and run:
    \`\`\`javascript
-   await window.ai.languageModel.capabilities()
+   await LanguageModel.availability()
    \`\`\`
-   Should return: { available: "readily" }
+   Should return: "available"
 
 For more details: https://developer.chrome.com/docs/ai/built-in
   `.trim();
-}
+
+export type { AIAPIStatus, AllAICapabilities };
+export { detectChromeAI, getSetupGuide };

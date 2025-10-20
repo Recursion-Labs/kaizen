@@ -8,7 +8,6 @@ import type {
   BehaviorPattern,
   SiteActivity,
   BehaviorReport,
-  StoredBehaviorData,
 } from "../types.js";
 
 const DB_NAME = "KaizenBehaviorDB";
@@ -320,13 +319,14 @@ class BehaviorStorage {
         transaction.objectStore(STORES.REPORTS),
       ];
 
-      const clearPromises = stores.map((store) => {
-        return new Promise<void>((res, rej) => {
-          const request = store.clear();
-          request.onerror = () => rej(request.error);
-          request.onsuccess = () => res();
-        });
-      });
+      const clearPromises = stores.map(
+        (store) =>
+          new Promise<void>((res, rej) => {
+            const request = store.clear();
+            request.onerror = () => rej(request.error);
+            request.onsuccess = () => res();
+          }),
+      );
 
       Promise.all(clearPromises)
         .then(() => resolve())

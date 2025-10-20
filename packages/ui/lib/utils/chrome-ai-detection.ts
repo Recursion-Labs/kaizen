@@ -3,6 +3,9 @@
  * Helps detect which Chrome AI APIs are available in the current browser
  */
 
+// Import to ensure global declarations are available
+import "@extension/shared/lib/ai/types.js";
+
 export interface AIAPIStatus {
   available: boolean;
   apiName: string;
@@ -22,53 +25,60 @@ export const detectChromeAI = (): {
 
   const apis: Record<string, AIAPIStatus> = {
     summarizer: {
-      available: Boolean(window.ai && "summarizer" in window.ai),
+      available: typeof Summarizer !== "undefined",
       apiName: "Summarizer API",
-      message: window.ai && "summarizer" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Enable chrome://flags/#summarization-api-for-gemini-nano",
+      message:
+        typeof Summarizer !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Enable chrome://flags/#summarization-api-for-gemini-nano",
     },
     proofreader: {
-      available: Boolean(window.ai && "proofreader" in window.ai),
+      available: typeof Proofreader !== "undefined",
       apiName: "Proofreader API",
-      message: window.ai && "proofreader" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Requires Chrome Canary with flags",
+      message:
+        typeof Proofreader !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Requires Chrome Canary with flags",
     },
     translator: {
-      available: Boolean(window.ai && "translator" in window.ai),
+      available: typeof Translator !== "undefined",
       apiName: "Translator API",
-      message: window.ai && "translator" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Enable chrome://flags/#translation-api",
+      message:
+        typeof Translator !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Enable chrome://flags/#translation-api",
     },
     writer: {
-      available: Boolean(window.ai && "writer" in window.ai),
+      available: typeof Writer !== "undefined",
       apiName: "Writer API",
-      message: window.ai && "writer" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Requires Chrome Canary with flags",
+      message:
+        typeof Writer !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Requires Chrome Canary with flags",
     },
     rewriter: {
-      available: Boolean(window.ai && "rewriter" in window.ai),
+      available: typeof Rewriter !== "undefined",
       apiName: "Rewriter API",
-      message: window.ai && "rewriter" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Requires Chrome Canary with flags",
+      message:
+        typeof Rewriter !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Requires Chrome Canary with flags",
     },
     languageDetector: {
-      available: Boolean(window.ai && "languageDetector" in window.ai),
+      available: typeof LanguageDetector !== "undefined",
       apiName: "Language Detector API",
-      message: window.ai && "languageDetector" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Requires Chrome Canary with flags",
+      message:
+        typeof LanguageDetector !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Requires Chrome Canary with flags",
     },
     prompt: {
-      available: Boolean(window.ai && "languageModel" in window.ai),
+      available: typeof LanguageModel !== "undefined",
       apiName: "Prompt API (Gemini Nano)",
-      message: window.ai && "languageModel" in window.ai
-        ? "✅ Available"
-        : "❌ Not available - Enable chrome://flags/#prompt-api-for-gemini-nano",
+      message:
+        typeof LanguageModel !== "undefined"
+          ? "✅ Available"
+          : "❌ Not available - Enable chrome://flags/#prompt-api-for-gemini-nano",
     },
   };
 
@@ -78,11 +88,11 @@ export const detectChromeAI = (): {
   const totalCount = Object.keys(apis).length;
 
   let overallMessage = "";
-  if (!window.ai) {
+  if (typeof LanguageModel === "undefined") {
     overallMessage = `
 ⚠️ Chrome AI APIs Not Detected
 
-You're using Chrome ${chromeVersion || "Unknown"}, but window.ai is not available.
+You're using Chrome ${chromeVersion || "Unknown"}, but LanguageModel API is not available.
 
 **To enable Chrome AI APIs:**
 
@@ -91,7 +101,7 @@ You're using Chrome ${chromeVersion || "Unknown"}, but window.ai is not availabl
 
 2. **Enable Required Flags** in chrome://flags:
    - prompt-api-for-gemini-nano
-   - summarization-api-for-gemini-nano  
+   - summarization-api-for-gemini-nano
    - translation-api
    - rewriter-api-for-gemini-nano
    - writer-api-for-gemini-nano
@@ -109,7 +119,7 @@ You're using Chrome ${chromeVersion || "Unknown"}, but window.ai is not availabl
     overallMessage = `
 ⚠️ Chrome AI APIs Detected but Not Enabled
 
-window.ai exists but no APIs are available (${availableCount}/${totalCount} enabled).
+LanguageModel exists but no APIs are available (${availableCount}/${totalCount} enabled).
 
 **Next Steps:**
 1. Open chrome://flags
@@ -147,7 +157,7 @@ Gemini Nano model: ${isCanary ? "Should be available in Canary" : "May require C
 export const getSetupGuide = (): string => {
   const detection = detectChromeAI();
 
-  if (!window.ai) {
+  if (typeof LanguageModel === "undefined") {
     return `
 🔧 **Quick Setup Guide**
 

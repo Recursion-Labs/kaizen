@@ -1,244 +1,286 @@
 /**
  * Chrome Built-in AI APIs - Type Definitions
- * Complete type safety for all 7 Chrome AI APIs
+ * Chrome 138+ Only - New LanguageModel API
+ * Based on: https://developer.chrome.com/docs/ai/built-in-apis
  */
 
 // ============================================================================
-// API Availability
+// API Availability (Chrome 138+)
 // ============================================================================
 
-export type APIAvailability = "readily" | "after-download" | "no";
+type APIAvailability =
+  | "available"
+  | "downloadable"
+  | "downloading"
+  | "unavailable";
 
-export interface APICapabilities {
-  available: APIAvailability;
-  defaultTemperature?: number;
-  defaultTopK?: number;
-  maxTopK?: number;
+interface AICreateMonitor {
+  addEventListener(
+    type: "downloadprogress",
+    listener: (e: DownloadProgressEvent) => void,
+  ): void;
+}
+
+interface DownloadProgressEvent extends Event {
+  loaded: number;
+  total: number;
 }
 
 // ============================================================================
-// Prompt API (General Reasoning)
+// Prompt API (General Reasoning) - Chrome 138+
 // ============================================================================
 
-export interface AILanguageModelSession {
-  prompt(input: string, options?: PromptOptions): Promise<string>;
-  promptStreaming(input: string, options?: PromptOptions): ReadableStream;
-  destroy(): void;
-  clone(): Promise<AILanguageModelSession>;
+interface AILanguageModel {
+  prompt(input: string, options?: { signal?: AbortSignal }): Promise<string>;
+  promptStreaming(
+    input: string,
+    options?: { signal?: AbortSignal },
+  ): ReadableStream;
   countPromptTokens(input: string): Promise<number>;
-  tokensSoFar: number;
-  maxTokens: number;
-  tokensLeft: number;
+  readonly maxTokens: number;
+  readonly tokensSoFar: number;
+  readonly tokensLeft: number;
+  clone(): Promise<AILanguageModel>;
+  destroy(): void;
 }
 
-export interface PromptOptions {
-  context?: string;
-  image?: string; // Base64 encoded
+interface AILanguageModelCreateOptions {
   systemPrompt?: string;
-}
-
-export interface AIModelCreateOptions {
-  temperature?: number; // 0-1
+  temperature?: number;
   topK?: number;
-  systemPrompt?: string;
-  initialPrompts?: Array<{ role: "user" | "assistant"; content: string }>;
+  signal?: AbortSignal;
+  monitor?: (monitor: AICreateMonitor) => void;
 }
 
 // ============================================================================
-// Summarizer API
+// Summarizer API - Chrome 138+
 // ============================================================================
 
-export interface AISummarizer {
-  summarize(input: string, options?: SummarizeOptions): Promise<string>;
-  summarizeStreaming(input: string, options?: SummarizeOptions): ReadableStream;
+interface AISummarizer {
+  summarize(
+    input: string,
+    options?: { context?: string; signal?: AbortSignal },
+  ): Promise<string>;
+  summarizeStreaming(
+    input: string,
+    options?: { context?: string; signal?: AbortSignal },
+  ): ReadableStream;
   destroy(): void;
 }
 
-export interface AISummarizerCreateOptions {
-  type?: "key-points" | "tl;dr" | "teaser" | "headline";
+interface AISummarizerCreateOptions {
+  sharedContext?: string;
+  type?: "tl;dr" | "key-points" | "teaser" | "headline";
   format?: "plain-text" | "markdown";
   length?: "short" | "medium" | "long";
-}
-
-export interface SummarizeOptions {
-  context?: string;
-}
-
-export interface AISummarizerCapabilities extends APICapabilities {
-  supportsType: (type: string) => boolean;
-  supportsFormat: (format: string) => boolean;
-  supportsLength: (length: string) => boolean;
+  signal?: AbortSignal;
+  monitor?: (monitor: AICreateMonitor) => void;
 }
 
 // ============================================================================
-// Writer API (Content Generation)
+// Writer API (Content Generation) - Chrome 138+
 // ============================================================================
 
-export interface AIWriter {
-  write(input: string, options?: WriteOptions): Promise<string>;
-  writeStreaming(input: string, options?: WriteOptions): ReadableStream;
+interface AIWriter {
+  write(
+    writingTask: string,
+    options?: { context?: string; signal?: AbortSignal },
+  ): Promise<string>;
+  writeStreaming(
+    writingTask: string,
+    options?: { context?: string; signal?: AbortSignal },
+  ): ReadableStream;
   destroy(): void;
 }
 
-export interface AIWriterCreateOptions {
-  tone?: "formal" | "neutral" | "casual" | "professional" | "friendly";
+interface AIWriterCreateOptions {
+  sharedContext?: string;
+  tone?: "formal" | "neutral" | "casual";
   format?: "plain-text" | "markdown";
   length?: "short" | "medium" | "long";
-}
-
-export interface WriteOptions {
-  context?: string;
-}
-
-export interface AIWriterCapabilities extends APICapabilities {
-  supportsTone: (tone: string) => boolean;
-  supportsFormat: (format: string) => boolean;
-  supportsLength: (length: string) => boolean;
+  signal?: AbortSignal;
+  monitor?: (monitor: AICreateMonitor) => void;
 }
 
 // ============================================================================
-// Rewriter API (Content Improvement)
+// Rewriter API (Content Improvement) - Chrome 138+
 // ============================================================================
 
-export interface AIRewriter {
-  rewrite(input: string, options?: RewriteOptions): Promise<string>;
-  rewriteStreaming(input: string, options?: RewriteOptions): ReadableStream;
+interface AIRewriter {
+  rewrite(
+    input: string,
+    options?: { context?: string; signal?: AbortSignal },
+  ): Promise<string>;
+  rewriteStreaming(
+    input: string,
+    options?: { context?: string; signal?: AbortSignal },
+  ): ReadableStream;
   destroy(): void;
 }
 
-export interface AIRewriterCreateOptions {
-  tone?:
-    | "as-is"
-    | "more-formal"
-    | "more-casual"
-    | "more-professional"
-    | "more-friendly";
+interface AIRewriterCreateOptions {
+  sharedContext?: string;
+  tone?: "as-is" | "more-formal" | "more-casual";
   format?: "as-is" | "plain-text" | "markdown";
   length?: "as-is" | "shorter" | "longer";
-}
-
-export interface RewriteOptions {
-  context?: string;
-}
-
-export interface AIRewriterCapabilities extends APICapabilities {
-  supportsTone: (tone: string) => boolean;
-  supportsFormat: (format: string) => boolean;
-  supportsLength: (length: string) => boolean;
+  signal?: AbortSignal;
+  monitor?: (monitor: AICreateMonitor) => void;
 }
 
 // ============================================================================
-// Translator API
+// Translator API - Chrome 138+
 // ============================================================================
 
-export interface AITranslator {
-  translate(input: string): Promise<string>;
-  translateStreaming(input: string): ReadableStream;
+interface AITranslator {
+  translate(input: string, options?: { signal?: AbortSignal }): Promise<string>;
+  translateStreaming(
+    input: string,
+    options?: { signal?: AbortSignal },
+  ): ReadableStream;
   destroy(): void;
 }
 
-export interface AITranslatorCreateOptions {
+interface AITranslatorCreateOptions {
   sourceLanguage: string; // BCP 47 language tag
   targetLanguage: string; // BCP 47 language tag
-}
-
-export interface AITranslatorCapabilities extends APICapabilities {
-  languagePairAvailable: (
-    source: string,
-    target: string
-  ) => Promise<APIAvailability>;
+  signal?: AbortSignal;
+  monitor?: (monitor: AICreateMonitor) => void;
 }
 
 // ============================================================================
-// Proofreader API (Grammar Correction)
+// Language Detector API - Chrome 138+
 // ============================================================================
 
-export interface AIProofreader {
-  proofread(input: string): Promise<AIProofreaderCorrection[]>;
+interface AILanguageDetector {
+  detect(input: string): Promise<AILanguageDetectorResult[]>;
   destroy(): void;
 }
 
-export interface AIProofreaderCorrection {
-  type: "grammar" | "spelling" | "punctuation" | "style";
-  original: string;
-  correction: string;
-  start: number;
-  end: number;
-  confidence?: number;
-}
-
-export interface AIProofreaderCapabilities extends APICapabilities {
-  // No additional capabilities
-}
-
-// ============================================================================
-// Language Detector API
-// ============================================================================
-
-export interface AILanguageDetector {
-  detect(input: string): Promise<AILanguageDetectorResult[]>;
-}
-
-export interface AILanguageDetectorResult {
+interface AILanguageDetectorResult {
   detectedLanguage: string; // BCP 47 language tag
   confidence: number; // 0-1
 }
 
-export interface AILanguageDetectorCapabilities extends APICapabilities {
-  // No additional capabilities
+// ============================================================================
+// Proofreader API - Chrome 141+ (Origin Trial)
+// ============================================================================
+
+interface AIProofreader {
+  proofread(input: string): Promise<AIProofreaderResult>;
+  destroy(): void;
+}
+
+interface AIProofreaderResult {
+  corrected: string;
+  corrections: AIProofreaderCorrection[];
+}
+
+interface AIProofreaderCorrection {
+  suggestion: string;
+  original: string;
+  position: number;
+  length: number;
+  explanation?: string;
+}
+
+interface AIProofreaderCreateOptions {
+  expectedInputLanguages?: string[];
+  signal?: AbortSignal;
+  monitor?: (monitor: AICreateMonitor) => void;
 }
 
 // ============================================================================
-// Window Interface Extension
+// Global API Constructors (Chrome 138+)
 // ============================================================================
 
 declare global {
   interface Window {
-    ai?: {
+    ai: {
       languageModel: {
-        capabilities(): Promise<APICapabilities>;
-        create(options?: AIModelCreateOptions): Promise<AILanguageModelSession>;
+        availability(): Promise<APIAvailability>;
+        create(
+          options?: AILanguageModelCreateOptions
+        ): Promise<AILanguageModel>;
       };
-      summarizer: {
-        capabilities(): Promise<AISummarizerCapabilities>;
+      summarizer?: {
+        availability(): Promise<APIAvailability>;
         create(options?: AISummarizerCreateOptions): Promise<AISummarizer>;
       };
-      writer: {
-        capabilities(): Promise<AIWriterCapabilities>;
+      writer?: {
+        availability(): Promise<APIAvailability>;
         create(options?: AIWriterCreateOptions): Promise<AIWriter>;
       };
-      rewriter: {
-        capabilities(): Promise<AIRewriterCapabilities>;
+      rewriter?: {
+        availability(): Promise<APIAvailability>;
         create(options?: AIRewriterCreateOptions): Promise<AIRewriter>;
       };
-      translator: {
-        capabilities(): Promise<AITranslatorCapabilities>;
+      translator?: {
+        availability(): Promise<APIAvailability>;
         create(options?: AITranslatorCreateOptions): Promise<AITranslator>;
       };
-      proofreader: {
-        capabilities(): Promise<AIProofreaderCapabilities>;
-        create(): Promise<AIProofreader>;
-      };
-      languageDetector: {
-        capabilities(): Promise<AILanguageDetectorCapabilities>;
+      languageDetector?: {
+        availability(): Promise<APIAvailability>;
         create(): Promise<AILanguageDetector>;
+      };
+      proofreader?: {
+        availability(): Promise<APIAvailability>;
+        create(options?: AIProofreaderCreateOptions): Promise<AIProofreader>;
       };
     };
   }
+
+  // Global constructors for Chrome 138+ AI APIs
+  const LanguageModel: {
+    availability(): Promise<APIAvailability>;
+    create(options?: AILanguageModelCreateOptions): Promise<AILanguageModel>;
+  };
+
+  const Summarizer: {
+    availability(): Promise<APIAvailability>;
+    create(options?: AISummarizerCreateOptions): Promise<AISummarizer>;
+  };
+
+  const Writer: {
+    availability(): Promise<APIAvailability>;
+    create(options?: AIWriterCreateOptions): Promise<AIWriter>;
+  };
+
+  const Rewriter: {
+    availability(): Promise<APIAvailability>;
+    create(options?: AIRewriterCreateOptions): Promise<AIRewriter>;
+  };
+
+  const Translator: {
+    availability(options?: {
+      sourceLanguage?: string;
+      targetLanguage?: string;
+    }): Promise<APIAvailability>;
+    create(options?: AITranslatorCreateOptions): Promise<AITranslator>;
+  };
+
+  const LanguageDetector: {
+    availability(): Promise<APIAvailability>;
+    create(): Promise<AILanguageDetector>;
+  };
+
+  const Proofreader: {
+    availability(): Promise<APIAvailability>;
+    create(options?: AIProofreaderCreateOptions): Promise<AIProofreader>;
+  };
 }
 
 // ============================================================================
 // Service Response Types
 // ============================================================================
 
-export interface AIServiceResponse<T = unknown> {
+interface AIServiceResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   timestamp: number;
 }
 
-export interface ChatMessage {
+interface ChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
@@ -246,9 +288,38 @@ export interface ChatMessage {
   image?: string;
 }
 
-export interface BrowsingContext {
+interface BrowsingContext {
   currentUrl?: string;
   currentTitle?: string;
   recentTabs?: Array<{ url: string; title: string }>;
   knowledgeGraph?: unknown;
 }
+
+// ============================================================================
+// Exports - Must be at the end per ESLint rules
+// ============================================================================
+
+export type {
+  APIAvailability,
+  AICreateMonitor,
+  DownloadProgressEvent,
+  AILanguageModel,
+  AILanguageModelCreateOptions,
+  AISummarizer,
+  AISummarizerCreateOptions,
+  AIWriter,
+  AIWriterCreateOptions,
+  AIRewriter,
+  AIRewriterCreateOptions,
+  AITranslator,
+  AITranslatorCreateOptions,
+  AILanguageDetector,
+  AILanguageDetectorResult,
+  AIProofreader,
+  AIProofreaderResult,
+  AIProofreaderCorrection,
+  AIProofreaderCreateOptions,
+  AIServiceResponse,
+  ChatMessage,
+  BrowsingContext,
+};
