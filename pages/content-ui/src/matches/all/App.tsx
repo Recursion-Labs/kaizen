@@ -1,3 +1,4 @@
+import { showAIFloatingBubble } from "../../components/AIFloatingBubble";
 import { AIOverlayManager } from "../../services/AIOverlayManager";
 import { SearchEnhancer } from "../../services/SearchEnhancer";
 import { useEffect } from "react";
@@ -16,9 +17,12 @@ export default function App() {
         await aiManager.initialize();
         console.log("[Kaizen] AI Manager ready ✅");
 
-        // Initialize Search Enhancer
+        // Initialize Search Enhancer (only on Google Search)
         const searchEnhancer = new SearchEnhancer();
         await searchEnhancer.initialize();
+
+        // Show AI Floating Bubble on all pages
+        showAIFloatingBubble();
 
         console.log("[Kaizen] All systems operational 🎉");
       } catch (error) {
