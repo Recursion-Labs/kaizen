@@ -5,7 +5,7 @@ interface HelpProps {
   theme: "light" | "dark";
 }
 
-export const Help: React.FC<HelpSettingsProps> = ({ theme }) => (
+export const Help: React.FC<HelpProps> = ({ theme }) => (
   <div className="p-8 max-w-4xl mx-auto">
     <h2
       className={cn(
