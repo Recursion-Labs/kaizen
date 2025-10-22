@@ -1,21 +1,27 @@
-import { AnalyticsSettings } from "./panels/AnalyticsSettings";
-import { GeneralSettings } from "./panels/GeneralSettings";
-import { HelpSettings } from "./panels/HelpSettings";
-import { KnowledgeGraphSettings } from "./panels/KnowledgeGraphSettings";
-import { ModelsSettings } from "./panels/ModelsSettings";
-import { BehaviorEngineSettings } from "./panels/BehaviorEngineSettings";
-import { ChatAssistantSettings } from "./panels/ChatAssistantSettings";
-import { cn } from "@extension/ui";
+import {
+  Analytics,
+  Dashboard,
+  Detection,
+  Settings,
+  Help,
+  Insights,
+  Overview,
+  Nudges,
+} from "./panels";
+import { exampleThemeStorage } from "@extension/storage";
+import { AIOverlayCircle, cn, ThemeToggle } from "@extension/ui";
+import * as LucideIcons from "lucide-react";
 import { useState } from "react";
+import type React from "react";
 
 type SettingsSection =
   | "overview"
-  | "behavior-engine"
-  | "chat-assistant"
-  | "models"
-  | "knowledge-graph"
+  | "behavior"
+  | "engine"
+  | "nudges"
   | "analytics"
-  | "general"
+  | "insights"
+  | "settings"
   | "help";
 
 interface SettingsDashboardProps {
@@ -28,77 +34,81 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("overview");
 
+  const handleThemeToggle = () => {
+    exampleThemeStorage.toggle();
+  };
+
   const navItems = [
     {
       id: "overview" as const,
       label: "Overview",
-      icon: "📋",
-      description: "Project & features",
+      icon: <LucideIcons.Home className="h-6 w-6" />,
+      description: "Welcome & quick stats",
     },
     {
-      id: "behavior-engine" as const,
-      label: "Behavior Engine",
-      icon: "🧠",
-      description: "Tracking & analytics",
+      id: "behavior" as const,
+      label: "Behavior",
+      icon: <LucideIcons.Activity className="h-6 w-6" />,
+      description: "Track habits & insights",
     },
     {
-      id: "chat-assistant" as const,
-      label: "Chat Assistant",
-      icon: "💬",
-      description: "AI & responses",
+      id: "engine" as const,
+      label: "Detection",
+      icon: <LucideIcons.Brain className="h-6 w-6" />,
+      description: "Pattern detection",
     },
     {
-      id: "models" as const,
-      label: "AI Models",
-      icon: "🤖",
-      description: "Configure Gemini Nano",
-    },
-    {
-      id: "knowledge-graph" as const,
-      label: "Knowledge Graph",
-      icon: "🔗",
-      description: "Graph & visualization",
+      id: "nudges" as const,
+      label: "Nudges",
+      icon: <LucideIcons.MessageCircle className="h-6 w-6" />,
+      description: "Smart notifications",
     },
     {
       id: "analytics" as const,
       label: "Analytics",
-      icon: "📊",
-      description: "Usage & insights",
+      icon: <LucideIcons.BarChart3 className="h-6 w-6" />,
+      description: "Time & reports",
     },
     {
-      id: "general" as const,
-      label: "General",
-      icon: "⚙️",
-      description: "Preferences & settings",
+      id: "insights" as const,
+      label: "Insights",
+      icon: <LucideIcons.Search className="h-6 w-6" />,
+      description: "Knowledge graph",
+    },
+    {
+      id: "settings" as const,
+      label: "Settings",
+      icon: <LucideIcons.Settings className="h-6 w-6" />,
+      description: "Customize & privacy",
     },
     {
       id: "help" as const,
       label: "Help",
-      icon: "📚",
-      description: "Documentation & support",
+      icon: <LucideIcons.HelpCircle className="h-6 w-6" />,
+      description: "Documentation",
     },
   ];
 
   const renderPanel = () => {
     switch (activeSection) {
       case "overview":
-        return <GeneralSettings theme={theme} />;
-      case "behavior-engine":
-        return <BehaviorEngineSettings theme={theme} />;
-      case "chat-assistant":
-        return <ChatAssistantSettings theme={theme} />;
-      case "models":
-        return <ModelsSettings theme={theme} />;
-      case "knowledge-graph":
-        return <KnowledgeGraphSettings theme={theme} />;
+        return <Overview theme={theme} />;
+      case "behavior":
+        return <Dashboard theme={theme} />;
+      case "engine":
+        return <Detection theme={theme} />;
+      case "nudges":
+        return <Nudges theme={theme} />;
       case "analytics":
-        return <AnalyticsSettings theme={theme} />;
-      case "general":
-        return <GeneralSettings theme={theme} />;
+        return <Analytics theme={theme} />;
+      case "insights":
+        return <Insights theme={theme} />;
+      case "settings":
+        return <Settings theme={theme} />;
       case "help":
-        return <HelpSettings theme={theme} />;
+        return <Help theme={theme} />;
       default:
-        return <GeneralSettings theme={theme} />;
+        return <Overview theme={theme} />;
     }
   };
 
@@ -120,45 +130,53 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
             theme === "light" ? "border-slate-200" : "border-gray-700",
           )}
         >
-          <div className="flex items-center space-x-3">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center",
-                "bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg",
-              )}
-            >
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h1
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
                 className={cn(
-                  "text-xl font-bold",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  "w-10 h-10 rounded-lg flex items-center justify-center",
+                  "bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg",
                 )}
               >
-                Kaizen
-              </h1>
-              <p
-                className={cn(
-                  "text-xs",
-                  theme === "light" ? "text-gray-500" : "text-gray-400",
-                )}
-              >
-                Settings
-              </p>
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1
+                  className={cn(
+                    "text-xl font-bold",
+                    theme === "light" ? "text-gray-900" : "text-white",
+                  )}
+                >
+                  Kaizen
+                </h1>
+                <p
+                  className={cn(
+                    "text-xs",
+                    theme === "light" ? "text-gray-500" : "text-gray-400",
+                  )}
+                >
+                  Settings
+                </p>
+              </div>
             </div>
+            {/* Animated Theme Toggle */}
+            <ThemeToggle
+              theme={theme}
+              onToggle={handleThemeToggle}
+              className="ml-auto"
+            />
           </div>
         </div>
 
@@ -180,7 +198,14 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                     : "text-gray-300 hover:bg-gray-700/50",
               )}
             >
-              <span className="text-2xl flex-shrink-0">{item.icon}</span>
+              <div
+                className={cn(
+                  "flex-shrink-0",
+                  theme === "light" ? "text-blue-600" : "text-blue-400",
+                )}
+              >
+                {item.icon}
+              </div>
               <div className="flex-1 text-left">
                 <div
                   className={cn(
@@ -221,6 +246,9 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
           {renderPanel()}
         </div>
       </main>
+
+      {/* AI Overlay Circle with Chrome AI APIs */}
+      <AIOverlayCircle />
     </div>
   );
 };

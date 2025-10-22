@@ -1,48 +1,472 @@
+import { ChatHeader } from "./ChatHeader";
+import { ChatInput } from "./ChatInput";
+import { HistoryView } from "./HistoryView";
+import { ImagePreview } from "./ImagePreview";
+import { MessageList } from "./MessageList";
+import { AIOverlayManager } from "../../../content-ui/src/services/AIOverlayManager";
+import { PageContentExtractor } from "../../../content-ui/src/services/PageContentExtractor";
+import { conversationStorage } from "@extension/storage";
 import { cn } from "@extension/ui";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import type { Message, Conversation } from "./types";
 import type React from "react";
+
+// Speech Recognition API types
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface ChatInterfaceProps {
   theme: "light" | "dark";
 }
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
+// Compress image data to reduce storage size
+const compressImageData = (
+  base64Data: string,
+  quality: number = 0.6
+): string => {
+  // For now, just return the original data
+  // In a real implementation, you could use canvas to compress
+  // But for simplicity, we'll just truncate very large images
+  if (base64Data.length > 500000) {
+    // If larger than ~500KB, truncate to save space
+    return base64Data.substring(0, 200000) + "...[truncated]";
+  }
+  return base64Data;
+};
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
   const [inputValue, setInputValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [aiManager, setAIManager] = useState<AIOverlayManager | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  const [pendingImage, setPendingImage] = useState<{
+    data: string;
+    fileName: string;
+  } | null>(null);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const currentMessages = useMemo(
+    () =>
+      currentConversationId
+        ? conversations.find((c) => c.id === currentConversationId)?.messages ||
+          []
+        : [],
+    [conversations, currentConversationId]
+  );
 
-    const newMessage: Message = {
+  // Initialize AI Manager
+  useEffect(() => {
+    const initAI = async () => {
+      try {
+        const manager = AIOverlayManager.getInstance();
+        await manager.initialize();
+        setAIManager(manager);
+        console.log("[SidePanel] AI Manager ready");
+      } catch (error) {
+        console.error("[SidePanel] Failed to initialize AI:", error);
+      }
+    };
+    initAI();
+  }, []);
+
+  // Load conversations from storage on mount
+  useEffect(() => {
+    const loadConversations = async () => {
+      try {
+        const storedConversations = await conversationStorage.get();
+        if (storedConversations && storedConversations.length > 0) {
+          // Convert ISO strings back to Date objects
+          const conversationsWithDates = storedConversations.map((conv) => ({
+            ...conv,
+            createdAt: new Date(conv.createdAt),
+            updatedAt: new Date(conv.updatedAt),
+            messages: conv.messages.map((msg) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp),
+            })),
+          }));
+          setConversations(conversationsWithDates);
+          console.log(
+            "[SidePanel] Loaded conversations from storage:",
+            conversationsWithDates.length
+          );
+        }
+      } catch (error) {
+        console.error("[SidePanel] Failed to load conversations:", error);
+      }
+    };
+    loadConversations();
+  }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [currentMessages]);
+
+  // Save conversations to storage whenever they change
+  useEffect(() => {
+    const saveConversations = async () => {
+      try {
+        // Convert Date objects to strings for storage
+        const conversationsForStorage = conversations.map((conv) => ({
+          ...conv,
+          createdAt: conv.createdAt.toISOString(),
+          updatedAt: conv.updatedAt.toISOString(),
+          messages: conv.messages.map((msg) => ({
+            ...msg,
+            timestamp: msg.timestamp.toISOString(),
+            // Compress image data to reduce storage size
+            image: msg.image ? compressImageData(msg.image) : undefined,
+          })),
+        }));
+        await conversationStorage.set(conversationsForStorage);
+      } catch (error) {
+        console.error("[SidePanel] Failed to save conversations:", error);
+
+        // If quota exceeded, try to clean up old conversations
+        if (error instanceof Error && error.message.includes("quota")) {
+          console.log(
+            "[SidePanel] Storage quota exceeded, cleaning up old conversations..."
+          );
+          try {
+            // Keep only the most recent 5 conversations
+            const recentConversations = conversations.slice(0, 5);
+            setConversations(recentConversations);
+
+            // Try saving again with reduced data
+            const conversationsForStorage = recentConversations.map((conv) => ({
+              ...conv,
+              createdAt: conv.createdAt.toISOString(),
+              updatedAt: conv.updatedAt.toISOString(),
+              messages: conv.messages.map((msg) => ({
+                ...msg,
+                timestamp: msg.timestamp.toISOString(),
+                // Further compress images for storage
+                image: msg.image
+                  ? compressImageData(msg.image, 0.3)
+                  : undefined,
+              })),
+            }));
+            await conversationStorage.set(conversationsForStorage);
+            console.log("[SidePanel] Successfully saved after cleanup");
+          } catch (cleanupError) {
+            console.error(
+              "[SidePanel] Failed to save even after cleanup:",
+              cleanupError
+            );
+            // As a last resort, save without images
+            try {
+              const conversationsWithoutImages = conversations
+                .slice(0, 3)
+                .map((conv) => ({
+                  ...conv,
+                  createdAt: conv.createdAt.toISOString(),
+                  updatedAt: conv.updatedAt.toISOString(),
+                  messages: conv.messages.map((msg) => ({
+                    ...msg,
+                    timestamp: msg.timestamp.toISOString(),
+                    image: undefined, // Remove images to save space
+                  })),
+                }));
+              await conversationStorage.set(conversationsWithoutImages);
+              console.log("[SidePanel] Saved conversations without images");
+            } catch (finalError) {
+              console.error(
+                "[SidePanel] Complete storage failure:",
+                finalError
+              );
+            }
+          }
+        }
+      }
+    };
+
+    // Only save if we have conversations and component is mounted
+    if (conversations.length > 0) {
+      saveConversations();
+    }
+  }, [conversations]);
+
+  // Helper function to add message to conversation (creates new conversation if none exists)
+  const addMessageToConversation = (
+    message: Message,
+    title?: string
+  ): string => {
+    let conversationId = currentConversationId;
+    if (!conversationId) {
+      conversationId = Date.now().toString();
+      const newConversation: Conversation = {
+        id: conversationId,
+        title:
+          title ||
+          (message.content.length > 50
+            ? message.content.substring(0, 50) + "..."
+            : message.content),
+        messages: [message],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setConversations((prev) => [newConversation, ...prev]);
+      setCurrentConversationId(conversationId);
+    } else {
+      // Add message to existing conversation
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId
+            ? {
+                ...conv,
+                messages: [...conv.messages, message],
+                updatedAt: new Date(),
+              }
+            : conv
+        )
+      );
+    }
+    return conversationId;
+  };
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || !aiManager) return;
+
+    const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: inputValue,
       timestamp: new Date(),
     };
 
-    setMessages([...messages, newMessage]);
-    setInputValue("");
+    // Add message to conversation immediately (creates new if none exists)
+    const conversationId = addMessageToConversation(userMessage);
 
-    // Simulate AI response
-    setTimeout(() => {
+    setInputValue("");
+    setIsProcessing(true);
+
+    try {
+      // Check if user is asking about page content
+      const pageContentKeywords = [
+        "this page",
+        "this article",
+        "current page",
+        "webpage",
+        "website",
+        "explain this",
+        "summarize this",
+        "what is this",
+        "analyze this",
+        "read this",
+        "tell me about",
+      ];
+
+      const isPageContentQuery = pageContentKeywords.some((keyword) =>
+        inputValue.toLowerCase().includes(keyword)
+      );
+
+      let pageContent: {
+        title: string;
+        content: string;
+        url: string;
+        wordCount: number;
+      } | null = null;
+      if (isPageContentQuery) {
+        try {
+          // Extract page content from the active tab
+          const [tab] = await chrome.tabs.query({
+            active: true,
+            currentWindow: true,
+          });
+          if (tab.id) {
+            const result = await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              func: PageContentExtractor.extractPageContent,
+            });
+            if (result && result[0] && result[0].result) {
+              pageContent = result[0].result;
+            }
+          }
+        } catch (error) {
+          console.warn("[SidePanel] Could not extract page content:", error);
+        }
+      }
+
+      // Check if there are any images in the current conversation
+      const currentConversation = conversations.find(
+        (c) => c.id === conversationId
+      );
+      const lastImageMessage = currentConversation?.messages
+        .filter((msg) => msg.image)
+        .pop();
+
+      let response: string;
+
+      if (lastImageMessage?.image) {
+        // Use image understanding capability
+        console.log("[SidePanel] Using image understanding for response");
+        response = await aiManager.promptWithImage(
+          inputValue,
+          lastImageMessage.image,
+          pageContent
+            ? `Page context: ${pageContent.title} - ${pageContent.content.substring(
+                0,
+                500
+              )}...`
+            : undefined
+        );
+      } else {
+        // Build the prompt with page content if available (regular text prompt)
+        const systemPrompt =
+          "You are Kaizen, an AI assistant focused on productivity, learning, and digital well-being. Provide helpful, concise responses. You have access to various AI tools and can help with writing, analysis, translation, and more.";
+
+        let fullPrompt = `${systemPrompt}\n\nUser: ${inputValue}\n\nAssistant:`;
+
+        if (pageContent && pageContent.content) {
+          fullPrompt = `${systemPrompt}\n\nPage Content:\nTitle: ${pageContent.title}\nURL: ${pageContent.url}\nWord Count: ${pageContent.wordCount}\n\nContent:\n${pageContent.content}\n\nUser Question: ${inputValue}\n\nAssistant: Please analyze the page content above and answer the user's question.`;
+        }
+
+        response = await aiManager.prompt(fullPrompt);
+      }
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I'm processing your request using local AI...",
+        content: response,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+
+      // Add AI response to conversation
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId
+            ? {
+                ...conv,
+                messages: [...conv.messages, aiMessage],
+                updatedAt: new Date(),
+              }
+            : conv
+        )
+      );
+    } catch (error) {
+      console.error("[SidePanel] Prompt API error:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content:
+          "Sorry, I encountered an error processing your request. Please try again.",
+        timestamp: new Date(),
+      };
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId!
+            ? {
+                ...conv,
+                messages: [...conv.messages, errorMessage],
+                updatedAt: new Date(),
+              }
+            : conv
+        )
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleImageSend = async (comment: string) => {
+    if (!pendingImage || !aiManager) return;
+
+    const content = comment.trim()
+      ? `${comment}\n\n[Image: ${pendingImage.fileName}]`
+      : `[Image: ${pendingImage.fileName}]`;
+
+    const imageMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content,
+      timestamp: new Date(),
+      image: pendingImage.data,
+    };
+
+    // Add message to conversation immediately (creates new if none exists)
+    const conversationId = addMessageToConversation(
+      imageMessage,
+      comment.trim() || `Image: ${pendingImage.fileName}`
+    );
+
+    // Clear the preview state
+    setShowImagePreview(false);
+    setPendingImage(null);
+
+    // Auto-generate AI response for the image immediately
+    setIsProcessing(true);
+    try {
+      console.log("[SidePanel] Auto-analyzing uploaded image");
+      const promptText = comment.trim()
+        ? `Please analyze this image and respond to: "${comment}"`
+        : "Please analyze and describe this image";
+
+      const response = await aiManager.promptWithImage(
+        promptText,
+        imageMessage.image!
+      );
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: response,
+        timestamp: new Date(),
+      };
+
+      // Add AI response to conversation
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId
+            ? {
+                ...conv,
+                messages: [...conv.messages, aiMessage],
+                updatedAt: new Date(),
+              }
+            : conv
+        )
+      );
+    } catch (error) {
+      console.error("[SidePanel] Failed to analyze uploaded image:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content:
+          "Sorry, I couldn't analyze the image right now. You can still ask me questions about it!",
+        timestamp: new Date(),
+      };
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId!
+            ? {
+                ...conv,
+                messages: [...conv.messages, errorMessage],
+                updatedAt: new Date(),
+              }
+            : conv
+        )
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  const handleImageCancel = () => {
+    setShowImagePreview(false);
+    setPendingImage(null);
   };
 
   const handleImageUpload = () => {
@@ -51,15 +475,102 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      console.log("File uploaded:", file.name);
-      // Handle image upload logic here
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Image = event.target?.result as string;
+        setPendingImage({
+          data: base64Image,
+          fileName: file.name,
+        });
+        setShowImagePreview(true);
+      };
+      reader.readAsDataURL(file);
     }
+    // Clear the input
+    e.target.value = "";
   };
 
   const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    // Handle voice recording logic here
+    if (isListening) {
+      // Stop recording
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      setIsRecording(false);
+    } else {
+      // Start recording
+      startVoiceRecording();
+    }
+  };
+
+  const startVoiceRecording = () => {
+    try {
+      // Check if Speech Recognition is supported
+      const SpeechRecognitionAPI =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognitionAPI) {
+        console.error("[SidePanel] Speech Recognition not supported");
+        alert(
+          "Speech recognition is not supported in this browser. Please use Chrome or Edge."
+        );
+        return;
+      }
+
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US"; // You can make this configurable
+
+      recognition.onstart = () => {
+        console.log("[SidePanel] Voice recording started");
+        setIsListening(true);
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("[SidePanel] Voice transcript:", transcript);
+
+        // Set the transcript as input value
+        setInputValue(transcript);
+
+        // Automatically send the message after voice input
+        setTimeout(() => {
+          handleSend();
+        }, 500);
+      };
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error("[SidePanel] Speech recognition error:", event.error);
+        setIsListening(false);
+        setIsRecording(false);
+
+        if (event.error === "not-allowed") {
+          alert(
+            "Microphone access denied. Please allow microphone access and try again."
+          );
+        } else {
+          alert(`Speech recognition error: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        console.log("[SidePanel] Voice recording ended");
+        setIsListening(false);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (error) {
+      console.error("[SidePanel] Failed to start voice recording:", error);
+      setIsListening(false);
+      setIsRecording(false);
+      alert("Failed to start voice recording. Please try again.");
+    }
   };
 
   const openSettings = () => {
@@ -70,446 +581,109 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
     setShowHistory(!showHistory);
   };
 
+  const createNewConversation = () => {
+    setCurrentConversationId(null);
+    setShowHistory(false);
+  };
+
+  const selectConversation = (conversationId: string) => {
+    setCurrentConversationId(conversationId);
+    setShowHistory(false);
+  };
+
+  const deleteConversation = (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConversations((prev) =>
+      prev.filter((conv) => conv.id !== conversationId)
+    );
+    if (currentConversationId === conversationId) {
+      setCurrentConversationId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full">
       {showHistory ? (
-        // History View - Full Panel
-        <div className="flex flex-col h-full w-full">
-          {/* History Header */}
-          <header
-            className={cn(
-              "flex items-center justify-between px-6 py-4 border-b",
-              theme === "light"
-                ? "bg-white border-slate-200 shadow-sm"
-                : "bg-gray-800 border-gray-700",
-            )}
-          >
-            <div className="flex items-center space-x-3">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h2
-                className={cn(
-                  "text-lg font-bold",
-                  theme === "light" ? "text-gray-900" : "text-white",
-                )}
-              >
-                Chat History
-              </h2>
-            </div>
-            <button
-              onClick={toggleHistory}
-              className={cn(
-                "p-2 rounded-lg transition-all duration-200",
-                "hover:bg-gray-100 dark:hover:bg-gray-700",
-                theme === "light" ? "text-gray-600" : "text-gray-400",
-              )}
-              title="Back to chat"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </header>
-
-          {/* History Search */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              className={cn(
-                "w-full px-4 py-2 rounded-lg border text-sm",
-                theme === "light"
-                  ? "bg-slate-50 border-slate-200 text-gray-900 placeholder-gray-400"
-                  : "bg-gray-900 border-gray-700 text-white placeholder-gray-500",
-              )}
-            />
-          </div>
-
-          {/* History List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.length === 0 ? (
-              <p
-                className={cn(
-                  "text-sm text-center py-12",
-                  theme === "light" ? "text-gray-500" : "text-gray-400",
-                )}
-              >
-                No chat history yet. Start a conversation!
-              </p>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "p-3 rounded-lg cursor-pointer transition-all hover:shadow-md",
-                    theme === "light"
-                      ? "bg-slate-100 hover:bg-slate-200"
-                      : "bg-gray-700 hover:bg-gray-600",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "text-sm font-medium mb-1",
-                      theme === "light" ? "text-gray-900" : "text-white",
-                    )}
-                  >
-                    {message.role === "user" ? "You" : "Assistant"}
-                  </div>
-                  <p
-                    className={cn(
-                      "text-xs line-clamp-2",
-                      theme === "light" ? "text-gray-600" : "text-gray-300",
-                    )}
-                  >
-                    {message.content}
-                  </p>
-                  <p
-                    className={cn(
-                      "text-xs mt-2",
-                      theme === "light" ? "text-gray-500" : "text-gray-400",
-                    )}
-                  >
-                    {message.timestamp.toLocaleTimeString()}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <HistoryView
+          theme={theme}
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onNewConversation={createNewConversation}
+          onSelectConversation={selectConversation}
+          onDeleteConversation={deleteConversation}
+          onBackToChat={toggleHistory}
+        />
       ) : (
-        // Chat View
         <>
-          {/* Header */}
-          <header
+          <ChatHeader
+            theme={theme}
+            onNewChat={createNewConversation}
+            onToggleHistory={toggleHistory}
+            onOpenSettings={openSettings}
+          />
+
+          <div
             className={cn(
-              "flex items-center justify-between px-6 py-4 border-b",
-              theme === "light"
-                ? "bg-white border-slate-200 shadow-sm"
-                : "bg-gray-800 border-gray-700",
+              "flex-1 overflow-y-auto p-6",
+              theme === "light" ? "bg-slate-50" : "bg-gray-900"
             )}
           >
-            <div className="flex items-center space-x-3">
+            <MessageList theme={theme} messages={currentMessages} />
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Thinking Indicator */}
+          {isProcessing && (
+            <div className="flex items-center justify-start px-6 pb-2">
               <div
                 className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center",
-                  "bg-gradient-to-r from-blue-500 to-purple-600",
+                  "flex items-center space-x-2 px-3 py-1 rounded-full text-xs",
+                  theme === "light"
+                    ? "bg-slate-100 text-gray-600"
+                    : "bg-gray-700 text-gray-300"
                 )}
               >
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h1
-                  className={cn(
-                    "text-lg font-bold",
-                    theme === "light" ? "text-gray-900" : "text-white",
-                  )}
-                >
-                  Kaizen Assistant
-                </h1>
-                <p
-                  className={cn(
-                    "text-xs",
-                    theme === "light" ? "text-gray-500" : "text-gray-400",
-                  )}
-                >
-                  AI-powered browsing help
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {/* Chat History Button */}
-              <button
-                onClick={toggleHistory}
-                className={cn(
-                  "p-2 rounded-lg transition-all duration-200",
-                  "hover:bg-gray-100 dark:hover:bg-gray-700",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
-                )}
-                title="Chat History"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </button>
-
-              {/* Settings Button */}
-              <button
-                onClick={openSettings}
-                className={cn(
-                  "p-2 rounded-lg transition-all duration-200",
-                  "hover:bg-gray-100 dark:hover:bg-gray-700",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
-                )}
-                title="Open Settings"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </header>
-
-          {/* Messages Container */}
-          <div
-            className={cn(
-              "flex-1 overflow-y-auto p-6 space-y-4",
-              theme === "light" ? "bg-slate-50" : "bg-gray-900",
-            )}
-          >
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                <div
-                  className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center",
-                    "bg-gradient-to-r from-blue-500 to-purple-600",
-                  )}
-                >
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h3
-                    className={cn(
-                      "text-xl font-semibold mb-2",
-                      theme === "light" ? "text-gray-900" : "text-white",
-                    )}
-                  >
-                    How can I help you?
-                  </h3>
-                  <p
-                    className={cn(
-                      "text-sm",
-                      theme === "light" ? "text-gray-500" : "text-gray-400",
-                    )}
-                  >
-                    Ask questions, upload images, or use voice input
-                  </p>
-                </div>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex",
-                    message.role === "user" ? "justify-end" : "justify-start",
-                  )}
-                >
+                <div className="flex space-x-1">
+                  <span>Kaizen is thinking </span>
+                  <div className="w-1 h-1 bg-current rounded-full animate-bounce"></div>
                   <div
-                    className={cn(
-                      "max-w-[80%] px-4 py-3 rounded-lg",
-                      message.role === "user"
-                        ? "bg-blue-500 text-white"
-                        : theme === "light"
-                          ? "bg-white text-gray-900 border border-slate-200"
-                          : "bg-gray-800 text-white border border-gray-700",
-                    )}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <span
-                      className={cn(
-                        "text-xs mt-1 block",
-                        message.role === "user"
-                          ? "text-blue-100"
-                          : theme === "light"
-                            ? "text-gray-400"
-                            : "text-gray-500",
-                      )}
-                    >
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
+                    className="w-1 h-1 bg-current rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 bg-current rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* Input Area */}
-          <div
-            className={cn(
-              "border-t p-4",
-              theme === "light"
-                ? "bg-white border-slate-200"
-                : "bg-gray-800 border-gray-700",
-            )}
-          >
-            <div className="flex items-center space-x-2">
-              {/* Image Upload Button */}
-              <button
-                onClick={handleImageUpload}
-                className={cn(
-                  "p-2 rounded-lg transition-colors",
-                  theme === "light"
-                    ? "hover:bg-slate-100 text-gray-600"
-                    : "hover:bg-gray-700 text-gray-400",
-                )}
-                title="Upload image"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-
-              {/* Text Input */}
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                placeholder="Ask anything..."
-                className={cn(
-                  "flex-1 px-4 py-2 rounded-lg border outline-none transition-colors",
-                  theme === "light"
-                    ? "bg-slate-50 border-slate-200 text-gray-900 placeholder-gray-400 focus:border-blue-500"
-                    : "bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500",
-                )}
-              />
-
-              {/* Voice Button */}
-              <button
-                onClick={toggleRecording}
-                className={cn(
-                  "p-2 rounded-lg transition-all",
-                  isRecording
-                    ? "bg-red-500 text-white animate-pulse"
-                    : theme === "light"
-                      ? "hover:bg-slate-100 text-gray-600"
-                      : "hover:bg-gray-700 text-gray-400",
-                )}
-                title={isRecording ? "Stop recording" : "Start recording"}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                  />
-                </svg>
-              </button>
-
-              {/* Send Button */}
-              <button
-                onClick={handleSend}
-                disabled={!inputValue.trim()}
-                className={cn(
-                  "p-2 rounded-lg transition-colors",
-                  inputValue.trim()
-                    ? "bg-blue-500 text-white hover:bg-blue-600"
-                    : theme === "light"
-                      ? "bg-slate-100 text-gray-400"
-                      : "bg-gray-700 text-gray-500",
-                )}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          <ChatInput
+            theme={theme}
+            inputValue={inputValue}
+            onInputChange={setInputValue}
+            onSend={handleSend}
+            onImageUpload={handleImageUpload}
+            onToggleRecording={toggleRecording}
+            isRecording={isRecording}
+            aiManagerAvailable={!!aiManager}
+            fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
+            onFileChange={handleFileChange}
+          />
+
+          {/* Image Preview Modal */}
+          {showImagePreview && pendingImage && (
+            <ImagePreview
+              theme={theme}
+              imageData={pendingImage.data}
+              fileName={pendingImage.fileName}
+              onSend={handleImageSend}
+              onCancel={handleImageCancel}
+            />
+          )}
         </>
       )}
     </div>

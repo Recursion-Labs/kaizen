@@ -38,6 +38,13 @@ const manifest = {
     "notifications",
     "sidePanel",
     "contextMenus",
+    "alarms",
+  ],
+  trial_tokens: [
+    "A8kuLbqI8jFb/3TxrBgIifoHcSjb4lHYx4TG8QHs852LOkGyztGVENErpVqkPkF+Ce3M+jAqmutDyFqMB5OOzQsAAACPeyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vZWdqbWRsZGJoZW5ramtoZm5wcGxjZm9wcGRla2RubWMiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElNdWx0aW1vZGFsSW5wdXQiLCJleHBpcnkiOjE3NzQzMTA0MDAsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0=",
+    "A88y3+tJI65RmD+6E71+p7qcAYUq8+J2hjTUTQ9ATzcpPX6oaO1VGMM+h4m1EZNChbnE2I2516mifT5GX8eiIQYAAACFeyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vZWdqbWRsZGJoZW5ramtoZm5wcGxjZm9wcGRla2RubWMiLCJmZWF0dXJlIjoiQUlQcm9vZnJlYWRlckFQSSIsImV4cGlyeSI6MTc3OTE0ODgwMCwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ==",
+    "A4fGsXg2ahT741tuEPYapnUrdV/f3DwU1+Dcx02J7nqxXCbg2t1iZP6UixZTziu/tAFG/2mU8nJHMabCZ0IrbA8AAACCeyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vZWdqbWRsZGJoZW5ramtoZm5wcGxjZm9wcGRla2RubWMiLCJmZWF0dXJlIjoiQUlSZXdyaXRlckFQSSIsImV4cGlyeSI6MTc2OTQ3MjAwMCwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ==",
+    "A8i+2bjL6SC4GXLQa4dy2nkhkKYJUnefTNwfZe7K6hDn0tqU/giYPQWROGKa3aOgHRLPYxQE+YORPIuoE2OGLA8AAACAeyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vZWdqbWRsZGJoZW5ramtoZm5wcGxjZm9wcGRla2RubWMiLCJmZWF0dXJlIjoiQUlXcml0ZXJBUEkiLCJleHBpcnkiOjE3Njk0NzIwMDAsImlzVGhpcmRQYXJ0eSI6dHJ1ZX0=",
   ],
   options_page: "options/index.html",
   background: {
@@ -47,9 +54,6 @@ const manifest = {
   action: {
     default_icon: "icon-34.png",
     default_popup: "popup/index.html",
-  },
-  chrome_url_overrides: {
-    newtab: "new-tab/index.html",
   },
   icons: {
     "128": "icon-128.png",

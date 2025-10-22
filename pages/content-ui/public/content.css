@@ -1,0 +1,318 @@
+/* Kaizen Overlay Styles - AI-Powered Content Enhancement */
+.kaizen-summary-card {
+  margin: 20px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  color: white;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.kaizen-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Header */
+.kaizen-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.kaizen-icon {
+  font-size: 24px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.kaizen-card-header strong {
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+.kaizen-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Card Body */
+.kaizen-card-body {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.kaizen-card-body p {
+  margin: 0;
+  opacity: 0.95;
+}
+
+/* Card Actions */
+.kaizen-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.kaizen-btn {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kaizen-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kaizen-btn:active {
+  transform: translateY(0);
+}
+
+.kaizen-btn span {
+  font-size: 16px;
+}
+
+/* Card Footer */
+.kaizen-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.kaizen-privacy-badge {
+  font-size: 12px;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Privacy Shield Card */
+.kaizen-privacy-shield {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  max-width: 400px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  color: white;
+  z-index: 999999;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Form Filler Widget */
+.kaizen-form-widget {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  z-index: 999999;
+  max-width: 300px;
+}
+
+.kaizen-form-widget::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  transform: rotate(45deg);
+}
+
+/* Rewrite Toolbar */
+.kaizen-rewrite-toolbar {
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 999999;
+}
+
+.kaizen-rewrite-toolbar button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.kaizen-rewrite-toolbar button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Doomscroll Nudge */
+.kaizen-doomscroll-nudge {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 999999;
+  animation: bounceIn 0.5s ease-out;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: translateX(-50%) translateY(100px) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px) scale(1.05);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Loading Animation */
+.kaizen-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .kaizen-summary-card {
+    margin: 12px 0;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .kaizen-card-header strong {
+    font-size: 16px;
+  }
+
+  .kaizen-card-body {
+    font-size: 14px;
+  }
+
+  .kaizen-card-actions {
+    flex-direction: column;
+  }
+
+  .kaizen-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .kaizen-privacy-shield {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .kaizen-form-widget {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .kaizen-form-widget::before {
+    background: #1a1a1a;
+  }
+}
+
+/* Accessibility */
+.kaizen-btn:focus-visible,
+.kaizen-rewrite-toolbar button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .kaizen-summary-card {
+    border: 2px solid white;
+  }
+
+  .kaizen-btn {
+    border: 2px solid white;
+  }
+}

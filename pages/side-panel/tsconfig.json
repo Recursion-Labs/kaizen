@@ -1,12 +1,15 @@
 {
   "extends": "@extension/tsconfig/base",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"],
-      "ignoreDeprecations": ["6.0"]
+      "@src/*": ["./src/*"],
     },
     "types": ["chrome", "node"]
   },
-  "include": ["src", "vite.config.mts", "tailwind.config.ts"]
+  "include": [
+    "src",
+    "vite.config.mts",
+    "tailwind.config.ts",
+    "../../types/**/*.d.ts"
+  ]
 }

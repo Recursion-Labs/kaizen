@@ -7,9 +7,13 @@ import type {
 
 /**
  * Chrome reference error while running `processTailwindFeatures` in tailwindcss.
- *  To avoid this, we need to check if globalThis.chrome is available and add fallback logic.
+ * To avoid this, we need to check if globalThis.chrome is available and add fallback logic.
  */
-const chrome = globalThis.chrome;
+type ChromeLike = { storage?: Record<string, unknown> } | undefined;
+const chromeLike: ChromeLike = (
+  globalThis as unknown as { chrome?: ChromeLike }
+).chrome;
+const hasChromeStorage = !!chromeLike?.storage;
 
 /**
  * Sets or updates an arbitrary cache with a new value or the result of an update function.
@@ -51,11 +55,14 @@ let globalSessionAccessLevelFlag: StorageConfigType["sessionAccessForContentScri
  * Checks if the storage permission is granted in the manifest.json.
  */
 const checkStoragePermission = (storageEnum: StorageEnum): void => {
-  if (!chrome) {
-    return;
-  }
+  // In non-extension environments (Vite preview), skip permission checks
+  if (!hasChromeStorage) return;
 
-  if (!chrome.storage[storageEnum]) {
+  if (
+    !(chromeLike!.storage as Record<string, unknown>)[
+      storageEnum as unknown as string
+    ]
+  ) {
     throw new Error(
       `"storage" permission in manifest.ts: "storage ${storageEnum}" isn't defined`,
     );
@@ -104,13 +111,32 @@ export const createStorage = <D = string>(
   // Register life cycle methods
   const get = async (): Promise<D> => {
     checkStoragePermission(storageEnum);
-    const value = await chrome?.storage[storageEnum].get([key]);
 
-    if (!value) {
-      return fallback;
+    // Use Chrome storage when available (extension context)
+    if (hasChromeStorage) {
+      const area = (chromeLike!.storage as Record<string, unknown>)[
+        storageEnum as unknown as string
+      ] as unknown as {
+        get: (keys: string[]) => Promise<Record<string, unknown>>;
+      };
+      const value = await area.get([key]);
+      if (!value) return fallback;
+      const deser = deserialize as unknown as (v: unknown) => D;
+      return deser((value as Record<string, unknown>)[key]) ?? fallback;
     }
 
-    return deserialize(value[key]) ?? fallback;
+    // Fallback for standard browser context (Vite dev/preview)
+    try {
+      const webStorage =
+        storageEnum === StorageEnum.Session
+          ? globalThis.sessionStorage
+          : globalThis.localStorage;
+      const raw = webStorage?.getItem(`kaizen:${storageEnum}:${key}`);
+      if (raw == null) return fallback;
+      return deserialize(JSON.parse(raw));
+    } catch {
+      return fallback;
+    }
   };
 
   const set = async (valueOrUpdate: ValueOrUpdateType<D>) => {
@@ -119,7 +145,32 @@ export const createStorage = <D = string>(
     }
     cache = await updateCache(valueOrUpdate, cache);
 
-    await chrome?.storage[storageEnum].set({ [key]: serialize(cache) });
+    // Use Chrome storage when available
+    if (hasChromeStorage) {
+      const area = (chromeLike!.storage as Record<string, unknown>)[
+        storageEnum as unknown as string
+      ] as unknown as {
+        set: (items: Record<string, unknown>) => Promise<void>;
+      };
+      await area.set({ [key]: serialize(cache) });
+      _emitChange();
+      return;
+    }
+
+    // Fallback to Web Storage
+    try {
+      const webStorage =
+        storageEnum === StorageEnum.Session
+          ? globalThis.sessionStorage
+          : globalThis.localStorage;
+      webStorage?.setItem(
+        `kaizen:${storageEnum}:${key}`,
+        JSON.stringify(serialize(cache)),
+      );
+    } catch (err) {
+      // noop for quota/security errors in preview
+      console.warn("Storage fallback set failed:", err);
+    }
     _emitChange();
   };
 
@@ -138,15 +189,14 @@ export const createStorage = <D = string>(
   };
 
   // Listener for live updates from the browser
-  const _updateFromStorageOnChanged = async (changes: {
-    [key: string]: chrome.storage.StorageChange;
-  }) => {
+  const _updateFromStorageOnChanged = async (
+    changes: Record<string, { newValue: unknown }>,
+  ) => {
     // Check if the key we are listening for is in the changes object
-    if (changes[key] === undefined) return;
+    if (!(key in changes)) return;
 
-    const valueOrUpdate: ValueOrUpdateType<D> = deserialize(
-      changes[key].newValue,
-    );
+    const deser = deserialize as unknown as (v: unknown) => D;
+    const valueOrUpdate: ValueOrUpdateType<D> = deser(changes[key].newValue);
 
     if (cache === valueOrUpdate) return;
 
@@ -155,6 +205,7 @@ export const createStorage = <D = string>(
     _emitChange();
   };
 
+  // Initialize cache once
   get().then((data) => {
     cache = data;
     initialCache = true;
@@ -162,10 +213,17 @@ export const createStorage = <D = string>(
   });
 
   // Register listener for live updates for our storage area
-  if (liveUpdate) {
-    chrome?.storage[storageEnum].onChanged.addListener(
-      _updateFromStorageOnChanged,
-    );
+  if (liveUpdate && hasChromeStorage) {
+    const area = (chromeLike!.storage as Record<string, unknown>)[
+      storageEnum as unknown as string
+    ] as unknown as {
+      onChanged: {
+        addListener: (
+          fn: (changes: Record<string, { newValue: unknown }>) => void,
+        ) => void;
+      };
+    };
+    area.onChanged.addListener(_updateFromStorageOnChanged);
   }
 
   return {
