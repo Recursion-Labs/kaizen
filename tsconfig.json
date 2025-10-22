@@ -9,6 +9,7 @@
   },
   "include": [
     "eslint.config.ts",
+    "testRunner.ts",
     "packages/**/*.{ts,tsx}",
     "packages/detectors/**/*.ts",
     "packages/detectors/test/**/*.ts",
