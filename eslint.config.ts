@@ -4,7 +4,7 @@ import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import { flatConfigs as importXFlatConfig } from 'eslint-plugin-import-x';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+// import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reactPlugin from 'eslint-plugin-react';
 import { browser, es2020, node } from 'globals';
 // eslint-disable-next-line import-x/no-deprecated
@@ -19,7 +19,6 @@ export default config(
   jsxA11y.flatConfigs.recommended,
   importXFlatConfig.recommended,
   importXFlatConfig.typescript,
-  eslintPluginPrettierRecommended,
   ...fixupConfigRules(new FlatCompat().extends('plugin:react-hooks/recommended') as FixupConfigArray),
   {
     files: ['**/*.{ts,tsx}'],
