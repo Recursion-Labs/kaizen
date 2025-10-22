@@ -11,7 +11,11 @@
     "eslint.config.ts",
     "packages/**/*.{ts,tsx}",
     "packages/detectors/**/*.ts",
-    "packages/interventions/**/*.ts"
+    "packages/detectors/test/**/*.ts",
+    "packages/knowledge/**/*.ts",
+    "packages/knowledge/test/**/*.ts",
+    "packages/interventions/**/*.ts",
+    "packages/test/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", "build"]
 }
