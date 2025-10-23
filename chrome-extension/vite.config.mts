@@ -33,12 +33,6 @@ export default defineConfig({
   ],
   publicDir: resolve(rootDir, "public"),
   build: {
-    lib: {
-      name: "BackgroundScript",
-      fileName: "background",
-      formats: ["es"],
-      entry: resolve(srcDir, "background", "index.ts"),
-    },
     outDir,
     emptyOutDir: false,
     sourcemap: IS_DEV,
@@ -46,6 +40,11 @@ export default defineConfig({
     reportCompressedSize: IS_PROD,
     watch: watchOption,
     rollupOptions: {
+      input: resolve(srcDir, "background", "index.ts"),
+      output: {
+        format: "es",
+        entryFileNames: "background.js",
+      },
       external: ["chrome"],
     },
   },
