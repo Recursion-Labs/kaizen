@@ -1,7 +1,7 @@
 // Retrieval + context builder for AI with enhanced functionality
 
-import type { KnowledgeGraph, KnowledgeNode, NodeType } from "./KnowledgeGraph";
 import type { EmbeddingService } from "./EmbeddingService";
+import type { KnowledgeGraph, KnowledgeNode, KnowledgeEdge, NodeType } from "./KnowledgeGraph";
 
 export interface RAGConfig {
   maxContextNodes: number;
@@ -13,7 +13,7 @@ export interface RAGConfig {
 
 export interface ContextResult {
   nodes: KnowledgeNode[];
-  edges: unknown[];
+  edges: KnowledgeEdge[];
   context: Record<string, unknown>;
   relevanceScore: number;
   timestamp: number;
@@ -233,7 +233,7 @@ export class RAGEngine {
   /**
    * Get relevant edges for context nodes
    */
-  private getRelevantEdges(nodes: KnowledgeNode[]): any[] {
+  private getRelevantEdges(nodes: KnowledgeNode[]): KnowledgeEdge[] {
     const nodeIds = new Set(nodes.map((n) => n.id));
     const edges = this.KG.getAllEdges();
 
@@ -247,32 +247,36 @@ export class RAGEngine {
    */
   private buildContext(
     nodes: KnowledgeNode[],
-    edges: any[]
-  ): Record<string, any> {
-    const context: Record<string, any> = {
+    edges: KnowledgeEdge[]
+  ): Record<string, unknown> {
+    const context: Record<string, unknown> = {
       nodeCount: nodes.length,
       edgeCount: edges.length,
-      nodeTypes: {},
-      patterns: [],
-      behaviors: [],
+      nodeTypes: {} as Record<string, number>,
+      patterns: [] as Array<{ id: string; metadata?: Record<string, unknown> }>,
+      behaviors: [] as Array<{ id: string; metadata?: Record<string, unknown> }>,
     };
 
     // Categorize nodes
     for (const node of nodes) {
-      if (!context.nodeTypes[node.type]) {
-        context.nodeTypes[node.type] = 0;
+      const nodeTypes = context.nodeTypes as Record<string, number>;
+      if (!nodeTypes[node.type]) {
+        nodeTypes[node.type] = 0;
       }
-      context.nodeTypes[node.type]++;
+      nodeTypes[node.type]++;
+
+      const patterns = context.patterns as Array<{ id: string; metadata?: Record<string, unknown> }>;
+      const behaviors = context.behaviors as Array<{ id: string; metadata?: Record<string, unknown> }>;
 
       if (node.type === "pattern") {
-        context.patterns.push({
+        patterns.push({
           id: node.id,
           metadata: this.config.includeMetadata ? node.metadata : undefined,
         });
       }
 
       if (node.type === "behavior") {
-        context.behaviors.push({
+        behaviors.push({
           id: node.id,
           metadata: this.config.includeMetadata ? node.metadata : undefined,
         });
@@ -288,7 +292,7 @@ export class RAGEngine {
   private getRecentActivity(): Array<{
     type: string;
     timestamp: number;
-    data: any;
+    data: unknown;
   }> {
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
@@ -311,7 +315,7 @@ export class RAGEngine {
   /**
    * Build user profile from graph data
    */
-  private buildUserProfile(): Record<string, any> {
+  private buildUserProfile(): Record<string, unknown> {
     const stats = this.KG.getStats();
     const recentPatterns = this.retrieveRecentPatterns(5);
 
