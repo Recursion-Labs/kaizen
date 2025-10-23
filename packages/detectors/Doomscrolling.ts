@@ -58,6 +58,13 @@ export class DoomScrolling {
   }
 
   /**
+   * Get monitored domains
+   */
+  getMonitoredDomains(): string[] {
+    return this.config.monitoredDomains;
+  }
+
+  /**
    * Adds scroll amount for a tab with real-time monitoring.
    * @param tabId - Chrome tab ID
    * @param scrollAmount - pixels scrolled
