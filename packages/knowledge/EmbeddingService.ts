@@ -1,9 +1,23 @@
 // Embeddings service for behaviors & nudges with multiple model providers and caching
 
-import axios from "axios";
 import { createHash } from "crypto";
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
-import path from "path";
+
+// Check if we're in a Chrome extension environment
+const isChromeExtension = typeof chrome !== 'undefined' && chrome.storage;
+
+// Lazy load Node.js modules only if not in Chrome extension
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let fs: any, path: any;
+if (!isChromeExtension) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    fs = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    path = require('path');
+  } catch {
+    // Node modules not available
+  }
+}
 
 export interface EmbeddingConfig {
   modelProvider: "gemini" | "openai" | "local";
@@ -30,16 +44,18 @@ export class EmbeddingService {
     this.config = {
       modelProvider: "gemini",
       modelName: "gemini-nano",
-      cacheDir: path.join(__dirname, ".cache/embeddings_cache"),
+      cacheDir: isChromeExtension ? "" : (path && path.join(__dirname, ".cache/embeddings_cache") || ""),
       maxRetries: 3,
       timeout: 30000, // 30 seconds
       ...config,
     };
 
-    if (!existsSync(this.config.cacheDir)) {
-      mkdirSync(this.config.cacheDir, { recursive: true });
-        }
+    if (!isChromeExtension && fs && path) {
+      if (!fs.existsSync(this.config.cacheDir)) {
+        fs.mkdirSync(this.config.cacheDir, { recursive: true });
+      }
     }
+  }
 
     /**
    * Hash based caching to avoid re-embedding same text
@@ -49,8 +65,9 @@ export class EmbeddingService {
     }
 
   private getCachePath(key: string): string {
+    if (!path) return "";
     return path.join(this.config.cacheDir, `${key}.json`);
-    }
+  }
 
     /** 
      * Fetches embedding vector for given text using caching and model routing
@@ -63,22 +80,43 @@ export class EmbeddingService {
       return this.cache.get(key)!.vector;
     }
 
-        const cachePath = this.getCachePath(key);
+    // Check file cache (Node.js environment)
+    if (!isChromeExtension && fs && path) {
+      const cachePath = this.getCachePath(key);
+      if (fs.existsSync(cachePath)) {
+        try {
+          const cached = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+          const result: EmbeddingResult = {
+            vector: cached.vector,
+            model: cached.model || this.config.modelName,
+            cached: true,
+            timestamp: cached.timestamp || Date.now(),
+          };
+          this.cache.set(key, result);
+          return result.vector;
+        } catch (error) {
+          console.warn(`Failed to read cache file: ${error}`);
+        }
+      }
+    }
 
-    // Check file cache
-        if (existsSync(cachePath)) {
+    // Check Chrome storage cache (Chrome extension environment)
+    if (isChromeExtension) {
       try {
-            const cached = JSON.parse(readFileSync(cachePath, "utf8"));
-        const result: EmbeddingResult = {
-          vector: cached.vector,
-          model: cached.model || this.config.modelName,
-          cached: true,
-          timestamp: cached.timestamp || Date.now(),
-        };
-        this.cache.set(key, result);
-        return result.vector;
+        const result = await chrome.storage.local.get(`embedding_${key}`);
+        if (result[`embedding_${key}`]) {
+          const cached = result[`embedding_${key}`];
+          const cacheResult: EmbeddingResult = {
+            vector: cached.vector,
+            model: cached.model || this.config.modelName,
+            cached: true,
+            timestamp: cached.timestamp || Date.now(),
+          };
+          this.cache.set(key, cacheResult);
+          return cacheResult.vector;
+        }
       } catch (error) {
-        console.warn(`Failed to read cache file: ${error}`);
+        console.warn(`Failed to read Chrome storage cache: ${error}`);
       }
     }
 
@@ -126,15 +164,35 @@ export class EmbeddingService {
     // Cache the result
     this.cache.set(key, result);
     
-    try {
-      writeFileSync(cachePath, JSON.stringify({
-        text,
-        vector,
-        model: this.config.modelName,
-        timestamp: result.timestamp,
-      }, null, 2), "utf8");
-    } catch (error) {
-      console.warn(`Failed to write cache file: ${error}`);
+    // Save to file cache (Node.js environment)
+    if (!isChromeExtension && fs && path) {
+      try {
+        const cachePath = this.getCachePath(key);
+        fs.writeFileSync(cachePath, JSON.stringify({
+          text,
+          vector,
+          model: this.config.modelName,
+          timestamp: result.timestamp,
+        }, null, 2), "utf8");
+      } catch (error) {
+        console.warn(`Failed to write cache file: ${error}`);
+      }
+    }
+
+    // Save to Chrome storage (Chrome extension environment)
+    if (isChromeExtension) {
+      try {
+        await chrome.storage.local.set({
+          [`embedding_${key}`]: {
+            text,
+            vector,
+            model: this.config.modelName,
+            timestamp: result.timestamp,
+          }
+        });
+      } catch (error) {
+        console.warn(`Failed to write Chrome storage cache: ${error}`);
+      }
     }
 
         return vector;
@@ -219,23 +277,29 @@ export class EmbeddingService {
       throw new Error("API key required for Gemini provider");
     }
 
-    const response = await axios.post(
+    const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${this.config.modelName}:embedContent`,
       {
-        content: {
-          parts: [{ text }]
-        }
-      },
-      {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-goog-api-key': this.config.apiKey,
         },
-        timeout: this.config.timeout,
+        body: JSON.stringify({
+          content: {
+            parts: [{ text }]
+          }
+        }),
+        signal: AbortSignal.timeout(this.config.timeout),
       }
     );
 
-    return response.data.embedding.values;
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.embedding.values;
   }
 
   /**
@@ -246,46 +310,58 @@ export class EmbeddingService {
       throw new Error("API key required for OpenAI provider");
     }
 
-    const response = await axios.post(
+    const response = await fetch(
       'https://api.openai.com/v1/embeddings',
       {
-        input: text,
-        model: this.config.modelName,
-      },
-      {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json',
         },
-        timeout: this.config.timeout,
+        body: JSON.stringify({
+          input: text,
+          model: this.config.modelName,
+        }),
+        signal: AbortSignal.timeout(this.config.timeout),
       }
     );
 
-    return response.data.data[0].embedding;
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
   }
 
   /**
    * Embed with local model
-   */
+  */
   private async embedWithLocalModel(text: string): Promise<number[]> {
     if (!this.config.localEndpoint) {
       throw new Error("Local endpoint required for local provider");
     }
 
-    const response = await axios.post(
+    const response = await fetch(
       this.config.localEndpoint,
       {
-        text,
-        model: this.config.modelName,
-      },
-      {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: this.config.timeout,
+        body: JSON.stringify({
+          text,
+          model: this.config.modelName,
+        }),
+        signal: AbortSignal.timeout(this.config.timeout),
       }
     );
 
-    return response.data.embedding;
+    if (!response.ok) {
+      throw new Error(`Local model error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.embedding;
   }
 }
