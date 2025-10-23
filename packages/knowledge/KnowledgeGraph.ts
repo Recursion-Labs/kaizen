@@ -130,11 +130,11 @@ export class KnowledgeGraph {
     }
 
     if (query.filters) {
-      result = result.filter(node => {
-        return Object.entries(query.filters!).every(([key, value]) => {
-          return node.metadata?.[key] === value;
-        });
-      });
+      result = result.filter(node =>
+  Object.entries(query.filters!).every(([key, value]) =>
+    node.metadata?.[key] === value
+  )
+);
     }
 
     if (query.offset) {
@@ -208,7 +208,7 @@ export class KnowledgeGraph {
   /**
    * Update node metadata
    */
-  updateNode(id: string, metadata: Record<string, any>) {
+  updateNode(id: string, metadata: Record<string, unknown>) {
     const node = this.nodes.get(id);
     if (node) {
       node.metadata = { ...node.metadata, ...metadata };
