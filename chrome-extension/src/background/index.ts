@@ -88,6 +88,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     integrationManager.handleScroll(sender.tab.id, message.scrollAmount, message.url);
     sendResponse({ success: true });
   }
+
+  // Handle RAG context requests from UI
+  if (message.type === 'GET_RAG_CONTEXT') {
+    console.log('RAG context requested from UI');
+    try {
+      const context = integrationManager.generateContextForNudge();
+      sendResponse({ success: true, context });
+    } catch (error) {
+      console.error('Failed to generate RAG context:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  // Handle productivity stats requests
+  if (message.type === 'GET_PRODUCTIVITY_STATS') {
+    console.log('Productivity stats requested from UI');
+    try {
+      const stats = {
+        productivityScore: integrationManager.getProductivityScore(),
+        todayStats: integrationManager.getTodayStats(),
+        knowledgeGraphStats: integrationManager.getKnowledgeGraphStats(),
+        activeSessions: integrationManager.getActiveSessions(),
+      };
+      sendResponse({ success: true, stats });
+    } catch (error) {
+      console.error('Failed to get productivity stats:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
   return true; // Keep the message channel open for async response
 });
 
