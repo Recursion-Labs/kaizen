@@ -3,10 +3,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Kaizen Color Palette CSS Variables */
+:root {
+  /* Light theme */
+  --kaizen-light-bg: #F5F9F8;
+  --kaizen-light-text: #575669;
+  --kaizen-light-muted: #A1A2AB;
+  --kaizen-light-surface: #F5F9F8;
+  --kaizen-light-border: #A1A2AB;
+  
+  /* Dark theme */
+  --kaizen-dark-bg: #252330;
+  --kaizen-dark-surface: #3B3A4A;
+  --kaizen-dark-text: #F5F9F8;
+  --kaizen-dark-muted: #A1A2AB;
+  --kaizen-dark-border: #3B3A4A;
+  
+  /* Accent colors */
+  --kaizen-accent: #595168;
+  --kaizen-accent-light: #A1A2AB;
+  --kaizen-accent-dark: #3B3A4A;
+  
+  /* Semantic colors */
+  --kaizen-primary: #575669;
+  --kaizen-secondary: #A1A2AB;
+  --kaizen-surface: #F5F9F8;
+  --kaizen-border: #A1A2AB;
+  --kaizen-muted: #A1A2AB;
+}
+
+/* Light theme */
+.light {
+  --kaizen-bg: var(--kaizen-light-bg);
+  --kaizen-text: var(--kaizen-light-text);
+  --kaizen-muted: var(--kaizen-light-muted);
+  --kaizen-surface: var(--kaizen-light-surface);
+  --kaizen-border: var(--kaizen-light-border);
+}
+
+/* Dark theme */
+.dark {
+  --kaizen-bg: var(--kaizen-dark-bg);
+  --kaizen-text: var(--kaizen-dark-text);
+  --kaizen-muted: var(--kaizen-dark-muted);
+  --kaizen-surface: var(--kaizen-dark-surface);
+  --kaizen-border: var(--kaizen-dark-border);
+}
+
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  background-color: var(--kaizen-bg);
+  color: var(--kaizen-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
@@ -19,4 +69,23 @@ body {
 code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Kaizen-specific component styles */
+.kaizen-card {
+  background-color: var(--kaizen-surface);
+  border: 1px solid var(--kaizen-border);
+  color: var(--kaizen-text);
+}
+
+.kaizen-text-muted {
+  color: var(--kaizen-muted);
+}
+
+.kaizen-accent {
+  color: var(--kaizen-accent);
+}
+
+.kaizen-accent-bg {
+  background-color: var(--kaizen-accent);
 }
