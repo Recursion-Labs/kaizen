@@ -199,7 +199,7 @@ declare global {
       languageModel: {
         availability(): Promise<APIAvailability>;
         create(
-          options?: AILanguageModelCreateOptions
+          options?: AILanguageModelCreateOptions,
         ): Promise<AILanguageModel>;
       };
       summarizer?: {

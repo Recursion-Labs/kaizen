@@ -2,7 +2,7 @@
   "extends": "@extension/tsconfig/base",
   "compilerOptions": {
     "paths": {
-      "@src/*": ["./src/*"],
+      "@src/*": ["./src/*"]
     },
     "types": ["chrome", "node"]
   },

@@ -22,7 +22,7 @@ const storage = createStorage<ConversationStateType>(
   {
     storageEnum: StorageEnum.Local,
     liveUpdate: true,
-  }
+  },
 );
 
 export type ConversationStateType = Conversation[];

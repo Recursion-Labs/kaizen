@@ -27,7 +27,7 @@ export const MessageList: React.FC<MessageListProps> = ({
         <div
           className={cn(
             "w-16 h-16 rounded-full flex items-center justify-center",
-            "bg-gradient-to-r from-blue-500 to-purple-600"
+            "bg-gradient-to-r from-blue-500 to-purple-600",
           )}
         >
           <svg
@@ -48,7 +48,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           <h3
             className={cn(
               "text-xl font-semibold mb-2",
-              theme === "light" ? "text-gray-900" : "text-white"
+              theme === "light" ? "text-gray-900" : "text-white",
             )}
           >
             How can I help you?
@@ -56,7 +56,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           <p
             className={cn(
               "text-sm",
-              theme === "light" ? "text-gray-500" : "text-gray-400"
+              theme === "light" ? "text-gray-500" : "text-gray-400",
             )}
           >
             Ask questions, upload images, or use voice input
@@ -73,7 +73,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           key={message.id}
           className={cn(
             "flex",
-            message.role === "user" ? "justify-end" : "justify-start"
+            message.role === "user" ? "justify-end" : "justify-start",
           )}
         >
           <div
@@ -83,7 +83,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                 ? "bg-blue-500 text-white"
                 : theme === "light"
                   ? "bg-white text-gray-900 border border-slate-200"
-                  : "bg-gray-800 text-white border border-gray-700"
+                  : "bg-gray-800 text-white border border-gray-700",
             )}
           >
             {message.image && (
@@ -100,7 +100,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               <div
                 className={cn(
                   "prose prose-sm max-w-none",
-                  theme === "dark" ? "prose-invert" : ""
+                  theme === "dark" ? "prose-invert" : "",
                 )}
               >
                 <ReactMarkdown
@@ -128,7 +128,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                               "px-1 rounded text-sm font-mono",
                               theme === "dark"
                                 ? "bg-gray-700 text-white"
-                                : "bg-gray-100 text-gray-900"
+                                : "bg-gray-100 text-gray-900",
                             )}
                             {...rest}
                           >
@@ -142,7 +142,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                             "rounded-md p-3 overflow-x-auto",
                             theme === "dark"
                               ? "bg-gray-900 text-white"
-                              : "bg-gray-100 text-gray-900"
+                              : "bg-gray-100 text-gray-900",
                           )}
                         >
                           <code className={className} {...rest}>
@@ -178,7 +178,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   ? "text-blue-100"
                   : theme === "light"
                     ? "text-gray-400"
-                    : "text-gray-500"
+                    : "text-gray-500",
               )}
             >
               {message.timestamp.toLocaleTimeString()}

@@ -24,15 +24,19 @@ export default withPageConfig({
   plugins: [IS_DEV && makeEntryPointPlugin()],
   build: {
     outDir: resolve(rootDir, "..", "..", "dist", "content-ui"),
-    lib: IS_DEV ? undefined : {
-      name: "content-ui",
-      formats: ["iife"],
-      entry: mainEntry,
-      fileName: "all",
-    },
-    rollupOptions: IS_DEV ? {
-      input: resolve(rootDir, "index.html"),
-    } : undefined,
+    lib: IS_DEV
+      ? undefined
+      : {
+          name: "content-ui",
+          formats: ["iife"],
+          entry: mainEntry,
+          fileName: "all",
+        },
+    rollupOptions: IS_DEV
+      ? {
+          input: resolve(rootDir, "index.html"),
+        }
+      : undefined,
   },
   server: {
     host: true,

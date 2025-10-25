@@ -31,7 +31,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         "border-t p-4",
         theme === "light"
           ? "bg-white border-slate-200"
-          : "bg-gray-800 border-gray-700"
+          : "bg-gray-800 border-gray-700",
       )}
     >
       <div className="flex items-center space-x-2">
@@ -42,7 +42,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             "p-2 rounded-lg transition-colors",
             theme === "light"
               ? "hover:bg-slate-100 text-gray-600"
-              : "hover:bg-gray-700 text-gray-400"
+              : "hover:bg-gray-700 text-gray-400",
           )}
           title="Upload image"
         >
@@ -79,7 +79,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             "flex-1 px-4 py-2 rounded-lg border outline-none transition-colors",
             theme === "light"
               ? "bg-slate-50 border-slate-200 text-gray-900 placeholder-gray-400 focus:border-blue-500"
-              : "bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500"
+              : "bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500",
           )}
         />
 
@@ -92,7 +92,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               ? "bg-red-500 text-white animate-pulse"
               : theme === "light"
                 ? "hover:bg-slate-100 text-gray-600"
-                : "hover:bg-gray-700 text-gray-400"
+                : "hover:bg-gray-700 text-gray-400",
           )}
           title={isRecording ? "Stop recording" : "Start recording"}
         >
@@ -121,7 +121,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               ? "bg-blue-500 text-white hover:bg-blue-600"
               : theme === "light"
                 ? "bg-slate-100 text-gray-400"
-                : "bg-gray-700 text-gray-500"
+                : "bg-gray-700 text-gray-500",
           )}
         >
           <svg
