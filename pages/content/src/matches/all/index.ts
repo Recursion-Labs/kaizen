@@ -10,7 +10,7 @@ let scrollTimer: ReturnType<typeof setTimeout> | null = null;
 let accumulatedScroll = 0;
 
 // Throttle to avoid overwhelming background script
-const SCROLL_THROTTLE_MS = 500;
+const SCROLL_THROTTLE_MS = 400;
 
 console.log('[Kaizen] Behavioral monitoring initialized on:', window.location.href);
 

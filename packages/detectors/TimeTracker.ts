@@ -71,6 +71,7 @@ export class TimeTracker {
         "disney.com",
         "twitch.tv",
         "reddit.com",
+        "x.com",
         "twitter.com",
         "facebook.com",
         "instagram.com",

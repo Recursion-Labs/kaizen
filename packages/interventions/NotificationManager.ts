@@ -9,9 +9,10 @@ export class NotificationManager {
   async showNudge(nudge: Nudge) {
     if (typeof chrome !== "undefined" && chrome.notifications) {
       try {
-        chrome.notifications.create({
+        const icon = chrome.runtime?.getURL?.("icon-128.png") ?? "icon-128.png";
+        chrome.notifications.create(undefined, {
           type: "basic",
-          iconUrl: "icons/mindful.png",
+          iconUrl: icon,
           title: nudge.title,
           message: nudge.message,
           priority: 2,

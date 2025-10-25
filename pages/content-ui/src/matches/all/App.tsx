@@ -1,4 +1,6 @@
+import { initRuntimeBridge } from "../../bridge/RuntimeBridge";
 import { showAIFloatingBubble } from "../../components/AIFloatingBubble";
+import { initBehaviorAlerts } from "../../components/BehaviorAlerts";
 import { AIOverlayManager } from "../../services/AIOverlayManager";
 import { SearchEnhancer } from "../../services/SearchEnhancer";
 import { useEffect } from "react";
@@ -21,8 +23,14 @@ export default function App() {
         const searchEnhancer = new SearchEnhancer();
         await searchEnhancer.initialize();
 
+        // Expose runtime bridge for page console (window.KAIZEN.*)
+        initRuntimeBridge();
+
         // Show AI Floating Bubble on all pages
         showAIFloatingBubble();
+
+        // Initialize professional behavior alerts (bottom-left toasts)
+        initBehaviorAlerts();
 
         console.log("[Kaizen] All systems operational 🎉");
       } catch (error) {

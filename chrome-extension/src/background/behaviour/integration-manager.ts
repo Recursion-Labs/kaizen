@@ -32,7 +32,13 @@ export class IntegrationManager {
     // Initialize detectors
     this.timeTracker = new TimeTracker();
     this.shoppingDetector = new ShoppingDetector();
-    this.doomScrolling = new DoomScrolling();
+    // More responsive real-time checks for doomscrolling
+    this.doomScrolling = new DoomScrolling({
+      realTimeCheckInterval: 1000, // check every 1s so interventions trigger promptly at threshold
+      minDurationMs: 60 * 1000, // keep 1 minute minimum duration
+      // keep default scrollThreshold (5000px) so 10k in 1 min => high severity
+      monitoredDomains: [], // empty => monitor ALL sites dynamically
+    });
 
     // Initialize knowledge components
     this.knowledgeGraph = new KnowledgeGraph();
@@ -179,12 +185,56 @@ export class IntegrationManager {
       createdAt: event.timestamp,
     });
 
-    // Schedule intervention if needed
+    // Schedule intervention if needed (medium and high severities)
     if (event.severity === "high") {
       this.scheduleWithCooldown("shoppingImpulse", 3000, 10 * 60 * 1000, `shop:${event.domain}`);
+    } else if (event.severity === "medium") {
+      this.scheduleWithCooldown("shoppingImpulse-warning", 4000, 15 * 60 * 1000, `shop-warn:${event.domain}`);
     }
 
     console.log(`Shopping event: ${event.domain} has ${event.severity} severity`);
+
+    // Realtime in-page alert for the originating tab (throttled per tab)
+    if (event.tabId && typeof chrome !== 'undefined' && chrome.tabs?.sendMessage) {
+      const toastKey = `toast:shop:${event.tabId}`;
+      if (this.canToast(toastKey, 5 * 60 * 1000)) { // 5 min cooldown per tab/category
+        try {
+          chrome.tabs.sendMessage(event.tabId, {
+            type: 'BEHAVIOR_ALERT',
+            category: 'shopping',
+            severity: event.severity,
+            title: event.severity === 'high' ? 'Impulsive shopping detected' : 'Shopping pattern noticed',
+            message: `Multiple visits to ${event.domain} (${event.visitCount} visits).`,
+            url: event.url,
+            timestamp: event.timestamp,
+          }, () => {
+            const e = chrome.runtime.lastError;
+            if (e) {
+              console.debug('[Kaizen] No content receiver for shopping alert yet, will retry shortly:', e.message);
+              // Retry once after a short delay (content scripts may still be loading)
+              setTimeout(() => {
+                chrome.tabs.sendMessage(event.tabId!, {
+                  type: 'BEHAVIOR_ALERT',
+                  category: 'shopping',
+                  severity: event.severity,
+                  title: event.severity === 'high' ? 'Impulsive shopping detected' : 'Shopping pattern noticed',
+                  message: `Multiple visits to ${event.domain} (${event.visitCount} visits).`,
+                  url: event.url,
+                  timestamp: event.timestamp,
+                }, () => {
+                  const e2 = chrome.runtime.lastError;
+                  if (e2) {
+                    console.debug('[Kaizen] Retry still has no receiver, skipping in-page toast.');
+                  }
+                });
+              }, 1200);
+            }
+          });
+        } catch (err) {
+          console.warn('[Kaizen] Failed to send shopping alert to content script:', err);
+        }
+      }
+    }
   }
 
   /**
@@ -226,12 +276,55 @@ export class IntegrationManager {
       createdAt: event.timestamp,
     });
 
-    // Schedule intervention if needed
+    // Schedule intervention if needed (medium and high severities)
     if (event.severity === "high") {
       this.scheduleWithCooldown("doomscrolling", 2000, 5 * 60 * 1000, `doom:${event.tabId}`);
+    } else if (event.severity === "medium") {
+      this.scheduleWithCooldown("doomscrolling-warning", 3000, 10 * 60 * 1000, `doom-warn:${event.tabId}`);
     }
 
     console.log(`Doomscrolling event: Tab ${event.tabId} has ${event.severity} severity`);
+
+    // Realtime in-page alert for the originating tab (throttled per tab)
+    if (event.tabId && typeof chrome !== 'undefined' && chrome.tabs?.sendMessage) {
+      const toastKey = `toast:doom:${event.tabId}`;
+      if (this.canToast(toastKey, 90 * 1000)) { // 90s cooldown per tab/category
+        try {
+          chrome.tabs.sendMessage(event.tabId, {
+            type: 'BEHAVIOR_ALERT',
+            category: 'doomscrolling',
+            severity: event.severity,
+            title: event.severity === 'high' ? 'Doomscrolling detected' : 'Heavy scrolling detected',
+            message: `You've scrolled quite a bit. Consider a short break.`,
+            url: event.url,
+            timestamp: event.timestamp,
+          }, () => {
+            const e = chrome.runtime.lastError;
+            if (e) {
+              console.debug('[Kaizen] No content receiver for doomscrolling alert yet, will retry shortly:', e.message);
+              setTimeout(() => {
+                chrome.tabs.sendMessage(event.tabId!, {
+                  type: 'BEHAVIOR_ALERT',
+                  category: 'doomscrolling',
+                  severity: event.severity,
+                  title: event.severity === 'high' ? 'Doomscrolling detected' : 'Heavy scrolling detected',
+                  message: `You've scrolled quite a bit. Consider a short break.`,
+                  url: event.url,
+                  timestamp: event.timestamp,
+                }, () => {
+                  const e2 = chrome.runtime.lastError;
+                  if (e2) {
+                    console.debug('[Kaizen] Retry still has no receiver, skipping in-page toast.');
+                  }
+                });
+              }, 1200);
+            }
+          });
+        } catch (err) {
+          console.warn('[Kaizen] Failed to send doomscrolling alert to content script:', err);
+        }
+      }
+    }
   }
 
   /**
@@ -275,7 +368,8 @@ export class IntegrationManager {
 
     // Schedule intervention for high severity patterns
     if (insight.severity === "high") {
-      this.scheduler.scheduleIntervention(`pattern-${insight.type}`, 4000);
+      // Cooldown to avoid repeated scheduling
+      this.scheduleWithCooldown(`pattern-${insight.type}`, 4000, 10 * 60 * 1000, `pattern:${insight.type}`);
     }
 
     console.log(`Pattern insight: ${insight.type} - ${insight.description}`);
@@ -397,6 +491,20 @@ export class IntegrationManager {
   }
 
   /**
+   * Expose full graph (nodes, edges, stats)
+   */
+  public getFullGraph() {
+    return this.ragEngine.getFullGraph();
+  }
+
+  /**
+   * Expose contextual recommendations from RAG
+   */
+  public async getContextualRecommendations(query: string) {
+    return this.ragEngine.getContextualRecommendations(query);
+  }
+
+  /**
    * Get productivity score
    */
   public getProductivityScore(): number {
@@ -470,6 +578,17 @@ export class IntegrationManager {
     if (now < nextAllowed) return; // still in cooldown
     this.cooldowns.set(key, now + cooldownMs);
     this.scheduler.scheduleIntervention(name, delayMs);
+  }
+
+  /**
+   * Throttle UI toast messages per key
+   */
+  private canToast(key: string, cooldownMs: number): boolean {
+    const now = Date.now();
+    const nextAllowed = this.cooldowns.get(key) || 0;
+    if (now < nextAllowed) return false;
+    this.cooldowns.set(key, now + cooldownMs);
+    return true;
   }
 }
 
