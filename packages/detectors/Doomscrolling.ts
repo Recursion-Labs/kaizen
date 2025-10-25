@@ -36,6 +36,7 @@ constructor(config?: Partial<DoomScrollingConfig>) {
       realTimeCheckInterval: 5000, // default: 5 seconds
       minDurationMs: 60 * 1000, // default: 1 minute
       monitoredDomains: [
+        "x.com",
         "twitter.com",
         "facebook.com",
         "instagram.com",
@@ -256,9 +257,11 @@ constructor(config?: Partial<DoomScrollingConfig>) {
   private isMonitoredDomain(url: string): boolean {
     try {
       const hostname = new URL(url).hostname.replace("www.", "");
-      return this.config.monitoredDomains.some((domain) =>
-        hostname.includes(domain),
-      );
+      // If list is empty, monitor ALL domains
+      if (!this.config.monitoredDomains || this.config.monitoredDomains.length === 0) {
+        return true;
+      }
+      return this.config.monitoredDomains.some((domain) => hostname.includes(domain));
     } catch {
       return false;
     }
