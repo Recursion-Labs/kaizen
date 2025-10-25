@@ -4,8 +4,8 @@ import { WebSocket } from "ws";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { PluginConfigType } from "../types.js";
-import type { PluginOption } from "vite";
 import type { OutputOptions, OutputBundle } from "rollup";
+import type { PluginOption } from "vite";
 
 const injectionsPath = resolve(import.meta.dirname, "..", "injections");
 
