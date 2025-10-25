@@ -1,0 +1,22 @@
+{
+  "name": "@kaizen/interventions",
+  "version": "0.1.0",
+  "description": "Intervention strategies and nudge generation for Kaizen extension",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./InterventionStrategy": "./InterventionStrategy.ts",
+    "./NudgeGenerator": "./NudgeGenerator.ts",
+    "./NotificationManager": "./NotificationManager.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@extension/tsconfig": "workspace:*",
+    "@types/chrome": "^0.0.323",
+    "typescript": "^5.9.3"
+  }
+}
