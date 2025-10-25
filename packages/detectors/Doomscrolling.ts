@@ -5,6 +5,7 @@ export interface DoomScrollingConfig {
   timeWindow: number; // time window to accumulate scroll
   monitoredDomains: string[]; // list of domains to monitor for doomscrolling
   realTimeCheckInterval: number; // interval in ms for real-time checks
+  minDurationMs: number; // minimum continuous duration before severity is non-null
 }
 
 export interface ScrollSession {
@@ -28,11 +29,12 @@ export class DoomScrolling {
   private eventListeners: ((event: DoomScrollingEvent) => void)[] = [];
   private checkInterval?: NodeJS.Timeout;
 
-  constructor(config?: Partial<DoomScrollingConfig>) {
+constructor(config?: Partial<DoomScrollingConfig>) {
     this.config = {
       scrollThreshold: 5000, // default: 5000px
       timeWindow: 10 * 60 * 1000, // default: 10 minutes
       realTimeCheckInterval: 5000, // default: 5 seconds
+      minDurationMs: 60 * 1000, // default: 1 minute
       monitoredDomains: [
         "twitter.com",
         "facebook.com",
@@ -105,7 +107,11 @@ export class DoomScrolling {
   isDoomScrolling(tabId: number): boolean {
     const session = this.sessions.get(tabId);
     if (!session) return false;
-    return session.accumulatedScroll >= this.config.scrollThreshold;
+    const duration = Date.now() - session.startTime;
+    return (
+      session.accumulatedScroll >= this.config.scrollThreshold &&
+      duration >= this.config.minDurationMs
+    );
   }
 
   /**
@@ -115,6 +121,9 @@ export class DoomScrolling {
   getDoomScrollingSeverity(tabId: number): "low" | "medium" | "high" | null {
     const session = this.sessions.get(tabId);
     if (!session) return null;
+
+    const duration = Date.now() - session.startTime;
+    if (duration < this.config.minDurationMs) return null;
 
     const scrollRatio = session.accumulatedScroll / this.config.scrollThreshold;
     if (scrollRatio >= 2) return "high";
@@ -166,6 +175,17 @@ export class DoomScrolling {
    */
   resetScroll(tabId: number) {
     this.sessions.delete(tabId);
+  }
+
+  /**
+   * Snapshot and restore for persistence across service worker restarts
+   */
+  getSession(tabId: number): ScrollSession | undefined {
+    return this.sessions.get(tabId);
+  }
+
+  restoreSession(tabId: number, session: ScrollSession) {
+    this.sessions.set(tabId, session);
   }
 
   /**
