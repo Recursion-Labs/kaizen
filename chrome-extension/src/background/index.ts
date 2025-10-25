@@ -7,7 +7,12 @@ import { IntegrationManager } from "./behaviour/integration-manager";
 
 // Simple rate limiter: max 3 notifications per hour
 const notificationHistory: number[] = [];
-const notifyIfAllowed = (options: chrome.notifications.NotificationOptions & { type: "basic" | "image" | "list" | "progress" }) => {
+const notifyIfAllowed = (
+  id: string,
+  options: chrome.notifications.NotificationOptions & {
+    type: "basic" | "image" | "list" | "progress";
+  },
+) => {
   const now = Date.now();
   // prune > 1h
   while (notificationHistory.length && now - notificationHistory[0] > 60 * 60 * 1000) {
@@ -18,8 +23,14 @@ const notifyIfAllowed = (options: chrome.notifications.NotificationOptions & { t
     return;
   }
   notificationHistory.push(now);
+
+  // Ensure iconUrl is resolvable from extension package
+  const opts: typeof options = { ...options };
+  if (typeof opts.iconUrl === 'string' && !/^chrome-extension:/.test(opts.iconUrl)) {
+    opts.iconUrl = chrome.runtime.getURL(opts.iconUrl);
+  }
   // @ts-expect-error - TS lib types differ across environments
-  chrome.notifications.create(options);
+  chrome.notifications.create(id, opts);
 };
 
 const handleIntervention = (alarm: chrome.alarms.Alarm) => {
@@ -27,42 +38,50 @@ const handleIntervention = (alarm: chrome.alarms.Alarm) => {
   
   // Handle different intervention types
   if (alarm.name === "limitExceeded") {
-    notifyIfAllowed({
+    notifyIfAllowed(alarm.name, {
       type: "basic",
-      iconUrl: "icon128.png",
+      iconUrl: "icon-128.png",
       title: "Usage Limit Reached",
       message: "You have visited this site frequently. Time for a break?",
     });
   } else if (alarm.name === "timeLimitExceeded") {
-    notifyIfAllowed({
+    notifyIfAllowed(alarm.name, {
       type: "basic",
-      iconUrl: "icon128.png",
+      iconUrl: "icon-128.png",
       title: "Time Limit Exceeded",
       message: "You've been browsing for a while. Consider taking a break!",
     });
   } else if (alarm.name === "shoppingImpulse") {
-    notifyIfAllowed({
+    notifyIfAllowed(alarm.name, {
       type: "basic",
-      iconUrl: "icon128.png",
+      iconUrl: "icon-128.png",
       title: "Shopping Reminder",
       message: "Multiple visits to shopping sites detected. Take a moment to think.",
     });
   } else if (alarm.name === "doomscrolling") {
-    notifyIfAllowed({
+    notifyIfAllowed(alarm.name, {
       type: "basic",
-      iconUrl: "icon128.png",
+      iconUrl: "icon-128.png",
       title: "Mindful Scrolling",
       message: "You've been scrolling for a while. Consider a mindful break.",
     });
-  } else if (alarm.name.startsWith("pattern-")) {
-    notifyIfAllowed({
+  } else if (alarm.name === "doomscrolling-warning") {
+    notifyIfAllowed(alarm.name, {
       type: "basic",
-      iconUrl: "icon128.png",
+      iconUrl: "icon-128.png",
+      title: "Heavy Scrolling Detected",
+      message: "Noticeable scrolling activity. Small pause can help refocus.",
+    });
+  } else if (alarm.name.startsWith("pattern-")) {
+    notifyIfAllowed(alarm.name, {
+      type: "basic",
+      iconUrl: "icon-128.png",
       title: "Behavior Pattern Detected",
       message: "A behavior pattern has been detected. Check your dashboard for insights.",
     });
   }
 };
+
 
 // Initialize scheduler
 const scheduler = new interventionScheduler.InterventionScheduler(
@@ -126,6 +145,59 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true, context });
     } catch (error) {
       console.error('Failed to generate RAG context:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  // Handle knowledge graph full dump
+  if (message.type === 'GET_KNOWLEDGE_GRAPH') {
+    console.log('Knowledge graph requested from UI');
+    try {
+      const graph = integrationManager.getFullGraph();
+      sendResponse({ success: true, graph });
+    } catch (error) {
+      console.error('Failed to get knowledge graph:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  // Handle knowledge graph stats only
+  if (message.type === 'GET_KG_STATS') {
+    console.log('KG stats requested from UI');
+    try {
+      const stats = integrationManager.getKnowledgeGraphStats();
+      sendResponse({ success: true, stats });
+    } catch (error) {
+      console.error('Failed to get KG stats:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  // Handle recent insights
+  if (message.type === 'GET_RECENT_INSIGHTS') {
+    console.log('Recent insights requested from UI');
+    try {
+      const insights = integrationManager.getRecentInsights(10);
+      sendResponse({ success: true, insights });
+    } catch (error) {
+      console.error('Failed to get recent insights:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  // Handle contextual recommendations
+  if (message.type === 'GET_CONTEXTUAL_RECS') {
+    console.log('Contextual recommendations requested from UI');
+    try {
+      const query = message.payload?.query || '';
+      integrationManager.getContextualRecommendations(query).then((recs) => {
+        sendResponse({ success: true, recommendations: recs });
+      }).catch((err) => {
+        console.error('Failed to get recommendations:', err);
+        sendResponse({ success: false, error: err instanceof Error ? err.message : 'Unknown error' });
+      });
+    } catch (error) {
+      console.error('Failed to start recommendations:', error);
       sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
