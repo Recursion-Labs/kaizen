@@ -24,7 +24,9 @@ export class NudgeGenerator {
 
   constructor() {
     // Check if Gemini Nano or any local AI runtime is available.
-    this.useGemini =
+    // Handle both browser and Node.js environments
+    const hasWindow = typeof window !== 'undefined';
+    this.useGemini = hasWindow &&
       typeof (window as { ai?: { languageModel?: unknown } }).ai !==
         "undefined" &&
       !!(window as { ai?: { languageModel?: unknown } }).ai?.languageModel;

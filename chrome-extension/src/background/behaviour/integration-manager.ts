@@ -2,9 +2,9 @@ import { DoomScrolling } from "../../../../packages/detectors/Doomscrolling";
 import { PatternAnalyzer } from "../../../../packages/detectors/PatternAnalyzer";
 import { ShoppingDetector } from "../../../../packages/detectors/ShoppingDetector";
 import { TimeTracker } from "../../../../packages/detectors/TimeTracker";
-import { EmbeddingService } from "../../../../packages/Knowledge/EmbeddingService";
-import { KnowledgeGraph } from "../../../../packages/Knowledge/KnowledgeGraph";
-import { RAGEngine } from "../../../../packages/Knowledge/RAGEngine";
+import { EmbeddingService } from "../../../../packages/knowledge/EmbeddingService";
+import { KnowledgeGraph } from "../../../../packages/knowledge/KnowledgeGraph";
+import { RAGEngine } from "../../../../packages/knowledge/RAGEngine";
 import type { InterventionScheduler } from "./intervention-scheduler";
 import type { DoomScrollingEvent } from "../../../../packages/detectors/Doomscrolling";
 import type { PatternInsight } from "../../../../packages/detectors/PatternAnalyzer";
@@ -23,6 +23,8 @@ export class IntegrationManager {
   private embeddingService: EmbeddingService;
   private ragEngine: RAGEngine;
   private scheduler: InterventionScheduler;
+  private lastActiveTabId: number | null = null;
+  private cooldowns: Map<string, number> = new Map();
 
   constructor(scheduler: InterventionScheduler) {
     this.scheduler = scheduler;
@@ -63,6 +65,9 @@ export class IntegrationManager {
 
     // Start monitoring
     this.startMonitoring();
+
+    // Attempt to restore persisted detector sessions (best-effort)
+    this.restorePersistedSessions();
 
     console.log("Integration manager initialized with all detectors and knowledge components.");
   }
@@ -127,7 +132,7 @@ export class IntegrationManager {
 
     // Schedule intervention if needed
     if (event.severity === "high") {
-      this.scheduler.scheduleIntervention("timeLimitExceeded", 2000);
+      this.scheduleWithCooldown("timeLimitExceeded", 2000, 10 * 60 * 1000, `time:${event.domain}`);
     }
 
     console.log(`Time tracking event: ${event.domain} spent ${event.timeSpent}ms`);
@@ -176,7 +181,7 @@ export class IntegrationManager {
 
     // Schedule intervention if needed
     if (event.severity === "high") {
-      this.scheduler.scheduleIntervention("shoppingImpulse", 3000);
+      this.scheduleWithCooldown("shoppingImpulse", 3000, 10 * 60 * 1000, `shop:${event.domain}`);
     }
 
     console.log(`Shopping event: ${event.domain} has ${event.severity} severity`);
@@ -223,7 +228,7 @@ export class IntegrationManager {
 
     // Schedule intervention if needed
     if (event.severity === "high") {
-      this.scheduler.scheduleIntervention("doomscrolling", 2000);
+      this.scheduleWithCooldown("doomscrolling", 2000, 5 * 60 * 1000, `doom:${event.tabId}`);
     }
 
     console.log(`Doomscrolling event: Tab ${event.tabId} has ${event.severity} severity`);
@@ -300,7 +305,28 @@ export class IntegrationManager {
    * Handle tab activation
    */
   public handleTabActivated(tabId: number): void {
-    this.timeTracker.updateTabActivity(tabId);
+    // Stop previous active tab session
+    if (this.lastActiveTabId !== null && this.lastActiveTabId !== tabId) {
+      this.timeTracker.stopTabSession(this.lastActiveTabId);
+      this.shoppingDetector.endTabSession(this.lastActiveTabId);
+    }
+
+    this.lastActiveTabId = tabId;
+
+    // Ensure a session exists for the newly active tab
+    chrome.tabs.get(tabId, (tab) => {
+      if (tab?.url) {
+        const hasSession = this.timeTracker.getActiveSessions().has(tabId);
+        if (!hasSession) {
+          this.timeTracker.startTabSession(tabId, tab.url);
+        } else {
+          this.timeTracker.updateTabActivity(tabId);
+        }
+        // Track shopping session start if applicable
+        this.shoppingDetector.startTabSession(tabId, tab.url);
+      }
+    });
+
     this.patternAnalyzer.recordTabSwitch(tabId);
   }
 
@@ -313,8 +339,13 @@ export class IntegrationManager {
     const tabId = tab.id;
     const url = tab.url;
 
-    // Update time tracker
-    this.timeTracker.updateTabUrl(tabId, url);
+    // Start session if missing, else update
+    const hasSession = this.timeTracker.getActiveSessions().has(tabId);
+    if (!hasSession) {
+      this.timeTracker.startTabSession(tabId, url);
+    } else {
+      this.timeTracker.updateTabUrl(tabId, url);
+    }
 
     // Check for shopping
     this.shoppingDetector.recordVisit(tabId, url);
@@ -339,6 +370,16 @@ export class IntegrationManager {
    */
   public handleScroll(tabId: number, scrollAmount: number, url: string): void {
     this.doomScrolling.addScroll(tabId, scrollAmount, url);
+
+    // Persist minimal session snapshot to session storage to survive short SW sleeps
+    try {
+      const session = this.doomScrolling.getSession(tabId);
+      if (session) {
+        chrome.storage.session?.set?.({ [`doom:${tabId}`]: session });
+      }
+    } catch {
+      // ignore if storage.session not available
+    }
   }
 
   /**
@@ -385,6 +426,50 @@ export class IntegrationManager {
       shopping: this.shoppingDetector.getActiveSessions(),
       doomscrolling: this.doomScrolling.getActiveSessions(),
     };
+  }
+
+  /**
+   * Restore persisted sessions from chrome.storage.session
+   */
+  private restorePersistedSessions() {
+    try {
+      chrome.storage.session?.get?.(null, (items: Record<string, unknown>) => {
+        if (!items) return;
+        Object.entries(items).forEach(([key, value]) => {
+          if (key.startsWith('doom:')) {
+            const tabId = Number(key.split(':')[1]);
+            if (typeof tabId === 'number' && value && typeof value === 'object') {
+              this.doomScrolling.restoreSession(tabId, value as any);
+            }
+          }
+        });
+      });
+    } catch {
+      // ignore if storage.session not available
+    }
+  }
+
+  /**
+   * Handle tab removed - cleanup sessions and graph
+   */
+  public handleTabRemoved(tabId: number) {
+    this.timeTracker.stopTabSession(tabId);
+    this.shoppingDetector.endTabSession(tabId);
+    this.doomScrolling.resetScroll(tabId);
+    if (this.lastActiveTabId === tabId) this.lastActiveTabId = null;
+    // Optionally remove tab node from KG
+    this.knowledgeGraph.removeNode(`tab-${tabId}`);
+  }
+
+  /**
+   * Schedule with cooldown key to avoid spam
+   */
+  private scheduleWithCooldown(name: string, delayMs: number, cooldownMs: number, key: string) {
+    const now = Date.now();
+    const nextAllowed = this.cooldowns.get(key) || 0;
+    if (now < nextAllowed) return; // still in cooldown
+    this.cooldowns.set(key, now + cooldownMs);
+    this.scheduler.scheduleIntervention(name, delayMs);
   }
 }
 

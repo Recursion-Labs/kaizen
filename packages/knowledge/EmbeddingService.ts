@@ -1,6 +1,5 @@
 // Embeddings service for behaviors & nudges with multiple model providers and caching
 
-import { createHash } from "crypto";
 
 // Check if we're in a Chrome extension environment
 const isChromeExtension = typeof chrome !== 'undefined' && chrome.storage;
@@ -8,15 +7,36 @@ const isChromeExtension = typeof chrome !== 'undefined' && chrome.storage;
 // Lazy load Node.js modules only if not in Chrome extension
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let fs: any, path: any;
+let createHash: (algorithm: string) => any; // Declare createHash here
 if (!isChromeExtension) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     fs = require('fs');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     path = require('path');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    createHash = require('crypto').createHash; // Assign Node.js crypto's createHash
   } catch {
     // Node modules not available
   }
+} else {
+  // Provide a browser-compatible hash function for the cache key
+  createHash = (algorithm: string) => {
+    return {
+      update: (text: string) => ({
+        digest: (encoding: string) => {
+          // A simple non-cryptographic hash for browser environment
+          let hash = 0;
+          for (let i = 0; i < text.length; i++) {
+            const char = text.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash |= 0; // Convert to 32bit integer
+          }
+          return Math.abs(hash).toString(16); // Hex representation
+        }
+      })
+    };
+  };
 }
 
 export interface EmbeddingConfig {

@@ -1,0 +1,22 @@
+{
+  "name": "@kaizen/detectors",
+  "version": "0.1.0",
+  "description": "Behavioral detectors for Kaizen extension",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./Doomscrolling": "./Doomscrolling.ts",
+    "./PatternAnalyzer": "./PatternAnalyzer.ts",
+    "./ShoppingDetector": "./ShoppingDetector.ts",
+    "./TimeTracker": "./TimeTracker.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@extension/tsconfig": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}

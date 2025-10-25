@@ -25,8 +25,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   aiManagerAvailable,
   fileInputRef,
   onFileChange,
-}) => {
-  return (
+}) => (
     <div
       className={cn(
         "border-t p-4",
@@ -142,4 +141,3 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       </div>
     </div>
   );
-};

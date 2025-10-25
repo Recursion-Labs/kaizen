@@ -128,10 +128,8 @@ class AIOverlayManager {
       this.capabilities.set("prompt", { available: availability });
 
       if (availability === "available") {
-        console.log(
-          "[Kaizen AI] Creating LanguageModel session with multimodal support...",
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log("[Kaizen AI] Creating LanguageModel session with multimodal support...");
+         
         const session = await LanguageModel.create({
           systemPrompt:
             "You are a helpful assistant that provides concise, accurate answers.",
@@ -344,7 +342,7 @@ class AIOverlayManager {
         if (typeof LanguageModel !== "undefined") {
           const availability = await LanguageModel.availability();
           if (availability === "available") {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             session = await LanguageModel.create({
               systemPrompt:
                 "You are a helpful assistant that provides concise, accurate answers.",
@@ -791,7 +789,7 @@ class AIOverlayManager {
 
       if (availability === "available") {
         console.log("[Kaizen AI] Creating test session...");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const session = await LanguageModel.create({
           systemPrompt: "You are a helpful assistant.",
           expectedInputs: [{ type: "text" }, { type: "image" }],

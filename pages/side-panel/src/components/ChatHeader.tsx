@@ -13,8 +13,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onNewChat,
   onToggleHistory,
   onOpenSettings,
-}) => {
-  return (
+}) => (
     <header
       className={cn(
         "flex items-center justify-between px-6 py-4 border-b",
@@ -148,4 +147,3 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
     </header>
   );
-};
