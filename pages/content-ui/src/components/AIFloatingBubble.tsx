@@ -180,14 +180,15 @@ const AIFloatingBubble = ({ onClose }: AIFloatingBubbleProps) => {
                     disabled={!tool.available}
                     className={`
                       group relative p-4 rounded-xl transition-all duration-200 text-left
-                      ${tool.available
-                        ? `
+                      ${
+                        tool.available
+                          ? `
                           bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-700
                           hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20
                           hover:shadow-lg hover:shadow-indigo-500/10 hover:scale-105
                           border border-gray-200 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-500
                         `
-                        : `
+                          : `
                           bg-gray-100 dark:bg-gray-800 opacity-60 cursor-not-allowed
                           border border-gray-200 dark:border-gray-700
                         `
@@ -195,19 +196,24 @@ const AIFloatingBubble = ({ onClose }: AIFloatingBubbleProps) => {
                     `}
                   >
                     {/* Tool Icon */}
-                    <div className={`
+                    <div
+                      className={`
                       w-12 h-12 rounded-lg mb-3 flex items-center justify-center text-2xl
-                      ${tool.available
-                        ? "bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 group-hover:from-indigo-200 group-hover:to-purple-200"
-                        : 'bg-gray-200 dark:bg-gray-700'
+                      ${
+                        tool.available
+                          ? "bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 group-hover:from-indigo-200 group-hover:to-purple-200"
+                          : "bg-gray-200 dark:bg-gray-700"
                       }
-                    `}>
+                    `}
+                    >
                       {tool.icon}
                     </div>
 
                     {/* Tool Info */}
                     <div className="space-y-1">
-                      <div className={`font-semibold text-sm ${tool.available ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <div
+                        className={`font-semibold text-sm ${tool.available ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}
+                      >
                         {tool.name}
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-400 leading-tight">
@@ -340,7 +346,7 @@ const AIToolModal = ({ toolId, aiManager, onClose }: AIToolModalProps) => {
     try {
       const result = await config.process(input);
       setOutput(
-        typeof result === "string" ? result : JSON.stringify(result, null, 2)
+        typeof result === "string" ? result : JSON.stringify(result, null, 2),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Processing failed");
@@ -503,7 +509,7 @@ export const showAIFloatingBubble = () => {
         root.unmount();
         container.remove();
       }}
-    />
+    />,
   );
 
   console.log("[Kaizen AI] Floating bubble injected 🚀");

@@ -128,21 +128,18 @@ class AIOverlayManager {
       this.capabilities.set("prompt", { available: availability });
 
       if (availability === "available") {
-        console.log("[Kaizen AI] Creating LanguageModel session with multimodal support...");
+        console.log(
+          "[Kaizen AI] Creating LanguageModel session with multimodal support...",
+        );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await LanguageModel.create({
           systemPrompt:
             "You are a helpful assistant that provides concise, accurate answers.",
           temperature: 0.8,
           topK: 40,
-          expectedInputs: [
-            { type: "text" },
-            { type: "image" }
-          ],
-          expectedOutputs: [
-            { type: "text" }
-          ],
-          languages: ["en"]
+          expectedInputs: [{ type: "text" }, { type: "image" }],
+          expectedOutputs: [{ type: "text" }],
+          languages: ["en"],
         } as any);
 
         this.sessions.set("prompt", session);
@@ -353,14 +350,9 @@ class AIOverlayManager {
                 "You are a helpful assistant that provides concise, accurate answers.",
               temperature: 0.8,
               topK: 40,
-              expectedInputs: [
-                { type: "text" },
-                { type: "image" }
-              ],
-              expectedOutputs: [
-                { type: "text" }
-              ],
-              languages: ["en"]
+              expectedInputs: [{ type: "text" }, { type: "image" }],
+              expectedOutputs: [{ type: "text" }],
+              languages: ["en"],
             } as any);
             this.sessions.set("prompt", session);
             console.log("[Kaizen AI] ✓ Prompt session created on-demand");
@@ -615,10 +607,10 @@ class AIOverlayManager {
         // const response = await session.promptMultimodal(content);
       }
     } catch (error) {
-        console.warn(
-          "[Kaizen AI] Multimodal API not available in current types, using fallback:",
-          error,
-        );
+      console.warn(
+        "[Kaizen AI] Multimodal API not available in current types, using fallback:",
+        error,
+      );
     }
 
     // Fallback: Use text-based description approach
@@ -678,7 +670,7 @@ class AIOverlayManager {
       // Add the image
       content.push({
         type: "image",
-        image: { data: imageData }
+        image: { data: imageData },
       });
 
       // Add the user's question/prompt
@@ -692,7 +684,9 @@ class AIOverlayManager {
         return await (session as any).promptMultimodal(content);
       } else {
         // Fallback: try regular prompt with structured content
-        console.log("[Kaizen AI] Fallback to regular prompt with multimodal content");
+        console.log(
+          "[Kaizen AI] Fallback to regular prompt with multimodal content",
+        );
         const structuredPrompt = content
           .map((item) => {
             if (item.type === "text") return item.text;
@@ -800,14 +794,9 @@ class AIOverlayManager {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await LanguageModel.create({
           systemPrompt: "You are a helpful assistant.",
-          expectedInputs: [
-            { type: "text" },
-            { type: "image" }
-          ],
-          expectedOutputs: [
-            { type: "text" }
-          ],
-          languages: ["en"]
+          expectedInputs: [{ type: "text" }, { type: "image" }],
+          expectedOutputs: [{ type: "text" }],
+          languages: ["en"],
         } as any);
         console.log("[Kaizen AI] ✓ Session created successfully");
 
