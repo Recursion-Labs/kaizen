@@ -3,9 +3,9 @@
 
 import { NudgeGenerator } from "./NudgeGenerator";
 import type { Nudge } from "./NudgeGenerator";
-import type { DoomScrolling } from "../detectors/Doomscrolling";
-import type { ShoppingDetector } from "../detectors/ShoppingDetector";
-import type { TimeTracker } from "../detectors/TimeTracker";
+import type { DoomScrolling } from "@kaizen/detectors/Doomscrolling";
+import type { ShoppingDetector } from "@kaizen/detectors/ShoppingDetector";
+import type { TimeTracker } from "@kaizen/detectors/TimeTracker";
 
 export interface InterventionDecision {
   trigger: boolean;
