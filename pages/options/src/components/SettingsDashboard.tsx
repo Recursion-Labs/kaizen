@@ -119,15 +119,15 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
         className={cn(
           "w-64 h-screen flex-shrink-0 border-r",
           theme === "light"
-            ? "bg-white border-slate-200"
-            : "bg-gray-800 border-gray-700",
+            ? "bg-kaizen-light-bg border-kaizen-border"
+            : "bg-kaizen-dark-bg border-kaizen-dark-border",
         )}
       >
         {/* Header */}
         <div
           className={cn(
             "p-6 border-b",
-            theme === "light" ? "border-slate-200" : "border-gray-700",
+            theme === "light" ? "border-kaizen-border" : "border-kaizen-dark-border",
           )}
         >
           <div className="flex items-center justify-between">
@@ -135,7 +135,7 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
               <div
                 className={cn(
                   "w-10 h-10 rounded-lg flex items-center justify-center",
-                  "bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg",
+                  "bg-gradient-to-r from-kaizen-accent to-kaizen-primary shadow-lg",
                 )}
               >
                 <svg
@@ -156,7 +156,7 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                 <h1
                   className={cn(
                     "text-xl font-bold",
-                    theme === "light" ? "text-gray-900" : "text-white",
+                    theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                   )}
                 >
                   Kaizen
@@ -164,7 +164,7 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                 <p
                   className={cn(
                     "text-xs",
-                    theme === "light" ? "text-gray-500" : "text-gray-400",
+                    theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                   )}
                 >
                   Settings
@@ -191,11 +191,11 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                 "flex items-start space-x-3 group",
                 activeSection === item.id
                   ? theme === "light"
-                    ? "bg-blue-50 text-blue-600 shadow-sm"
-                    : "bg-blue-900/30 text-blue-400 shadow-sm"
+                    ? "bg-kaizen-surface text-kaizen-accent shadow-sm"
+                    : "bg-kaizen-dark-surface text-kaizen-accent shadow-sm"
                   : theme === "light"
-                    ? "text-gray-700 hover:bg-slate-50"
-                    : "text-gray-300 hover:bg-gray-700/50",
+                    ? "text-kaizen-light-text hover:bg-kaizen-surface"
+                    : "text-kaizen-dark-muted hover:bg-kaizen-dark-surface",
               )}
             >
               <div
@@ -220,11 +220,11 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                     "text-xs mt-0.5",
                     activeSection === item.id
                       ? theme === "light"
-                        ? "text-blue-500"
-                        : "text-blue-300"
+                        ? "text-kaizen-accent"
+                        : "text-kaizen-accent"
                       : theme === "light"
-                        ? "text-gray-500"
-                        : "text-gray-400",
+                        ? "text-kaizen-light-muted"
+                        : "text-kaizen-dark-muted",
                   )}
                 >
                   {item.description}
@@ -240,7 +240,7 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
         <div
           className={cn(
             "min-h-screen w-full",
-            theme === "light" ? "bg-slate-50" : "bg-gray-900",
+            theme === "light" ? "bg-kaizen-light-bg" : "bg-kaizen-dark-bg",
           )}
         >
           {renderPanel()}
