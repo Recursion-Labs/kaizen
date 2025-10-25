@@ -1,0 +1,17 @@
+{
+  "extends": "@extension/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "../../",
+    "composite": false,
+    "noEmit": true,
+    "lib": ["ES2020", "DOM"],
+    "baseUrl": "../../",
+    "paths": {
+      "@kaizen/detectors": ["packages/detectors/index.ts"],
+      "@kaizen/detectors/*": ["packages/detectors/*"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
