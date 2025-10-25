@@ -6,8 +6,9 @@ export class BehaviorMonitor {
       changeInfo: chrome.tabs.TabChangeInfo,
       tab: chrome.tabs.Tab,
     ) => void,
+    onTabRemoved?: (tabId: number, removeInfo: chrome.tabs.TabRemoveInfo) => void,
   ) {
-    this.setupListeners(onTabActivated, onTabUpdated);
+    this.setupListeners(onTabActivated, onTabUpdated, onTabRemoved);
   }
 
   private setupListeners(
@@ -17,6 +18,7 @@ export class BehaviorMonitor {
       changeInfo: chrome.tabs.TabChangeInfo,
       tab: chrome.tabs.Tab,
     ) => void,
+    onTabRemoved?: (tabId: number, removeInfo: chrome.tabs.TabRemoveInfo) => void,
   ): void {
     chrome.tabs.onActivated.addListener((activeInfo) => {
       console.log(`Tab ${activeInfo.tabId} was activated.`);
@@ -29,6 +31,13 @@ export class BehaviorMonitor {
         onTabUpdated(tabId, changeInfo, tab);
       }
     });
+
+    if (onTabRemoved) {
+      chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+        console.log(`Tab ${tabId} removed (isWindowClosing=${removeInfo.isWindowClosing}).`);
+        onTabRemoved(tabId, removeInfo);
+      });
+    }
 
     console.log("Behavior monitor initialized.");
   }
