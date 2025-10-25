@@ -175,13 +175,30 @@ export class TimeTracker {
     neutral: number;
   } {
     const today = new Date().toDateString();
-    return (
-      this.dailyStats.get(today) || {
-        productive: 0,
-        entertainment: 0,
-        neutral: 0,
+    const base = this.dailyStats.get(today) || {
+      productive: 0,
+      entertainment: 0,
+      neutral: 0,
+    };
+
+    // Add live time from active sessions
+    const now = Date.now();
+    for (const session of this.sessions.values()) {
+      const live = session.accumulatedTime + (now - session.startTime);
+      switch (session.category) {
+        case 'productive':
+          base.productive += live;
+          break;
+        case 'entertainment':
+          base.entertainment += live;
+          break;
+        case 'neutral':
+          base.neutral += live;
+          break;
       }
-    );
+    }
+
+    return base;
   }
 
   /**

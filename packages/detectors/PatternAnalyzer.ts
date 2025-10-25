@@ -19,7 +19,7 @@ export interface PatternInsight {
   severity: InsightSeverity;
   timestamp: number;
   confidence: number; // 0-1 confidence score
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PatternAnalyzerConfig {
@@ -36,7 +36,7 @@ export interface AnalysisContext {
   currentTime: number;
   activeTabs: number[];
   recentInsights: PatternInsight[];
-  userBehaviorHistory: Record<string, any>;
+  userBehaviorHistory: Record<string, unknown>;
 }
 
 export class PatternAnalyzer {
@@ -47,7 +47,8 @@ export class PatternAnalyzer {
   private config: PatternAnalyzerConfig;
   private analysisInterval?: NodeJS.Timeout;
   private tabSwitchHistory: Map<number, number[]> = new Map(); // tabId -> timestamps
-  private behaviorHistory: Record<string, any> = {};
+  private behaviorHistory: Record<string, unknown> = {};
+  private eventListeners: ((insight: PatternInsight) => void)[] = [];
 
   constructor(
     timeTracker: TimeTracker,
@@ -185,6 +186,12 @@ export class PatternAnalyzer {
 
     this.insights.push(...newInsights);
     this.updateBehaviorHistory(newInsights);
+    
+    // Notify listeners
+    newInsights.forEach(insight => {
+      this.eventListeners.forEach(listener => listener(insight));
+    });
+    
     return newInsights;
   }
 
@@ -255,6 +262,23 @@ export class PatternAnalyzer {
   }
 
   /**
+   * Add event listener for pattern insights
+   */
+  addEventListener(listener: (insight: PatternInsight) => void) {
+    this.eventListeners.push(listener);
+  }
+
+  /**
+   * Remove event listener
+   */
+  removeEventListener(listener: (insight: PatternInsight) => void) {
+    const index = this.eventListeners.indexOf(listener);
+    if (index > -1) {
+      this.eventListeners.splice(index, 1);
+    }
+  }
+
+  /**
    * Setup real-time event listeners
    */
   private setupRealTimeListeners() {
@@ -284,6 +308,9 @@ export class PatternAnalyzer {
 
     this.insights.push(insight);
     this.updateBehaviorHistory([insight]);
+    
+    // Notify listeners
+    this.eventListeners.forEach(listener => listener(insight));
   }
 
   /**
@@ -353,19 +380,25 @@ export class PatternAnalyzer {
       };
     }
 
-    this.behaviorHistory[today].insights.push(...insights);
+    const todayData = this.behaviorHistory[today] as {
+      insights: PatternInsight[];
+      patterns: Record<string, number>;
+      productivityScore: number;
+    };
+
+    todayData.insights.push(...insights);
 
     // Update pattern counts
     insights.forEach((insight) => {
-      if (!this.behaviorHistory[today].patterns[insight.type]) {
-        this.behaviorHistory[today].patterns[insight.type] = 0;
+      if (!todayData.patterns[insight.type]) {
+        todayData.patterns[insight.type] = 0;
       }
-      this.behaviorHistory[today].patterns[insight.type]++;
+      todayData.patterns[insight.type]++;
     });
 
     // Update productivity score
-    this.behaviorHistory[today].productivityScore =
-      this.calculateProductivityScore();
+    todayData.productivityScore = this.calculateProductivityScore();
+    this.behaviorHistory[today] = todayData;
 
     // Clean up old history (keep last 30 days)
     const thirtyDaysAgo = new Date(
