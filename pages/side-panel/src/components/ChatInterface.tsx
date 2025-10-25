@@ -26,7 +26,7 @@ interface ChatInterfaceProps {
 // Compress image data to reduce storage size
 const compressImageData = (
   base64Data: string,
-  quality: number = 0.6
+  quality: number = 0.6,
 ): string => {
   // For now, just return the original data
   // In a real implementation, you could use canvas to compress
@@ -65,7 +65,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
         ? conversations.find((c) => c.id === currentConversationId)?.messages ||
           []
         : [],
-    [conversations, currentConversationId]
+    [conversations, currentConversationId],
   );
 
   // Initialize AI Manager
@@ -102,7 +102,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
           setConversations(conversationsWithDates);
           console.log(
             "[SidePanel] Loaded conversations from storage:",
-            conversationsWithDates.length
+            conversationsWithDates.length,
           );
         }
       } catch (error) {
@@ -140,7 +140,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
         // If quota exceeded, try to clean up old conversations
         if (error instanceof Error && error.message.includes("quota")) {
           console.log(
-            "[SidePanel] Storage quota exceeded, cleaning up old conversations..."
+            "[SidePanel] Storage quota exceeded, cleaning up old conversations...",
           );
           try {
             // Keep only the most recent 5 conversations
@@ -166,7 +166,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
           } catch (cleanupError) {
             console.error(
               "[SidePanel] Failed to save even after cleanup:",
-              cleanupError
+              cleanupError,
             );
             // As a last resort, save without images
             try {
@@ -187,7 +187,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
             } catch (finalError) {
               console.error(
                 "[SidePanel] Complete storage failure:",
-                finalError
+                finalError,
               );
             }
           }
@@ -204,7 +204,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
   // Helper function to add message to conversation (creates new conversation if none exists)
   const addMessageToConversation = (
     message: Message,
-    title?: string
+    title?: string,
   ): string => {
     let conversationId = currentConversationId;
     if (!conversationId) {
@@ -232,8 +232,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 messages: [...conv.messages, message],
                 updatedAt: new Date(),
               }
-            : conv
-        )
+            : conv,
+        ),
       );
     }
     return conversationId;
@@ -272,7 +272,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
       ];
 
       const isPageContentQuery = pageContentKeywords.some((keyword) =>
-        inputValue.toLowerCase().includes(keyword)
+        inputValue.toLowerCase().includes(keyword),
       );
 
       let pageContent: {
@@ -304,7 +304,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
 
       // Check if there are any images in the current conversation
       const currentConversation = conversations.find(
-        (c) => c.id === conversationId
+        (c) => c.id === conversationId,
       );
       const lastImageMessage = currentConversation?.messages
         .filter((msg) => msg.image)
@@ -321,9 +321,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
           pageContent
             ? `Page context: ${pageContent.title} - ${pageContent.content.substring(
                 0,
-                500
+                500,
               )}...`
-            : undefined
+            : undefined,
         );
       } else {
         // Build the prompt with page content if available (regular text prompt)
@@ -355,8 +355,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 messages: [...conv.messages, aiMessage],
                 updatedAt: new Date(),
               }
-            : conv
-        )
+            : conv,
+        ),
       );
     } catch (error) {
       console.error("[SidePanel] Prompt API error:", error);
@@ -375,8 +375,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 messages: [...conv.messages, errorMessage],
                 updatedAt: new Date(),
               }
-            : conv
-        )
+            : conv,
+        ),
       );
     } finally {
       setIsProcessing(false);
@@ -401,7 +401,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
     // Add message to conversation immediately (creates new if none exists)
     const conversationId = addMessageToConversation(
       imageMessage,
-      comment.trim() || `Image: ${pendingImage.fileName}`
+      comment.trim() || `Image: ${pendingImage.fileName}`,
     );
 
     // Clear the preview state
@@ -418,7 +418,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
 
       const response = await aiManager.promptWithImage(
         promptText,
-        imageMessage.image!
+        imageMessage.image!,
       );
 
       const aiMessage: Message = {
@@ -437,8 +437,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 messages: [...conv.messages, aiMessage],
                 updatedAt: new Date(),
               }
-            : conv
-        )
+            : conv,
+        ),
       );
     } catch (error) {
       console.error("[SidePanel] Failed to analyze uploaded image:", error);
@@ -457,8 +457,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 messages: [...conv.messages, errorMessage],
                 updatedAt: new Date(),
               }
-            : conv
-        )
+            : conv,
+        ),
       );
     } finally {
       setIsProcessing(false);
@@ -514,7 +514,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
       if (!SpeechRecognitionAPI) {
         console.error("[SidePanel] Speech Recognition not supported");
         alert(
-          "Speech recognition is not supported in this browser. Please use Chrome or Edge."
+          "Speech recognition is not supported in this browser. Please use Chrome or Edge.",
         );
         return;
       }
@@ -550,7 +550,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
 
         if (event.error === "not-allowed") {
           alert(
-            "Microphone access denied. Please allow microphone access and try again."
+            "Microphone access denied. Please allow microphone access and try again.",
           );
         } else {
           alert(`Speech recognition error: ${event.error}`);
@@ -594,7 +594,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
   const deleteConversation = (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setConversations((prev) =>
-      prev.filter((conv) => conv.id !== conversationId)
+      prev.filter((conv) => conv.id !== conversationId),
     );
     if (currentConversationId === conversationId) {
       setCurrentConversationId(null);
@@ -627,7 +627,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
           <div
             className={cn(
               "flex-1 overflow-y-auto p-6",
-              theme === "light" ? "bg-slate-50" : "bg-gray-900"
+              theme === "light" ? "bg-kaizen-light-bg" : "bg-kaizen-dark-bg",
             )}
           >
             <MessageList theme={theme} messages={currentMessages} />
@@ -641,8 +641,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 className={cn(
                   "flex items-center space-x-2 px-3 py-1 rounded-full text-xs",
                   theme === "light"
-                    ? "bg-slate-100 text-gray-600"
-                    : "bg-gray-700 text-gray-300"
+                    ? "bg-kaizen-surface text-kaizen-muted"
+                    : "bg-kaizen-dark-surface text-kaizen-dark-muted",
                 )}
               >
                 <div className="flex space-x-1">
