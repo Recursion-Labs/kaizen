@@ -1,6 +1,19 @@
 import { cn } from "@extension/ui";
 import { TrendingUp, Calendar, BarChart3 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+} from "recharts";
 import type {
   ActivityChartProps,
   ChartDataPoint,
@@ -16,40 +29,50 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadChartData = useCallback(async () => {
-    setLoading(true);
+  const loadChartData = useCallback(async (withSpinner = false) => {
+    if (withSpinner) {
+      setLoading(true);
+    }
+    setError(null);
+
     try {
-      // TODO: Replace with actual BehaviorStorage calls
-      // const storage = await behaviorStorage.initialize();
-      // const data = await storage.getMetricsRange(startDate, endDate);
-
-      // Mock data for development
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      if (timeRange === "week") {
-        setChartData([
-          { label: "Mon", value: 120, productiveTime: 80, distractedTime: 40 },
-          { label: "Tue", value: 150, productiveTime: 110, distractedTime: 40 },
-          { label: "Wed", value: 135, productiveTime: 95, distractedTime: 40 },
-          { label: "Thu", value: 180, productiveTime: 130, distractedTime: 50 },
-          { label: "Fri", value: 145, productiveTime: 100, distractedTime: 45 },
-          { label: "Sat", value: 90, productiveTime: 60, distractedTime: 30 },
-          { label: "Sun", value: 75, productiveTime: 50, distractedTime: 25 },
-        ]);
+      if (!chrome?.runtime?.sendMessage) {
+        throw new Error("Activity data is unavailable outside of the extension context.");
       }
-    } catch (error) {
-      console.error("Failed to load chart data:", error);
+
+      const response = await chrome.runtime.sendMessage({
+        type: "GET_HISTORICAL_ACTIVITY",
+        timeRange,
+      });
+
+      if (!response?.success || !response.data) {
+        throw new Error(response?.error ?? "Unable to load activity data.");
+      }
+
+      setChartData(response.data);
+    } catch (err) {
+      console.error("Failed to load chart data:", err);
+      const message = err instanceof Error ? err.message : "Failed to load activity data.";
+      setError(message);
     } finally {
-      setLoading(false);
+      if (withSpinner) {
+        setLoading(false);
+      }
     }
   }, [timeRange]);
 
   useEffect(() => {
-    void loadChartData();
-  }, [loadChartData]);
+    void loadChartData(true);
+    const intervalId = window.setInterval(() => {
+      void loadChartData();
+    }, 15000); // Update every 15 seconds
 
-  const maxValue = Math.max(...chartData.map((d) => d.value), 1);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadChartData]);
 
   if (loading) {
     return (
@@ -94,6 +117,33 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           />
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div
+          className={cn(
+            "rounded-lg border p-4 text-sm",
+            theme === "light"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-red-800 bg-red-900/30 text-red-200",
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => loadChartData(true)}
+              className={cn(
+                "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                theme === "light"
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-red-500 text-white hover:bg-red-400",
+              )}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -187,46 +237,120 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           </div>
         </div>
 
-        {/* Simple Bar Chart Visualization */}
-        <div className="space-y-4">
-          {chartData.map((point, index) => (
-            <div key={index} className="space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span
-                  className={cn(
-                    "font-medium",
-                    theme === "light" ? "text-gray-700" : "text-gray-300",
-                  )}
-                >
-                  {point.label}
-                </span>
-                <span
-                  className={cn(
-                    theme === "light" ? "text-gray-600" : "text-gray-400",
-                  )}
-                >
-                  {point.value}m
-                </span>
-              </div>
-              <div className="relative h-8 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                {/* Productive Time */}
-                <div
-                  className="absolute left-0 top-0 h-full bg-green-500 transition-all"
-                  style={{
-                    width: `${(point.productiveTime / maxValue) * 100}%`,
-                  }}
+        {/* Recharts Visualization */}
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === "bar" ? (
+              <BarChart data={chartData}>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
                 />
-                {/* Distracted Time */}
-                <div
-                  className="absolute h-full bg-red-500 transition-all"
-                  style={{
-                    left: `${(point.productiveTime / maxValue) * 100}%`,
-                    width: `${(point.distractedTime / maxValue) * 100}%`,
-                  }}
+                <XAxis 
+                  dataKey="label" 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
                 />
-              </div>
-            </div>
-          ))}
+                <YAxis 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
+                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    borderRadius: "6px",
+                    color: theme === "light" ? "#111827" : "#f9fafb",
+                  }}
+                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                />
+                <Bar dataKey="productiveTime" stackId="a" fill="#10b981" name="Productive (min)" />
+                <Bar dataKey="distractedTime" stackId="a" fill="#ef4444" name="Distracted (min)" />
+              </BarChart>
+            ) : chartType === "line" ? (
+              <LineChart data={chartData}>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                />
+                <XAxis 
+                  dataKey="label" 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
+                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    borderRadius: "6px",
+                    color: theme === "light" ? "#111827" : "#f9fafb",
+                  }}
+                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="productiveTime" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  name="Productive (min)"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="distractedTime" 
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                  name="Distracted (min)"
+                />
+              </LineChart>
+            ) : (
+              <AreaChart data={chartData}>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                />
+                <XAxis 
+                  dataKey="label" 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
+                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    borderRadius: "6px",
+                    color: theme === "light" ? "#111827" : "#f9fafb",
+                  }}
+                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="productiveTime" 
+                  stackId="1"
+                  stroke="#10b981" 
+                  fill="#10b981"
+                  fillOpacity={0.6}
+                  name="Productive (min)"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="distractedTime" 
+                  stackId="1"
+                  stroke="#ef4444" 
+                  fill="#ef4444"
+                  fillOpacity={0.6}
+                  name="Distracted (min)"
+                />
+              </AreaChart>
+            )}
+          </ResponsiveContainer>
         </div>
       </div>
 

@@ -16,6 +16,19 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+} from "recharts";
 import type {
   DashboardProps,
   BehaviorView,
@@ -153,6 +166,12 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
   const [latestInsight, setLatestInsight] = useState<InsightSummary | null>(
     null,
   );
+  const [doomscrollChartData, setDoomscrollChartData] = useState<Array<{
+    time: string;
+    scrollDistance: number;
+    activeSessions: number;
+    highSeverity: number;
+  }>>([]);
   const isMountedRef = useRef(true);
 
   const loadDashboardData = useCallback(
@@ -228,6 +247,26 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
           focusSessions: sessionCounts.time,
           shoppingAlerts: sessionCounts.shopping,
           doomscrollSessions: sessionCounts.doomscrolling,
+          doomscrollMetrics: payload.doomscrollMetrics,
+        });
+
+        // Update chart data for real-time visualization
+        const now = new Date();
+        const timeLabel = now.toLocaleTimeString([], { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        setDoomscrollChartData(prev => {
+          const newData = [...prev, {
+            time: timeLabel,
+            scrollDistance: payload.doomscrollMetrics?.totalScrollDistance || 0,
+            activeSessions: sessionCounts.doomscrolling,
+            highSeverity: payload.doomscrollMetrics?.highSeveritySessions || 0,
+          }];
+          
+          // Keep only last 20 data points for the chart
+          return newData.slice(-20);
         });
 
         const newestInsight =
@@ -380,6 +419,15 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
           theme={theme}
           color="indigo"
         />
+        {todayMetrics?.doomscrollMetrics && (
+          <StatCard
+            icon={<TrendingUp className="h-5 w-5" />}
+            label="Scroll Distance"
+            value={`${Math.round(todayMetrics.doomscrollMetrics.totalScrollDistance / 1000)}k px`}
+            theme={theme}
+            color="red"
+          />
+        )}
       </div>
 
       {todayMetrics && (
@@ -446,6 +494,20 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               value={todayMetrics.doomscrollSessions}
               theme={theme}
             />
+            {todayMetrics.doomscrollMetrics && (
+              <>
+                <MetricItem
+                  label="Avg Scroll/Session"
+                  value={`${Math.round(todayMetrics.doomscrollMetrics.averageScrollPerSession / 1000)}k px`}
+                  theme={theme}
+                />
+                <MetricItem
+                  label="High Severity"
+                  value={todayMetrics.doomscrollMetrics.highSeveritySessions}
+                  theme={theme}
+                />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -524,6 +586,149 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
           </div>
         </div>
       </div>
+
+      {/* Real-time Doomscrolling Chart */}
+      {doomscrollChartData.length > 0 && (
+        <div
+          className={cn(
+            "rounded-lg border p-6",
+            theme === "light"
+              ? "border-gray-200 bg-white"
+              : "border-gray-700 bg-gray-800",
+          )}
+        >
+          <h3
+            className={cn(
+              "mb-4 text-lg font-semibold",
+              theme === "light" ? "text-gray-900" : "text-white",
+            )}
+          >
+            Real-time Doomscrolling Activity
+          </h3>
+          
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={doomscrollChartData}>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                />
+                <XAxis 
+                  dataKey="time" 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
+                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    borderRadius: "6px",
+                    color: theme === "light" ? "#111827" : "#f9fafb",
+                  }}
+                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="scrollDistance"
+                  stackId="1"
+                  stroke="#ef4444"
+                  fill="#ef4444"
+                  fillOpacity={0.6}
+                  name="Scroll Distance (px)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="activeSessions"
+                  stackId="2"
+                  stroke="#f59e0b"
+                  fill="#f59e0b"
+                  fillOpacity={0.6}
+                  name="Active Sessions"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="text-center">
+              <p
+                className={cn(
+                  "text-xs",
+                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                )}
+              >
+                Current Sessions
+              </p>
+              <p
+                className={cn(
+                  "text-xl font-semibold text-orange-500",
+                  theme === "light" ? "text-orange-600" : "text-orange-400",
+                )}
+              >
+                {doomscrollChartData[doomscrollChartData.length - 1]?.activeSessions || 0}
+              </p>
+            </div>
+            <div className="text-center">
+              <p
+                className={cn(
+                  "text-xs",
+                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                )}
+              >
+                Total Scroll
+              </p>
+              <p
+                className={cn(
+                  "text-xl font-semibold text-red-500",
+                  theme === "light" ? "text-red-600" : "text-red-400",
+                )}
+              >
+                {Math.round((doomscrollChartData[doomscrollChartData.length - 1]?.scrollDistance || 0) / 1000)}k px
+              </p>
+            </div>
+            <div className="text-center">
+              <p
+                className={cn(
+                  "text-xs",
+                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                )}
+              >
+                High Severity
+              </p>
+              <p
+                className={cn(
+                  "text-xl font-semibold text-purple-500",
+                  theme === "light" ? "text-purple-600" : "text-purple-400",
+                )}
+              >
+                {doomscrollChartData[doomscrollChartData.length - 1]?.highSeverity || 0}
+              </p>
+            </div>
+            <div className="text-center">
+              <p
+                className={cn(
+                  "text-xs",
+                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                )}
+              >
+                Peak Sessions
+              </p>
+              <p
+                className={cn(
+                  "text-xl font-semibold text-blue-500",
+                  theme === "light" ? "text-blue-600" : "text-blue-400",
+                )}
+              >
+                {Math.max(...doomscrollChartData.map(d => d.activeSessions), 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

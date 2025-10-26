@@ -31,6 +31,11 @@ export interface TodayMetrics {
   focusSessions: number;
   shoppingAlerts: number;
   doomscrollSessions: number;
+  doomscrollMetrics?: {
+    totalScrollDistance: number;
+    averageScrollPerSession: number;
+    highSeveritySessions: number;
+  };
 }
 
 export interface ProductivityInsight {
@@ -58,6 +63,16 @@ export interface ProductivityStatsPayload {
     shopping: number;
     doomscrolling: number;
   };
+  sessionSummaries?: {
+    time: TimeSessionSummary[];
+    shopping: ShoppingSessionSummary[];
+    doomscrolling: DoomscrollSessionSummary[];
+  };
+  doomscrollMetrics?: {
+    totalScrollDistance: number;
+    averageScrollPerSession: number;
+    highSeveritySessions: number;
+  };
   insights?: ProductivityInsight[];
 }
 
@@ -77,13 +92,32 @@ export interface StatCardProps {
   label: string;
   value: string;
   theme: ThemeVariant;
-  color: "blue" | "purple" | "green" | "orange" | "pink" | "indigo";
+  color: "blue" | "purple" | "green" | "orange" | "pink" | "indigo" | "red";
 }
 
-export interface MetricItemProps {
-  label: string;
-  value: number | string;
-  theme: ThemeVariant;
+export interface TimeSessionSummary {
+  tabId: number;
+  url: string;
+  domain: string;
+  category: string;
+  startTime: number;
+  accumulatedTime: number;
+  lastActiveTime: number;
+}
+
+export interface ShoppingSessionSummary {
+  domain: string;
+  visitCount: number;
+  lastVisitTime: number;
+  totalTimeSpent: number;
+}
+
+export interface DoomscrollSessionSummary {
+  tabId: number;
+  accumulatedScroll: number;
+  startTime: number;
+  lastScrollTime: number;
+  scrollEvents: number;
 }
 
 export interface GoalsPanelProps {
