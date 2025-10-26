@@ -6,6 +6,9 @@ export interface ShoppingDetectorConfig {
   monitoredDomains: string[]; // domains to monitor for shopping activity
   realTimeCheckInterval: number; // interval in ms for real-time checks
   sessionTimeout: number; // timeout for inactive sessions
+  childBurstWindowMs: number; // window for child-link burst detection (e.g., 60s)
+  childBurstThreshold: number; // unique child paths within window to flag impulse (e.g., 15)
+  childBurstCooldownMs: number; // cooldown between bursts per domain
 }
 
 export interface ShoppingSession {
@@ -14,6 +17,8 @@ export interface ShoppingSession {
   lastVisitTime: number;
   totalTimeSpent: number;
   urls: string[]; // track visited URLs
+  recentPaths: Array<{ path: string; timestamp: number }>; // for burst detection
+  lastBurstAt?: number; // last time a burst alert was emitted
 }
 
 export interface ShoppingEvent {
@@ -39,6 +44,9 @@ export class ShoppingDetector {
       timeWindow: 10 * 60 * 1000,
       realTimeCheckInterval: 5000, // 5 seconds
       sessionTimeout: 30 * 60 * 1000, // 30 minutes
+      childBurstWindowMs: 60 * 1000,
+      childBurstThreshold: 15,
+      childBurstCooldownMs: 2 * 60 * 1000,
       monitoredDomains: [
         "amazon.com",
         "flipkart.com",
@@ -66,13 +74,21 @@ export class ShoppingDetector {
   }
 
   /**
+   * Update configuration at runtime
+   */
+  updateConfig(patch: Partial<ShoppingDetectorConfig>) {
+    this.config = { ...this.config, ...patch };
+  }
+
+  /**
    * Record a tab visit with enhanced tracking
    * @param tabId - Chrome tab ID
    * @param url - current tab URL
    */
   recordVisit(tabId: number, url: string) {
     const domain = this.extractDomain(url);
-    if (!this.config.monitoredDomains.includes(domain)) return;
+    // If monitoredDomains is empty, monitor ALL domains; else restrict to the list
+    if (this.config.monitoredDomains.length > 0 && !this.config.monitoredDomains.includes(domain)) return;
 
     const now = Date.now();
     const session = this.sessions.get(domain) || {
@@ -81,6 +97,7 @@ export class ShoppingDetector {
       lastVisitTime: now,
       totalTimeSpent: 0,
       urls: [],
+      recentPaths: [],
     };
 
     // Reset session if time window exceeded
@@ -89,6 +106,7 @@ export class ShoppingDetector {
       session.startTime = now;
       session.totalTimeSpent = 0;
       session.urls = [];
+      session.recentPaths = [];
     }
 
     // Track time spent if this is a continuation of a tab session
@@ -106,6 +124,32 @@ export class ShoppingDetector {
     // Update tab session
     this.tabSessions.set(tabId, { domain, startTime: now });
 
+    // Track child-link bursts within time window
+    const path = this.extractPath(url);
+    if (path && this.isLikelyProductPath(path, url)) {
+      // Keep only recent items within window
+      const windowStart = now - this.config.childBurstWindowMs;
+      session.recentPaths = session.recentPaths.filter((p) => p.timestamp >= windowStart);
+      session.recentPaths.push({ path, timestamp: now });
+
+      const uniqueCount = new Set(session.recentPaths.map((p) => p.path)).size;
+      const inCooldown = !!session.lastBurstAt && now - session.lastBurstAt < this.config.childBurstCooldownMs;
+      if (!inCooldown && uniqueCount >= this.config.childBurstThreshold) {
+        // Emit immediate high-severity event
+        const event: ShoppingEvent = {
+          domain,
+          url,
+          tabId,
+          severity: "high",
+          timestamp: now,
+          visitCount: session.visitCount,
+          timeSpent: session.totalTimeSpent,
+        };
+        this.eventListeners.forEach((listener) => listener(event));
+        session.lastBurstAt = now;
+      }
+    }
+
     // Check for impulsive behavior in real-time
     this.checkImpulsiveBehaviorRealTime(domain, url, tabId);
   }
@@ -117,7 +161,8 @@ export class ShoppingDetector {
    */
   startTabSession(tabId: number, url: string) {
     const domain = this.extractDomain(url);
-    if (this.config.monitoredDomains.includes(domain)) {
+    const allow = this.config.monitoredDomains.length === 0 || this.config.monitoredDomains.includes(domain);
+    if (allow) {
       this.tabSessions.set(tabId, { domain, startTime: Date.now() });
     }
   }
@@ -143,7 +188,13 @@ export class ShoppingDetector {
   isImpulsive(domain: string): boolean {
     const session = this.sessions.get(domain);
     if (!session) return false;
-    return session.visitCount >= this.config.visitThreshold;
+    // Use unique product-like paths within the burst window
+    const now = Date.now();
+    const windowStart = now - this.config.childBurstWindowMs;
+    const unique = new Set(
+      (session.recentPaths || []).filter(p => p.timestamp >= windowStart).map(p => p.path)
+    ).size;
+    return unique >= this.config.childBurstThreshold;
   }
 
   /**
@@ -154,12 +205,15 @@ export class ShoppingDetector {
     const session = this.sessions.get(domain);
     if (!session) return null;
 
-    const visitRatio = session.visitCount / this.config.visitThreshold;
-    const timeRatio = session.totalTimeSpent / (this.config.timeWindow / 2); // half the time window
+    const now = Date.now();
+    const windowStart = now - this.config.childBurstWindowMs;
+    const unique = new Set(
+      (session.recentPaths || []).filter(p => p.timestamp >= windowStart).map(p => p.path)
+    ).size;
 
-    if (visitRatio >= 2 || timeRatio >= 0.8) return "high";
-    if (visitRatio >= 1.5 || timeRatio >= 0.5) return "medium";
-    if (visitRatio >= 1) return "low";
+    if (unique >= this.config.childBurstThreshold) return "high";
+    if (unique >= Math.ceil(this.config.childBurstThreshold * 0.66)) return "medium";
+    if (unique >= Math.ceil(this.config.childBurstThreshold * 0.33)) return "low";
     return null;
   }
 
@@ -294,6 +348,35 @@ export class ShoppingDetector {
       return new URL(url).hostname.replace("www.", "");
     } catch {
       return "";
+    }
+  }
+
+  private extractPath(url: string): string {
+    try {
+      const u = new URL(url);
+      const basePath = u.pathname.replace(/\/$/, "");
+      // Preserve an identifying query token if present
+      const importantKeys = ["id", "sku", "product", "pid", "item", "model"]; 
+      for (const k of importantKeys) {
+        const v = u.searchParams.get(k);
+        if (v) return `${basePath}?${k}=${v}`;
+      }
+      return basePath;
+    } catch {
+      return "";
+    }
+  }
+
+  /** Heuristic: treat only deep or explicitly identified paths as product pages */
+  private isLikelyProductPath(path: string, url: string): boolean {
+    try {
+      const clean = path.split("?")[0];
+      const segs = clean.split("/").filter(Boolean);
+      if (segs.length >= 2) return true; // e.g., /dp/B0.. or /p/xyz
+      // If id-like query token exists, we already included it in path string above
+      return /\?(id|sku|product|pid|item|model)=/.test(path);
+    } catch {
+      return false;
     }
   }
 }

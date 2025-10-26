@@ -33,8 +33,35 @@ const notifyIfAllowed = (
   chrome.notifications.create(id, opts);
 };
 
+const openSidePanelForTab = (tabId: number) => {
+  if (!("sidePanel" in chrome) || !chrome.sidePanel) {
+    throw new Error("Side panel API unavailable in this browser version");
+  }
+
+  chrome.sidePanel
+    .setOptions({
+      tabId,
+      path: "side-panel/index.html",
+      enabled: true,
+    })
+    .catch((error: unknown) => {
+      console.error("[Kaizen] Failed to configure side panel options:", error);
+    });
+
+  chrome.sidePanel.open({ tabId }).catch((error: unknown) => {
+    console.error("[Kaizen] Failed to open side panel:", error);
+  });
+};
+
+const ENABLE_OS_NOTIFICATIONS = false;
+
 const handleIntervention = (alarm: chrome.alarms.Alarm) => {
   console.log("Executing intervention logic for:", alarm.name);
+  
+  // If OS notifications are disabled, just return after logging.
+  if (!ENABLE_OS_NOTIFICATIONS) {
+    return;
+  }
   
   // Handle different intervention types
   if (alarm.name === "limitExceeded") {
@@ -121,8 +148,41 @@ console.log("Integration manager:", {
   knowledge: ["KnowledgeGraph", "EmbeddingService", "RAGEngine"],
 });
 
+const sidePanelAvailable = "sidePanel" in chrome && !!chrome.sidePanel;
+const autoOpenSupported = sidePanelAvailable && typeof chrome.sidePanel?.setPanelBehavior === "function";
+
+if (autoOpenSupported) {
+  chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error: unknown) => {
+      console.error("[Kaizen] Failed to configure side panel behavior:", error);
+    });
+}
+
 // Handle scroll events and page loads from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "OPEN_SIDE_PANEL") {
+    const tabId = sender.tab?.id ?? message.tabId;
+
+    if (typeof tabId !== "number") {
+      sendResponse({ success: false, error: "TAB_ID_UNAVAILABLE" });
+      return false;
+    }
+
+    try {
+      openSidePanelForTab(tabId);
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error("[Kaizen] Failed to open side panel from message:", error);
+      sendResponse({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+
+    return false;
+  }
+
   // Handle scroll events
   if (message.type === 'SCROLL_EVENT' && sender.tab?.id) {
     console.log(`[Kaizen] Scroll event received: ${message.scrollAmount}px on tab ${sender.tab.id}`);
@@ -206,11 +266,74 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_PRODUCTIVITY_STATS') {
     console.log('Productivity stats requested from UI');
     try {
+      const productivityScore = integrationManager.getProductivityScore();
+      const todayStats = integrationManager.getTodayStats();
+      const knowledgeGraphStats = integrationManager.getKnowledgeGraphStats();
+      const insights = integrationManager.getRecentInsights(5);
+      const activeSessions = integrationManager.getActiveSessions();
+
+      const sessionCounts = {
+        time: activeSessions.time?.size ?? 0,
+        shopping: activeSessions.shopping?.size ?? 0,
+        doomscrolling: activeSessions.doomscrolling?.size ?? 0,
+      };
+
+      const sessionSummaries = {
+        time: Array.from(activeSessions.time?.entries() ?? []).map(
+          ([tabId, session]) => ({
+            tabId,
+            url: session.url,
+            domain: session.domain,
+            category: session.category,
+            startTime: session.startTime,
+            accumulatedTime: session.accumulatedTime,
+            lastActiveTime: session.lastActiveTime,
+          }),
+        ),
+        shopping: Array.from(activeSessions.shopping?.entries() ?? []).map(
+          ([domain, session]) => ({
+            domain,
+            visitCount: session.visitCount,
+            lastVisitTime: session.lastVisitTime,
+            totalTimeSpent: session.totalTimeSpent,
+          }),
+        ),
+        doomscrolling: Array.from(activeSessions.doomscrolling?.entries() ?? []).map(
+          ([tabId, session]) => ({
+            tabId,
+            accumulatedScroll: session.accumulatedScroll,
+            startTime: session.startTime,
+            lastScrollTime: session.lastScrollTime,
+            scrollEvents: session.scrollEvents,
+          }),
+        ),
+      };
+
+      // Calculate doomscrolling metrics
+      const doomscrollSessions = sessionSummaries.doomscrolling;
+      const totalScrollDistance = doomscrollSessions.reduce((sum, s) => sum + s.accumulatedScroll, 0);
+      const averageScrollPerSession = doomscrollSessions.length > 0 ? totalScrollDistance / doomscrollSessions.length : 0;
+      const highSeveritySessions = doomscrollSessions.filter(s => {
+        const duration = Date.now() - s.startTime;
+        if (duration < 60000) return false; // less than 1 min
+        const scrollRatio = s.accumulatedScroll / 5000; // threshold is 5000px
+        return scrollRatio >= 2; // high severity
+      }).length;
+
+      const doomscrollMetrics = {
+        totalScrollDistance,
+        averageScrollPerSession: Math.round(averageScrollPerSession),
+        highSeveritySessions,
+      };
+
       const stats = {
-        productivityScore: integrationManager.getProductivityScore(),
-        todayStats: integrationManager.getTodayStats(),
-        knowledgeGraphStats: integrationManager.getKnowledgeGraphStats(),
-        activeSessions: integrationManager.getActiveSessions(),
+        productivityScore,
+        todayStats,
+        knowledgeGraphStats,
+        sessionCounts,
+        sessionSummaries,
+        doomscrollMetrics,
+        insights,
       };
       sendResponse({ success: true, stats });
     } catch (error) {
@@ -219,8 +342,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   }
 
+  // Handle historical activity data requests
+  if (message.type === 'GET_HISTORICAL_ACTIVITY') {
+    console.log('Historical activity data requested from UI');
+    try {
+      const timeRange = message.timeRange || 'week';
+      const activityData = integrationManager.getHistoricalActivity(timeRange);
+      sendResponse({ success: true, data: activityData });
+    } catch (error) {
+      console.error('Failed to get historical activity data:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
   return true; // Keep the message channel open for async response
 });
+
+if (!autoOpenSupported
+  && sidePanelAvailable
+  && chrome.action?.onClicked) {
+  chrome.action.onClicked.addListener((tab) => {
+    const tabId = tab.id;
+
+    if (typeof tabId !== "number") {
+      console.warn("[Kaizen] Unable to open side panel: missing tab id");
+      return;
+    }
+
+    try {
+      openSidePanelForTab(tabId);
+    } catch (error) {
+      console.error("[Kaizen] Failed to open side panel from action click:", error);
+    }
+  });
+}
 
 export default {
   scheduler,

@@ -17,11 +17,11 @@ export const Insights: React.FC<InsightsProps> = ({ theme }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-kaizen-border dark:border-kaizen-border">
         <h2
           className={cn(
             "text-3xl font-bold mb-2",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Knowledge Graph
@@ -29,7 +29,7 @@ export const Insights: React.FC<InsightsProps> = ({ theme }) => {
         <p
           className={cn(
             "text-sm mb-6",
-            theme === "light" ? "text-gray-500" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           Visualize and explore connections between concepts, entities, and

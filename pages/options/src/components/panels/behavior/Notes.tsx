@@ -1,31 +1,18 @@
 import { cn } from "@extension/ui";
 import { Plus, Search, Tag, Smile, Frown, Meh } from "lucide-react";
 import { useState } from "react";
+import type {
+  RemarksPanelProps,
+  BehaviorRemark,
+  RemarkMood,
+  RemarkCategory,
+  MoodButtonProps,
+  RemarkCardProps,
+} from "./types";
 import type React from "react";
 
-interface RemarksPanelProps {
-  theme: "light" | "dark";
-}
-
-type RemarkMood = "positive" | "neutral" | "negative";
-type RemarkCategory =
-  | "goal"
-  | "reflection"
-  | "achievement"
-  | "challenge"
-  | "note";
-
-interface Remark {
-  id: string;
-  timestamp: number;
-  content: string;
-  tags: string[];
-  mood?: RemarkMood;
-  category?: RemarkCategory;
-}
-
-export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
-  const [remarks, setRemarks] = useState<Remark[]>([
+const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
+  const [remarks, setRemarks] = useState<BehaviorRemark[]>([
     {
       id: "1",
       timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
@@ -52,7 +39,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
 
   const addRemark = () => {
     if (newRemark.trim()) {
-      const remark: Remark = {
+  const remark: BehaviorRemark = {
         id: Date.now().toString(),
         timestamp: Date.now(),
         content: newRemark,
@@ -82,7 +69,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
         <h2
           className={cn(
             "text-2xl font-bold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Personal Remarks
@@ -90,7 +77,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
         <p
           className={cn(
             "text-sm",
-            theme === "light" ? "text-gray-600" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           Journal your thoughts and track your behavioral insights
@@ -102,14 +89,14 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-6",
           theme === "light"
-            ? "border-gray-200 bg-white"
-            : "border-gray-700 bg-gray-800",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         <h3
           className={cn(
             "mb-4 text-lg font-semibold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Add New Remark
@@ -121,10 +108,10 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
           onChange={(e) => setNewRemark(e.target.value)}
           placeholder="What are you thinking about your browsing habits?"
           className={cn(
-            "mb-4 w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+            "mb-4 w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-2",
             theme === "light"
-              ? "border-gray-300 bg-white text-gray-900"
-              : "border-gray-600 bg-gray-700 text-white",
+              ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text focus:ring-kaizen-accent"
+              : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text focus:ring-kaizen-accent",
           )}
           rows={4}
         />
@@ -134,7 +121,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
           <span
             className={cn(
               "text-sm font-medium",
-              theme === "light" ? "text-gray-700" : "text-gray-300",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Mood:
@@ -181,7 +168,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
           <span
             className={cn(
               "text-sm font-medium",
-              theme === "light" ? "text-gray-700" : "text-gray-300",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Category:
@@ -194,8 +181,8 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
             className={cn(
               "rounded-lg border px-3 py-1.5 text-sm",
               theme === "light"
-                ? "border-gray-300 bg-white text-gray-900"
-                : "border-gray-600 bg-gray-700 text-white",
+                ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text"
+                : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text",
             )}
           >
             <option value="note">Note</option>
@@ -213,8 +200,10 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
           className={cn(
             "flex w-full items-center justify-center space-x-2 rounded-lg px-6 py-3 font-semibold transition-colors",
             newRemark.trim()
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "cursor-not-allowed bg-gray-400 text-gray-200",
+              ? theme === "light"
+                ? "bg-kaizen-accent text-kaizen-light-bg hover:bg-kaizen-accent/80"
+                : "bg-kaizen-accent-dark text-kaizen-dark-text hover:bg-kaizen-accent/80"
+              : "cursor-not-allowed bg-kaizen-muted text-kaizen-light-muted",
           )}
         >
           <Plus className="h-5 w-5" />
@@ -227,15 +216,15 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-4",
           theme === "light"
-            ? "border-gray-200 bg-white"
-            : "border-gray-700 bg-gray-800",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         <div className="flex items-center space-x-3">
           <Search
             className={cn(
               "h-5 w-5",
-              theme === "light" ? "text-gray-400" : "text-gray-500",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           />
           <input
@@ -245,7 +234,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
             placeholder="Search remarks..."
             className={cn(
               "flex-1 border-none bg-transparent focus:outline-none",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           />
         </div>
@@ -256,7 +245,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
         <h3
           className={cn(
             "text-lg font-semibold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Recent Remarks ({filteredRemarks.length})
@@ -266,7 +255,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
           <p
             className={cn(
               "text-center text-sm",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             No remarks found. Start journaling your thoughts above!
@@ -285,14 +274,6 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
 
 // Helper Components
 
-interface MoodButtonProps {
-  mood: RemarkMood;
-  icon: React.ReactNode;
-  selected: boolean;
-  onClick: () => void;
-  theme: "light" | "dark";
-}
-
 const MoodButton: React.FC<MoodButtonProps> = ({
   mood,
   icon,
@@ -301,9 +282,9 @@ const MoodButton: React.FC<MoodButtonProps> = ({
   theme,
 }) => {
   const moodColors = {
-    positive: "text-green-600 dark:text-green-400",
-    neutral: "text-yellow-600 dark:text-yellow-400",
-    negative: "text-red-600 dark:text-red-400",
+    positive: theme === "light" ? "text-kaizen-success" : "text-kaizen-success-dark",
+    neutral: theme === "light" ? "text-kaizen-secondary" : "text-kaizen-secondary-dark",
+    negative: theme === "light" ? "text-kaizen-error" : "text-kaizen-error-dark",
   };
 
   return (
@@ -312,10 +293,12 @@ const MoodButton: React.FC<MoodButtonProps> = ({
       className={cn(
         "rounded-lg p-2 transition-colors",
         selected
-          ? "bg-blue-100 dark:bg-blue-900/30"
+          ? theme === "light"
+            ? "bg-kaizen-accent/20"
+            : "bg-kaizen-accent-dark/20"
           : theme === "light"
-            ? "hover:bg-gray-100"
-            : "hover:bg-gray-700",
+          ? "hover:bg-kaizen-surface"
+          : "hover:bg-kaizen-dark-surface",
         moodColors[mood],
       )}
     >
@@ -323,11 +306,6 @@ const MoodButton: React.FC<MoodButtonProps> = ({
     </button>
   );
 };
-
-interface RemarkCardProps {
-  remark: Remark;
-  theme: "light" | "dark";
-}
 
 const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
   const formatDate = (timestamp: number) => {
@@ -344,9 +322,9 @@ const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
   };
 
   const moodIcons = {
-    positive: <Smile className="h-4 w-4 text-green-600 dark:text-green-400" />,
-    neutral: <Meh className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />,
-    negative: <Frown className="h-4 w-4 text-red-600 dark:text-red-400" />,
+    positive: <Smile className={cn("h-4 w-4", theme === "light" ? "text-kaizen-success" : "text-kaizen-success-dark")} />,
+    neutral: <Meh className={cn("h-4 w-4", theme === "light" ? "text-kaizen-secondary" : "text-kaizen-secondary-dark")} />,
+    negative: <Frown className={cn("h-4 w-4", theme === "light" ? "text-kaizen-error" : "text-kaizen-error-dark")} />,
   };
 
   return (
@@ -354,15 +332,15 @@ const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
       className={cn(
         "rounded-lg border p-4",
         theme === "light"
-          ? "border-gray-200 bg-white"
-          : "border-gray-700 bg-gray-800",
+          ? "border-kaizen-border bg-kaizen-surface"
+          : "border-kaizen-border bg-kaizen-dark-surface",
       )}
     >
       <div className="mb-2 flex items-start justify-between">
         <p
           className={cn(
             "flex-1 text-sm",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           {remark.content}
@@ -378,8 +356,8 @@ const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
               className={cn(
                 "flex items-center space-x-1 rounded-full px-2 py-1 text-xs",
                 theme === "light"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-blue-900/30 text-blue-300",
+                  ? "bg-kaizen-accent/20 text-kaizen-accent"
+                  : "bg-kaizen-accent-dark/20 text-kaizen-accent-dark",
               )}
             >
               <Tag className="h-3 w-3" />
@@ -391,7 +369,7 @@ const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
         <span
           className={cn(
             "text-xs",
-            theme === "light" ? "text-gray-500" : "text-gray-500",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           {formatDate(remark.timestamp)}
@@ -400,3 +378,5 @@ const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
     </div>
   );
 };
+
+export { Notes };

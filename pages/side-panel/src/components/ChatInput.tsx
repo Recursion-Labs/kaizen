@@ -30,8 +30,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       className={cn(
         "border-t p-4",
         theme === "light"
-          ? "bg-white border-slate-200"
-          : "bg-gray-800 border-gray-700",
+          ? "bg-kaizen-light-bg border-kaizen-border"
+          : "bg-kaizen-dark-bg border-kaizen-dark-border",
       )}
     >
       <div className="flex items-center space-x-2">
@@ -41,8 +41,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           className={cn(
             "p-2 rounded-lg transition-colors",
             theme === "light"
-              ? "hover:bg-slate-100 text-gray-600"
-              : "hover:bg-gray-700 text-gray-400",
+              ? "hover:bg-kaizen-surface text-kaizen-light-muted"
+              : "hover:bg-kaizen-dark-surface text-kaizen-dark-muted",
           )}
           title="Upload image"
         >
@@ -78,8 +78,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           className={cn(
             "flex-1 px-4 py-2 rounded-lg border outline-none transition-colors",
             theme === "light"
-              ? "bg-slate-50 border-slate-200 text-gray-900 placeholder-gray-400 focus:border-blue-500"
-              : "bg-gray-900 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500",
+              ? "bg-kaizen-surface border-kaizen-border text-kaizen-light-text placeholder-kaizen-light-muted focus:border-kaizen-accent"
+              : "bg-kaizen-dark-surface border-kaizen-dark-border text-kaizen-dark-text placeholder-kaizen-dark-muted focus:border-kaizen-accent",
           )}
         />
 
@@ -91,8 +91,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             isRecording
               ? "bg-red-500 text-white animate-pulse"
               : theme === "light"
-                ? "hover:bg-slate-100 text-gray-600"
-                : "hover:bg-gray-700 text-gray-400",
+                ? "hover:bg-kaizen-surface text-kaizen-light-muted"
+                : "hover:bg-kaizen-dark-surface text-kaizen-dark-muted",
           )}
           title={isRecording ? "Stop recording" : "Start recording"}
         >
@@ -118,10 +118,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           className={cn(
             "p-2 rounded-lg transition-colors",
             inputValue.trim() && aiManagerAvailable
-              ? "bg-blue-500 text-white hover:bg-blue-600"
+              ? "bg-kaizen-accent text-kaizen-light-text hover:bg-kaizen-primary"
               : theme === "light"
-                ? "bg-slate-100 text-gray-400"
-                : "bg-gray-700 text-gray-500",
+                ? "bg-kaizen-surface text-kaizen-light-muted"
+                : "bg-kaizen-dark-surface text-kaizen-dark-muted",
           )}
         >
           <svg

@@ -113,30 +113,30 @@ const Detection: React.FC<DetectionProps> = () => {
     <div className="space-y-8 p-8">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-3xl font-bold text-kaizen-light-text dark:text-kaizen-dark-text">
           Behavior Recognition Engine
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-kaizen-light-muted dark:text-kaizen-dark-muted">
           Configure which patterns Kaizen should detect and monitor
         </p>
       </div>
 
       {/* Engine Status */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="rounded-lg border border-kaizen-border bg-kaizen-surface p-6 shadow-sm dark:border-kaizen-border dark:bg-kaizen-dark-surface">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div
               className={`h-3 w-3 rounded-full ${
                 engineStatus === "active"
-                  ? "bg-green-500 animate-pulse"
-                  : "bg-gray-400"
+                  ? "bg-kaizen-success animate-pulse"
+                  : "bg-kaizen-muted"
               }`}
             />
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-lg font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
                 Detection Engine
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-kaizen-light-muted dark:text-kaizen-dark-muted">
                 {engineStatus === "active"
                   ? "Actively monitoring your browsing patterns"
                   : "Detection paused"}
@@ -151,8 +151,8 @@ const Detection: React.FC<DetectionProps> = () => {
             }
             className={`rounded-lg px-4 py-2 font-medium transition-colors ${
               engineStatus === "active"
-                ? "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
-                : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
+                ? "bg-kaizen-error text-kaizen-light-bg hover:bg-kaizen-error/80"
+                : "bg-kaizen-success text-kaizen-light-bg hover:bg-kaizen-success/80"
             }`}
           >
             {engineStatus === "active" ? "Pause Detection" : "Resume Detection"}
@@ -162,7 +162,7 @@ const Detection: React.FC<DetectionProps> = () => {
 
       {/* Pattern Cards */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
           Pattern Detection Settings
         </h2>
 
@@ -177,14 +177,14 @@ const Detection: React.FC<DetectionProps> = () => {
       </div>
 
       {/* Info Section */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-900/20">
+      <div className="rounded-lg border border-kaizen-accent bg-kaizen-accent/5 p-6 dark:border-kaizen-accent-dark dark:bg-kaizen-accent-dark/5">
         <div className="flex items-start space-x-3">
-          <Info className="mt-1 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+          <Info className="mt-1 h-5 w-5 flex-shrink-0 text-kaizen-accent dark:text-kaizen-accent-dark" />
           <div className="flex-1">
-            <h3 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">
+            <h3 className="mb-2 font-semibold text-kaizen-accent dark:text-kaizen-accent-dark">
               How Pattern Detection Works
             </h3>
-            <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
+            <ul className="space-y-1 text-sm text-kaizen-light-text dark:text-kaizen-dark-text">
               <li>
                 • <strong>Confidence Score:</strong> AI-powered assessment of
                 pattern accuracy (higher is better)
@@ -220,32 +220,34 @@ const PatternCard: React.FC<PatternCardProps> = ({
   <div
     className={`rounded-lg border p-6 transition-all ${
       pattern.enabled
-        ? "border-blue-200 bg-white dark:border-blue-800 dark:bg-gray-800"
-        : "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50"
+        ? "border-kaizen-accent bg-kaizen-surface dark:border-kaizen-accent-dark dark:bg-kaizen-dark-surface"
+        : "border-kaizen-border bg-kaizen-muted/20 dark:border-kaizen-border dark:bg-kaizen-dark-muted/20"
     }`}
   >
     {/* Header */}
     <div className="mb-4 flex items-start justify-between">
       <div className="flex items-start space-x-3">
-        <div className="text-blue-600 dark:text-blue-400">{pattern.icon}</div>
+        <div className="text-kaizen-accent dark:text-kaizen-accent-dark">{pattern.icon}</div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-lg font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
             {pattern.name}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-kaizen-light-muted dark:text-kaizen-dark-muted">
             {pattern.description}
           </p>
         </div>
       </div>
       <button
         onClick={() => onToggle(pattern.id)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          pattern.enabled ? "bg-blue-600" : "bg-gray-300"
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-kaizen-accent focus:ring-offset-2 dark:focus:ring-kaizen-accent-dark ${
+          pattern.enabled
+            ? "bg-kaizen-accent dark:bg-kaizen-accent-dark"
+            : "bg-kaizen-muted dark:bg-kaizen-dark-muted"
         }`}
         aria-label={`Toggle ${pattern.name} detection`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-kaizen-light-bg transition-transform dark:bg-kaizen-dark-bg ${
             pattern.enabled ? "translate-x-6" : "translate-x-1"
           }`}
         />
@@ -254,25 +256,25 @@ const PatternCard: React.FC<PatternCardProps> = ({
 
     {/* Stats & Controls */}
     {pattern.enabled && (
-      <div className="space-y-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <div className="space-y-4 border-t border-kaizen-border pt-4 dark:border-kaizen-border">
         {/* Confidence Meter */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-700 dark:text-gray-300">
+            <span className="text-kaizen-light-text dark:text-kaizen-dark-text">
               Detection Confidence
             </span>
-            <span className="font-medium text-gray-900 dark:text-gray-100">
+            <span className="font-medium text-kaizen-light-text dark:text-kaizen-dark-text">
               {pattern.confidence}%
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-kaizen-muted dark:bg-kaizen-dark-muted">
             <div
               className={`h-full transition-all ${
                 pattern.confidence >= 80
-                  ? "bg-green-500"
+                  ? "bg-kaizen-success"
                   : pattern.confidence >= 60
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
+                    ? "bg-kaizen-secondary"
+                    : "bg-kaizen-error"
               }`}
               style={{ width: `${pattern.confidence}%` }}
             />
@@ -284,11 +286,11 @@ const PatternCard: React.FC<PatternCardProps> = ({
           <div className="flex items-center justify-between text-sm">
             <label
               htmlFor={`threshold-${pattern.id}`}
-              className="text-gray-700 dark:text-gray-300"
+              className="text-kaizen-light-text dark:text-kaizen-dark-text"
             >
               Detection Threshold
             </label>
-            <span className="font-medium text-gray-900 dark:text-gray-100">
+            <span className="font-medium text-kaizen-light-text dark:text-kaizen-dark-text">
               {pattern.threshold} min
             </span>
           </div>
@@ -302,16 +304,16 @@ const PatternCard: React.FC<PatternCardProps> = ({
             onChange={(e) =>
               onThresholdChange(pattern.id, parseInt(e.target.value))
             }
-            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-kaizen-muted dark:bg-kaizen-dark-muted"
           />
         </div>
 
         {/* Detected Today */}
-        <div className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-700/50">
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex items-center justify-between rounded-lg bg-kaizen-accent/10 px-3 py-2 dark:bg-kaizen-accent-dark/10">
+          <span className="text-sm text-kaizen-light-text dark:text-kaizen-dark-text">
             Detected Today
           </span>
-          <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+          <span className="rounded-full bg-kaizen-accent px-3 py-1 text-sm font-medium text-kaizen-light-bg dark:bg-kaizen-accent-dark dark:text-kaizen-dark-text">
             {pattern.detectedToday} times
           </span>
         </div>

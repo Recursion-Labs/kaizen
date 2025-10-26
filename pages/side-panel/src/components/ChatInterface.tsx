@@ -49,7 +49,6 @@ interface ChatInterfaceProps {
 // Compress image data to reduce storage size
 const compressImageData = (
   base64Data: string,
-  quality: number = 0.6,
 ): string => {
   // For now, just return the original data
   // In a real implementation, you could use canvas to compress
@@ -180,7 +179,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
                 timestamp: msg.timestamp.toISOString(),
                 // Further compress images for storage
                 image: msg.image
-                  ? compressImageData(msg.image, 0.3)
+                  ? compressImageData(msg.image)
                   : undefined,
               })),
             }));
@@ -335,6 +334,47 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
 
       let response: string;
 
+      // Check if user wants summarization
+      const summarizeKeywords = [
+        "summarize",
+        "summary",
+        "tl;dr",
+        "tldr",
+        "condense",
+        "shorten",
+      ];
+      const wantsSummary = summarizeKeywords.some((keyword) =>
+        inputValue.toLowerCase().includes(keyword),
+      );
+
+      // Check if user wants translation
+      const translateKeywords = [
+        "translate",
+        "translation",
+        "translate to",
+        "in spanish",
+        "in french",
+        "in german",
+        "in chinese",
+        "in japanese",
+      ];
+      const wantsTranslation = translateKeywords.some((keyword) =>
+        inputValue.toLowerCase().includes(keyword),
+      );
+
+      // Check if user wants proofreading/grammar check
+      const proofreadKeywords = [
+        "proofread",
+        "grammar",
+        "check grammar",
+        "correct",
+        "fix grammar",
+        "spell check",
+      ];
+      const wantsProofread = proofreadKeywords.some((keyword) =>
+        inputValue.toLowerCase().includes(keyword),
+      );
+
       if (lastImageMessage?.image) {
         // Use image understanding capability
         console.log("[SidePanel] Using image understanding for response");
@@ -348,18 +388,90 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
               )}...`
             : undefined,
         );
+      } else if (wantsSummary && pageContent) {
+        // Use Summarizer API for page content
+        console.log("[SidePanel] Using Summarizer API for page content");
+        try {
+          response = await aiManager.summarize(
+            pageContent.content,
+            `Please provide a concise summary of this webpage titled "${pageContent.title}"`
+          );
+        } catch (error) {
+          console.warn("[SidePanel] Summarizer API failed, using Prompt API:", error);
+          response = await aiManager.prompt(
+            `Please summarize this webpage content:\n\nTitle: ${pageContent.title}\n\nContent: ${pageContent.content}`
+          );
+        }
+      } else if (wantsTranslation) {
+        // Use Translator API
+        console.log("[SidePanel] Using Translator API");
+        try {
+          // Detect language if not specified
+          const sourceLang = "en";
+          let targetLang = "es"; // default to Spanish
+
+          // Simple language detection from keywords
+          if (inputValue.toLowerCase().includes("to spanish") || inputValue.toLowerCase().includes("in spanish")) {
+            targetLang = "es";
+          } else if (inputValue.toLowerCase().includes("to french") || inputValue.toLowerCase().includes("in french")) {
+            targetLang = "fr";
+          } else if (inputValue.toLowerCase().includes("to german") || inputValue.toLowerCase().includes("in german")) {
+            targetLang = "de";
+          } else if (inputValue.toLowerCase().includes("to chinese") || inputValue.toLowerCase().includes("in chinese")) {
+            targetLang = "zh";
+          } else if (inputValue.toLowerCase().includes("to japanese") || inputValue.toLowerCase().includes("in japanese")) {
+            targetLang = "ja";
+          }
+
+          // Extract text to translate (remove translation command)
+          const textToTranslate = inputValue.replace(/translate\s+(to\s+)?\w+/i, "").trim();
+
+          response = await aiManager.translate(textToTranslate, sourceLang, targetLang);
+          response = `**Translation (${sourceLang} → ${targetLang}):**\n\n${response}`;
+        } catch (error) {
+          console.warn("[SidePanel] Translator API failed, using Prompt API:", error);
+          response = await aiManager.prompt(`Please translate the following text: ${inputValue}`);
+        }
+      } else if (wantsProofread) {
+        // Use Proofreader API
+        console.log("[SidePanel] Using Proofreader API");
+        try {
+          const proofreadResult = await aiManager.proofread(inputValue);
+          if (proofreadResult.corrections && proofreadResult.corrections.length > 0) {
+            response = `**Proofread Result:**\n\n${proofreadResult.corrected}\n\n**Suggestions:**\n${proofreadResult.corrections.map(c => `• ${c.original} → ${c.suggestion}${c.explanation ? ` (${c.explanation})` : ''}`).join('\n')}`;
+          } else {
+            response = `**Proofread Result:**\n\nYour text appears to be grammatically correct!\n\n${proofreadResult.corrected}`;
+          }
+        } catch (error) {
+          console.warn("[SidePanel] Proofreader API failed, using Prompt API:", error);
+          response = await aiManager.prompt(`Please proofread and correct the following text: ${inputValue}`);
+        }
       } else {
         // Build the prompt with page content if available (regular text prompt)
         const systemPrompt =
-          "You are Kaizen, an AI assistant focused on productivity, learning, and digital well-being. Provide helpful, concise responses. You have access to various AI tools and can help with writing, analysis, translation, and more.";
+          "You are Kaizen, an AI assistant focused on productivity, learning, and digital well-being. You have access to various AI tools including summarization, translation, proofreading, and content analysis. Provide helpful, concise responses. You can help with writing, analysis, translation, summarization, and more.";
 
         let fullPrompt = `${systemPrompt}\n\nUser: ${inputValue}\n\nAssistant:`;
 
         if (pageContent && pageContent.content) {
-          fullPrompt = `${systemPrompt}\n\nPage Content:\nTitle: ${pageContent.title}\nURL: ${pageContent.url}\nWord Count: ${pageContent.wordCount}\n\nContent:\n${pageContent.content}\n\nUser Question: ${inputValue}\n\nAssistant: Please analyze the page content above and answer the user's question.`;
-        }
+          fullPrompt = `${systemPrompt}\n\nPage Content Available:\nTitle: ${pageContent.title}\nURL: ${pageContent.url}\nWord Count: ${pageContent.wordCount}\n\nContent (excerpt):\n${pageContent.content.substring(0, 1000)}...\n\nUser Question: ${inputValue}\n\nAssistant: Please analyze the page content above and answer the user's question. If the question is about the page content, use it to provide a relevant answer.`;
 
-        response = await aiManager.prompt(fullPrompt);
+          // If it's a page content query, use summarizer for better response
+          if (isPageContentQuery) {
+            try {
+              console.log("[SidePanel] Using Summarizer API for page analysis");
+              const summary = await aiManager.summarize(pageContent.content, inputValue);
+              response = summary;
+            } catch (error) {
+              console.warn("[SidePanel] Summarizer failed for page analysis, using Prompt API:", error);
+              response = await aiManager.prompt(fullPrompt);
+            }
+          } else {
+            response = await aiManager.prompt(fullPrompt);
+          }
+        } else {
+          response = await aiManager.prompt(fullPrompt);
+        }
       }
 
       const aiMessage: Message = {
@@ -522,6 +634,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ theme }) => {
       }
       setIsListening(false);
       setIsRecording(false);
+      
     } else {
       // Start recording
       startVoiceRecording();

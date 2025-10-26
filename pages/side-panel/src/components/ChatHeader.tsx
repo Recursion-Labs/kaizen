@@ -16,21 +16,21 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => (
     <header
       className={cn(
-        "flex items-center justify-between px-6 py-4 border-b",
+        "flex items-center justify-between px-4 py-3 border-b",
         theme === "light"
           ? "bg-white border-slate-200 shadow-sm"
           : "bg-gray-800 border-gray-700",
       )}
     >
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2.5">
         <div
           className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center",
+            "w-7 h-7 rounded-lg flex items-center justify-center",
             "bg-gradient-to-r from-blue-500 to-purple-600",
           )}
         >
           <svg
-            className="w-5 h-5 text-white"
+            className="w-4 h-4 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <div>
           <h1
             className={cn(
-              "text-lg font-bold",
+              "text-base font-semibold leading-none",
               theme === "light" ? "text-gray-900" : "text-white",
             )}
           >
@@ -54,7 +54,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           </h1>
           <p
             className={cn(
-              "text-xs",
+              "text-[11px] leading-tight",
               theme === "light" ? "text-gray-500" : "text-gray-400",
             )}
           >
@@ -63,19 +63,19 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1.5">
         {/* New Chat Button */}
         <button
           onClick={onNewChat}
           className={cn(
-            "p-2 rounded-lg transition-all duration-200",
+            "p-1.5 rounded-lg transition-all duration-200",
             "hover:bg-gray-100 dark:hover:bg-gray-700",
             theme === "light" ? "text-gray-600" : "text-gray-400",
           )}
           title="New Conversation"
         >
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -93,14 +93,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <button
           onClick={onToggleHistory}
           className={cn(
-            "p-2 rounded-lg transition-all duration-200",
+            "p-1.5 rounded-lg transition-all duration-200",
             "hover:bg-gray-100 dark:hover:bg-gray-700",
             theme === "light" ? "text-gray-600" : "text-gray-400",
           )}
           title="Chat History"
         >
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -118,14 +118,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <button
           onClick={onOpenSettings}
           className={cn(
-            "p-2 rounded-lg transition-all duration-200",
+            "p-1.5 rounded-lg transition-all duration-200",
             "hover:bg-gray-100 dark:hover:bg-gray-700",
             theme === "light" ? "text-gray-600" : "text-gray-400",
           )}
           title="Open Settings"
         >
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

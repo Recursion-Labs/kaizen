@@ -5,6 +5,10 @@ import { createRoot } from "react-dom/client";
 
 type Toast = BehaviorAlertPayload & { id: string };
 
+type DismissState = {
+  doomscrolling: Map<string, number>; // host -> last dismissed milestone
+};
+
 const SeverityStyles: Record<Toast["severity"], { bg: string; border: string; text: string; accent: string }> = {
   low: {
     bg: "bg-white dark:bg-gray-800",
@@ -82,25 +86,47 @@ const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: (id: string) => 
 const BehaviorAlerts = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timers = useRef<Map<string, number>>(new Map());
+  const dismissState = useRef<DismissState>({ doomscrolling: new Map() });
   
   useEffect(() => {
     const lastShown = new Map<string, number>(); // key by category
-    const COOLDOWN_MS = 90 * 1000; // 90s per category
+    const DEFAULT_COOLDOWN_MS = 90 * 1000; // 90s per category
 
     const handler = (message: any) => {
       if (message && message.type === "BEHAVIOR_ALERT") {
         const payload = message as BehaviorAlertPayload;
         const key = `${payload.category}`;
         const now = Date.now();
+
+        // Doomscrolling: sticky and update-in-place, no cooldown between milestones
+        if (payload.category === 'doomscrolling') {
+          const host = (() => { try { return new URL(payload.url || location.href).hostname; } catch { return 'unknown'; } })();
+          const lastDismissedMilestone = dismissState.current.doomscrolling.get(host) ?? -1;
+          const milestone = typeof (payload as any).milestone === 'number' ? (payload as any).milestone : 0;
+          if (lastDismissedMilestone >= milestone) return; // user dismissed this or a newer milestone already
+
+          setToasts((prev) => {
+            const existing = prev.find((t) => t.category === 'doomscrolling');
+            if (existing) {
+              return prev.map((t) => t.id === existing.id ? { ...existing, ...payload, id: existing.id } : t);
+            }
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            return [...prev, { id, ...payload }];
+          });
+          return; // stickies have no auto-dismiss
+        }
+
+        // Other categories: apply cooldown
         const nextAllowed = lastShown.get(key) || 0;
         if (now < nextAllowed) return; // skip duplicate toasts
-        lastShown.set(key, now + COOLDOWN_MS);
+        lastShown.set(key, now + DEFAULT_COOLDOWN_MS);
 
         const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const toast: Toast = { id, ...payload };
-        setToasts((prev) => [...prev, toast].slice(-2)); // keep only last 2 visible
+        // Keep at most 2 to avoid flooding
+        setToasts((prev) => [...prev, toast].slice(-2));
 
-        // Auto-dismiss after 6s (longer for high severity)
+        // Auto-dismiss after 6s (longer for high severity), except doomscrolling handled above
         const timeout = window.setTimeout(() => {
           setToasts((prev) => prev.filter((t) => t.id !== id));
           timers.current.delete(id);
@@ -121,7 +147,17 @@ const BehaviorAlerts = () => {
   }, []);
 
   const closeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => {
+      const toast = prev.find((t) => t.id === id);
+      // Record doomscrolling dismissal milestone per host
+      if (toast?.category === 'doomscrolling') {
+        const host = (() => { try { return new URL(toast.url || location.href).hostname; } catch { return 'unknown'; } })();
+        const milestone = typeof (toast as any).milestone === 'number' ? (toast as any).milestone : 0;
+        const prevMilestone = dismissState.current.doomscrolling.get(host) ?? -1;
+        if (milestone > prevMilestone) dismissState.current.doomscrolling.set(host, milestone);
+      }
+      return prev.filter((t) => t.id !== id);
+    });
     const t = timers.current.get(id);
     if (t) {
       window.clearTimeout(t);

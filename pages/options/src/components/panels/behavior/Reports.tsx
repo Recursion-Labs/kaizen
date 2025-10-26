@@ -1,28 +1,17 @@
 import { cn } from "@extension/ui";
 import { FileText, Download, Calendar, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import type {
+  BehaviorReport,
+  ExportFormat,
+  ReportCardProps,
+  ReportsPanelProps,
+  ReportType,
+  ReportTypeButtonProps,
+} from "./types";
 import type React from "react";
 
-interface ReportsPanelProps {
-  theme: "light" | "dark";
-}
-
-type ReportType = "daily" | "weekly" | "monthly";
-type ExportFormat = "pdf" | "html" | "json";
-
-interface BehaviorReport {
-  id: string;
-  type: ReportType;
-  generatedAt: number;
-  period: { start: string; end: string };
-  summary: {
-    totalTime: number;
-    productiveTime: number;
-    topSites: Array<{ url: string; time: number }>;
-  };
-}
-
-export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
+const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
   const [selectedType, setSelectedType] = useState<ReportType>("weekly");
   const [generating, setGenerating] = useState(false);
   const [recentReports, setRecentReports] = useState<BehaviorReport[]>([
@@ -84,7 +73,7 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
         <h2
           className={cn(
             "text-2xl font-bold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Behavior Reports
@@ -92,7 +81,7 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
         <p
           className={cn(
             "text-sm",
-            theme === "light" ? "text-gray-600" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           Generate and export comprehensive behavior analytics
@@ -104,14 +93,14 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-6",
           theme === "light"
-            ? "border-gray-200 bg-white"
-            : "border-gray-700 bg-gray-800",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         <h3
           className={cn(
             "mb-4 text-lg font-semibold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Generate New Report
@@ -149,8 +138,10 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
           className={cn(
             "w-full rounded-lg px-6 py-3 font-semibold transition-colors",
             generating
-              ? "cursor-not-allowed bg-gray-400 text-gray-200"
-              : "bg-blue-600 text-white hover:bg-blue-700",
+              ? "cursor-not-allowed bg-kaizen-muted text-kaizen-light-muted"
+              : theme === "light"
+              ? "bg-kaizen-accent text-kaizen-light-bg hover:bg-kaizen-accent/80"
+              : "bg-kaizen-accent-dark text-kaizen-dark-text hover:bg-kaizen-accent/80",
           )}
         >
           {generating
@@ -164,14 +155,14 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-6",
           theme === "light"
-            ? "border-gray-200 bg-white"
-            : "border-gray-700 bg-gray-800",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         <h3
           className={cn(
             "mb-4 text-lg font-semibold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Recent Reports
@@ -181,7 +172,7 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
           <p
             className={cn(
               "text-center text-sm",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             No reports generated yet. Create your first report above!
@@ -203,16 +194,6 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
   );
 };
 
-// Helper Components
-
-interface ReportTypeButtonProps {
-  label: string;
-  icon: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-  theme: "light" | "dark";
-}
-
 const ReportTypeButton: React.FC<ReportTypeButtonProps> = ({
   label,
   icon,
@@ -225,22 +206,18 @@ const ReportTypeButton: React.FC<ReportTypeButtonProps> = ({
     className={cn(
       "flex flex-1 items-center justify-center space-x-2 rounded-lg border px-4 py-3 transition-colors",
       active
-        ? "border-blue-600 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+        ? theme === "light"
+          ? "border-kaizen-accent bg-kaizen-accent/10 text-kaizen-accent"
+          : "border-kaizen-accent-dark bg-kaizen-accent-dark/10 text-kaizen-accent-dark"
         : theme === "light"
-          ? "border-gray-300 text-gray-700 hover:bg-gray-50"
-          : "border-gray-600 text-gray-300 hover:bg-gray-700",
+        ? "border-kaizen-border text-kaizen-light-text hover:bg-kaizen-surface"
+        : "border-kaizen-border text-kaizen-dark-text hover:bg-kaizen-dark-surface",
     )}
   >
     {icon}
     <span className="font-medium">{label}</span>
   </button>
 );
-
-interface ReportCardProps {
-  report: BehaviorReport;
-  onExport: (reportId: string, format: ExportFormat) => void;
-  theme: "light" | "dark";
-}
 
 const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
   const formatDate = (timestamp: number) =>
@@ -251,8 +228,8 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
       className={cn(
         "rounded-lg border p-4",
         theme === "light"
-          ? "border-gray-200 bg-gray-50"
-          : "border-gray-700 bg-gray-800/50",
+          ? "border-kaizen-border bg-kaizen-surface"
+          : "border-kaizen-border bg-kaizen-dark-surface",
       )}
     >
       <div className="flex items-start justify-between">
@@ -260,7 +237,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
           <h4
             className={cn(
               "font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             {report.type.charAt(0).toUpperCase() + report.type.slice(1)} Report
@@ -268,7 +245,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
           <p
             className={cn(
               "mt-1 text-sm",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             {report.period.start} to {report.period.end}
@@ -276,7 +253,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
           <p
             className={cn(
               "mt-2 text-xs",
-              theme === "light" ? "text-gray-500" : "text-gray-500",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             Generated: {formatDate(report.generatedAt)}
@@ -290,8 +267,8 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
             className={cn(
               "rounded-lg p-2 transition-colors",
               theme === "light"
-                ? "text-blue-600 hover:bg-blue-50"
-                : "text-blue-400 hover:bg-blue-900/30",
+                ? "text-kaizen-accent hover:bg-kaizen-accent/10"
+                : "text-kaizen-accent-dark hover:bg-kaizen-accent-dark/10",
             )}
             title="Export as PDF"
           >
@@ -302,3 +279,5 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
     </div>
   );
 };
+
+export { Reports };

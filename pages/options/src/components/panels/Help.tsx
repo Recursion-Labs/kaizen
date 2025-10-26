@@ -10,7 +10,7 @@ export const Help: React.FC<HelpProps> = ({ theme }) => (
     <h2
       className={cn(
         "text-3xl font-bold mb-4",
-        theme === "light" ? "text-gray-900" : "text-white",
+        theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
       )}
     >
       Help & Support
@@ -18,7 +18,7 @@ export const Help: React.FC<HelpProps> = ({ theme }) => (
     <p
       className={cn(
         "text-sm",
-        theme === "light" ? "text-gray-500" : "text-gray-400",
+        theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
       )}
     >
       Documentation and support resources

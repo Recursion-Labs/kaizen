@@ -158,12 +158,12 @@ export class TimeTracker {
   checkLongSessions(): number[] {
     const now = Date.now();
     const longTabs: number[] = [];
-    this.sessions.forEach((session) => {
+    for (const [, session] of this.sessions) {
       const totalTime = session.accumulatedTime + (now - session.startTime);
       if (totalTime / 60000 >= this.config.alertThresholdMinutes) {
         longTabs.push(session.tabId);
       }
-    });
+    }
     return longTabs;
   }
 
@@ -176,30 +176,33 @@ export class TimeTracker {
     neutral: number;
   } {
     const today = new Date().toDateString();
-    const base = this.dailyStats.get(today) || {
-      productive: 0,
-      entertainment: 0,
-      neutral: 0,
-    };
+    const stored =
+      this.dailyStats.get(today) || {
+        productive: 0,
+        entertainment: 0,
+        neutral: 0,
+      };
 
-    // Add live time from active sessions
+    // Clone to avoid mutating persisted aggregates when layering live data
+    const snapshot = { ...stored };
+
     const now = Date.now();
-    for (const session of this.sessions.values()) {
+    this.sessions.forEach((session) => {
       const live = session.accumulatedTime + (now - session.startTime);
       switch (session.category) {
-        case 'productive':
-          base.productive += live;
+        case "productive":
+          snapshot.productive += live;
           break;
-        case 'entertainment':
-          base.entertainment += live;
+        case "entertainment":
+          snapshot.entertainment += live;
           break;
-        case 'neutral':
-          base.neutral += live;
+        case "neutral":
+          snapshot.neutral += live;
           break;
       }
-    }
+    });
 
-    return base;
+    return snapshot;
   }
 
   /**
@@ -211,6 +214,13 @@ export class TimeTracker {
     if (total === 0) return 0.5; // neutral if no data
 
     return stats.productive / total;
+  }
+
+  /**
+   * Update configuration at runtime
+   */
+  updateConfig(patch: Partial<TimeTrackerConfig>) {
+    this.config = { ...this.config, ...patch };
   }
 
   /**
@@ -263,11 +273,11 @@ export class TimeTracker {
    */
   cleanupOldSessions() {
     const now = Date.now();
-    for (const [tabId, session] of this.sessions.entries()) {
+    this.sessions.forEach((session, tabId) => {
       if (now - session.lastActiveTime > this.config.sessionTimeout) {
         this.sessions.delete(tabId);
       }
-    }
+    });
   }
 
   resetTabSession(tabId: number) {
@@ -367,8 +377,8 @@ export class TimeTracker {
   private performRealTimeCheck() {
     this.cleanupOldSessions();
 
-    for (const [tabId, session] of this.sessions.entries()) {
+    this.sessions.forEach((session, tabId) => {
       this.checkTimeThreshold(tabId, session);
-    }
+    });
   }
 }

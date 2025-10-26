@@ -6,6 +6,7 @@ export interface DoomScrollingConfig {
   monitoredDomains: string[]; // list of domains to monitor for doomscrolling
   realTimeCheckInterval: number; // interval in ms for real-time checks
   minDurationMs: number; // minimum continuous duration before severity is non-null
+  milestonePx: number; // fire an event every N pixels irrespective of time (e.g., 10000)
 }
 
 export interface ScrollSession {
@@ -13,6 +14,7 @@ export interface ScrollSession {
   startTime: number;
   lastScrollTime: number;
   scrollEvents: number;
+  milestonesEmitted: number; // how many milestone alerts have been emitted for this session
 }
 
 export interface DoomScrollingEvent {
@@ -35,6 +37,7 @@ constructor(config?: Partial<DoomScrollingConfig>) {
       timeWindow: 10 * 60 * 1000, // default: 10 minutes
       realTimeCheckInterval: 5000, // default: 5 seconds
       minDurationMs: 60 * 1000, // default: 1 minute
+      milestonePx: 10000, // milestone event every 10k px irrespective of time
       monitoredDomains: [
         "x.com",
         "twitter.com",
@@ -67,6 +70,18 @@ constructor(config?: Partial<DoomScrollingConfig>) {
     return this.config.monitoredDomains;
   }
 
+  /** Get milestone size in pixels */
+  getMilestonePx(): number {
+    return this.config.milestonePx;
+  }
+
+  /**
+   * Update configuration at runtime (persist externally if needed)
+   */
+  updateConfig(patch: Partial<DoomScrollingConfig>) {
+    this.config = { ...this.config, ...patch };
+  }
+
   /**
    * Adds scroll amount for a tab with real-time monitoring.
    * @param tabId - Chrome tab ID
@@ -83,6 +98,7 @@ constructor(config?: Partial<DoomScrollingConfig>) {
       startTime: now,
       lastScrollTime: now,
       scrollEvents: 0,
+      milestonesEmitted: 0,
     };
 
     // Reset session if time window exceeded
@@ -90,6 +106,7 @@ constructor(config?: Partial<DoomScrollingConfig>) {
       session.accumulatedScroll = 0;
       session.startTime = now;
       session.scrollEvents = 0;
+      session.milestonesEmitted = 0;
     }
 
     session.accumulatedScroll += scrollAmount;
@@ -97,7 +114,10 @@ constructor(config?: Partial<DoomScrollingConfig>) {
     session.scrollEvents += 1;
     this.sessions.set(tabId, session);
 
-    // Check for doomscrolling in real-time
+    // Milestone-based immediate alert irrespective of time
+    this.checkMilestoneAndEmit(tabId, url);
+
+    // Check for doomscrolling in real-time (time-window based)
     this.checkDoomScrollingRealTime(tabId, url, scrollAmount);
   }
 
@@ -186,6 +206,10 @@ constructor(config?: Partial<DoomScrollingConfig>) {
   }
 
   restoreSession(tabId: number, session: ScrollSession) {
+    // Backwards compatibility: hydrate missing fields
+    if (typeof (session as any).milestonesEmitted !== 'number') {
+      (session as any).milestonesEmitted = 0;
+    }
     this.sessions.set(tabId, session);
   }
 
@@ -235,6 +259,9 @@ constructor(config?: Partial<DoomScrollingConfig>) {
   private performRealTimeCheck() {
     this.cleanupOldSessions();
     for (const [tabId, session] of this.sessions.entries()) {
+      // Also evaluate milestone in periodic loop in case content events were throttled
+      this.checkMilestoneAndEmit(tabId, "");
+
       if (this.isDoomScrolling(tabId)) {
         const severity = this.getDoomScrollingSeverity(tabId);
         if (severity) {
@@ -264,6 +291,30 @@ constructor(config?: Partial<DoomScrollingConfig>) {
       return this.config.monitoredDomains.some((domain) => hostname.includes(domain));
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Emit event when crossing next 10k-like milestone without time gating
+   */
+  private checkMilestoneAndEmit(tabId: number, url: string) {
+    const session = this.sessions.get(tabId);
+    if (!session) return;
+    const milestone = this.config.milestonePx;
+    if (!milestone || milestone <= 0) return;
+
+    const count = Math.floor(session.accumulatedScroll / milestone);
+    if (count > session.milestonesEmitted) {
+      session.milestonesEmitted = count;
+      this.sessions.set(tabId, session);
+      const event: DoomScrollingEvent = {
+        tabId,
+        url,
+        severity: "high", // treat milestone as high-priority alert
+        timestamp: Date.now(),
+        scrollAmount: session.accumulatedScroll,
+      };
+      this.eventListeners.forEach((listener) => listener(event));
     }
   }
 }
