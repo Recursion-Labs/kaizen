@@ -217,6 +217,13 @@ export class TimeTracker {
   }
 
   /**
+   * Update configuration at runtime
+   */
+  updateConfig(patch: Partial<TimeTrackerConfig>) {
+    this.config = { ...this.config, ...patch };
+  }
+
+  /**
    * Start real-time monitoring
    */
   startRealTimeMonitoring() {
