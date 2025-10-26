@@ -33,6 +33,26 @@ const notifyIfAllowed = (
   chrome.notifications.create(id, opts);
 };
 
+const openSidePanelForTab = (tabId: number) => {
+  if (!("sidePanel" in chrome) || !chrome.sidePanel) {
+    throw new Error("Side panel API unavailable in this browser version");
+  }
+
+  chrome.sidePanel
+    .setOptions({
+      tabId,
+      path: "side-panel/index.html",
+      enabled: true,
+    })
+    .catch((error: unknown) => {
+      console.error("[Kaizen] Failed to configure side panel options:", error);
+    });
+
+  chrome.sidePanel.open({ tabId }).catch((error: unknown) => {
+    console.error("[Kaizen] Failed to open side panel:", error);
+  });
+};
+
 const handleIntervention = (alarm: chrome.alarms.Alarm) => {
   console.log("Executing intervention logic for:", alarm.name);
   
@@ -121,8 +141,41 @@ console.log("Integration manager:", {
   knowledge: ["KnowledgeGraph", "EmbeddingService", "RAGEngine"],
 });
 
+const sidePanelAvailable = "sidePanel" in chrome && !!chrome.sidePanel;
+const autoOpenSupported = sidePanelAvailable && typeof chrome.sidePanel?.setPanelBehavior === "function";
+
+if (autoOpenSupported) {
+  chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error: unknown) => {
+      console.error("[Kaizen] Failed to configure side panel behavior:", error);
+    });
+}
+
 // Handle scroll events and page loads from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "OPEN_SIDE_PANEL") {
+    const tabId = sender.tab?.id ?? message.tabId;
+
+    if (typeof tabId !== "number") {
+      sendResponse({ success: false, error: "TAB_ID_UNAVAILABLE" });
+      return false;
+    }
+
+    try {
+      openSidePanelForTab(tabId);
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error("[Kaizen] Failed to open side panel from message:", error);
+      sendResponse({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+
+    return false;
+  }
+
   // Handle scroll events
   if (message.type === 'SCROLL_EVENT' && sender.tab?.id) {
     console.log(`[Kaizen] Scroll event received: ${message.scrollAmount}px on tab ${sender.tab.id}`);
@@ -266,6 +319,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return true; // Keep the message channel open for async response
 });
+
+if (!autoOpenSupported
+  && sidePanelAvailable
+  && chrome.action?.onClicked) {
+  chrome.action.onClicked.addListener((tab) => {
+    const tabId = tab.id;
+
+    if (typeof tabId !== "number") {
+      console.warn("[Kaizen] Unable to open side panel: missing tab id");
+      return;
+    }
+
+    try {
+      openSidePanelForTab(tabId);
+    } catch (error) {
+      console.error("[Kaizen] Failed to open side panel from action click:", error);
+    }
+  });
+}
 
 export default {
   scheduler,
