@@ -53,8 +53,15 @@ const openSidePanelForTab = (tabId: number) => {
   });
 };
 
+const ENABLE_OS_NOTIFICATIONS = false;
+
 const handleIntervention = (alarm: chrome.alarms.Alarm) => {
   console.log("Executing intervention logic for:", alarm.name);
+  
+  // If OS notifications are disabled, just return after logging.
+  if (!ENABLE_OS_NOTIFICATIONS) {
+    return;
+  }
   
   // Handle different intervention types
   if (alarm.name === "limitExceeded") {
