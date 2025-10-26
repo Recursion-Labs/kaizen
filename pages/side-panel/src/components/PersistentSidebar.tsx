@@ -10,11 +10,12 @@ import {
   Heart,
   Gift,
   HelpCircle,
-  CheckCircle
+  CheckCircle,
+  Network
 } from "lucide-react";
 import type React from "react";
 
-type Section = "chat" | "write" | "translate" | "grammar" | "apis";
+type Section = "chat" | "write" | "translate" | "grammar" | "apis" | "graph";
 
 interface PersistentSidebarProps {
   theme: "light" | "dark";
@@ -60,6 +61,12 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
       icon: Settings,
       label: "APIs",
       description: "Chrome APIs"
+    },
+    {
+      id: "graph" as const,
+      icon: Network,
+      label: "Graph",
+      description: "Knowledge Graph"
     }
   ];
 
