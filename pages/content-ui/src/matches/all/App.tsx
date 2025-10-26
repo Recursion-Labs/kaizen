@@ -1,5 +1,4 @@
 import { initRuntimeBridge } from "../../bridge/RuntimeBridge";
-import { showAIFloatingBubble } from "../../components/AIFloatingBubble";
 import { initBehaviorAlerts } from "../../components/BehaviorAlerts";
 import { AIOverlayManager } from "../../services/AIOverlayManager";
 import { SearchEnhancer } from "../../services/SearchEnhancer";
@@ -8,6 +7,10 @@ import { useEffect } from "react";
 export default function App() {
   useEffect(() => {
     console.log("[Kaizen] Content-UI loaded 🚀");
+
+    // Remove legacy/previous launchers if present (we don't show a right-bottom launcher)
+    document.querySelector("#kaizen-sidepanel-launcher-root")?.remove();
+    document.querySelector("#kaizen-ai-bubble-root")?.remove();
 
     // Initialize AI Manager and Search Enhancer
     const init = async () => {
@@ -25,9 +28,6 @@ export default function App() {
 
         // Expose runtime bridge for page console (window.KAIZEN.*)
         initRuntimeBridge();
-
-        // Show AI Floating Bubble on all pages
-        showAIFloatingBubble();
 
         // Initialize professional behavior alerts (bottom-left toasts)
         initBehaviorAlerts();
