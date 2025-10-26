@@ -302,17 +302,48 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         ),
       };
 
+      // Calculate doomscrolling metrics
+      const doomscrollSessions = sessionSummaries.doomscrolling;
+      const totalScrollDistance = doomscrollSessions.reduce((sum, s) => sum + s.accumulatedScroll, 0);
+      const averageScrollPerSession = doomscrollSessions.length > 0 ? totalScrollDistance / doomscrollSessions.length : 0;
+      const highSeveritySessions = doomscrollSessions.filter(s => {
+        const duration = Date.now() - s.startTime;
+        if (duration < 60000) return false; // less than 1 min
+        const scrollRatio = s.accumulatedScroll / 5000; // threshold is 5000px
+        return scrollRatio >= 2; // high severity
+      }).length;
+
+      const doomscrollMetrics = {
+        totalScrollDistance,
+        averageScrollPerSession: Math.round(averageScrollPerSession),
+        highSeveritySessions,
+      };
+
       const stats = {
         productivityScore,
         todayStats,
         knowledgeGraphStats,
         sessionCounts,
         sessionSummaries,
+        doomscrollMetrics,
         insights,
       };
       sendResponse({ success: true, stats });
     } catch (error) {
       console.error('Failed to get productivity stats:', error);
+      sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  // Handle historical activity data requests
+  if (message.type === 'GET_HISTORICAL_ACTIVITY') {
+    console.log('Historical activity data requested from UI');
+    try {
+      const timeRange = message.timeRange || 'week';
+      const activityData = integrationManager.getHistoricalActivity(timeRange);
+      sendResponse({ success: true, data: activityData });
+    } catch (error) {
+      console.error('Failed to get historical activity data:', error);
       sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }

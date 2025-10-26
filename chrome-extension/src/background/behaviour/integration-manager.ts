@@ -6,7 +6,7 @@ import { EmbeddingService } from "../../../../packages/knowledge/EmbeddingServic
 import { KnowledgeGraph } from "../../../../packages/knowledge/KnowledgeGraph";
 import { RAGEngine } from "../../../../packages/knowledge/RAGEngine";
 import type { InterventionScheduler } from "./intervention-scheduler";
-import type { DoomScrollingEvent } from "../../../../packages/detectors/Doomscrolling";
+import type { DoomScrollingEvent, ScrollSession } from "../../../../packages/detectors/Doomscrolling";
 import type { PatternInsight } from "../../../../packages/detectors/PatternAnalyzer";
 import type { ShoppingEvent } from "../../../../packages/detectors/ShoppingDetector";
 import type { TimeTrackingEvent } from "../../../../packages/detectors/TimeTracker";
@@ -526,6 +526,13 @@ export class IntegrationManager {
   }
 
   /**
+   * Get historical activity data
+   */
+  public getHistoricalActivity(timeRange: "day" | "week" | "month") {
+    return this.timeTracker.getHistoricalActivity(timeRange);
+  }
+
+  /**
    * Get active sessions
    */
   public getActiveSessions() {
@@ -547,6 +554,7 @@ export class IntegrationManager {
           if (key.startsWith('doom:')) {
             const tabId = Number(key.split(':')[1]);
             if (typeof tabId === 'number' && value && typeof value === 'object') {
+              this.doomScrolling.restoreSession(tabId, value as ScrollSession);
               this.doomScrolling.restoreSession(tabId, value as any);
             }
           }

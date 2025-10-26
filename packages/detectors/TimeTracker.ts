@@ -217,6 +217,84 @@ export class TimeTracker {
   }
 
   /**
+   * Get historical activity data for a time range
+   */
+  getHistoricalActivity(timeRange: "day" | "week" | "month"): Array<{
+    label: string;
+    value: number;
+    productiveTime: number;
+    distractedTime: number;
+  }> {
+    const now = new Date();
+    const data: Array<{
+      label: string;
+      value: number;
+      productiveTime: number;
+      distractedTime: number;
+    }> = [];
+
+    if (timeRange === "day") {
+      // For day view, show hourly data for the last 24 hours
+      for (let i = 23; i >= 0; i--) {
+        const date = new Date(now.getTime() - i * 60 * 60 * 1000);
+        const hourLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateKey = date.toDateString();
+        const hourKey = date.getHours();
+        
+        // Get stored data for this hour (simplified - in real implementation would need hourly storage)
+        const dayStats = this.dailyStats.get(dateKey) || { productive: 0, entertainment: 0, neutral: 0 };
+        const productive = Math.round(dayStats.productive / 24); // Rough hourly distribution
+        const distracted = Math.round((dayStats.entertainment + dayStats.neutral) / 24);
+        
+        data.push({
+          label: hourLabel,
+          value: productive + distracted,
+          productiveTime: productive,
+          distractedTime: distracted,
+        });
+      }
+    } else if (timeRange === "week") {
+      // For week view, show daily data for the last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayLabel = date.toLocaleDateString([], { weekday: 'short' });
+        const dateKey = date.toDateString();
+        
+        const dayStats = this.dailyStats.get(dateKey) || { productive: 0, entertainment: 0, neutral: 0 };
+        const productive = Math.round(dayStats.productive / (1000 * 60)); // Convert to minutes
+        const distracted = Math.round((dayStats.entertainment + dayStats.neutral) / (1000 * 60));
+        
+        data.push({
+          label: dayLabel,
+          value: productive + distracted,
+          productiveTime: productive,
+          distractedTime: distracted,
+        });
+      }
+    } else if (timeRange === "month") {
+      // For month view, show daily data for the last 30 days
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayLabel = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const dateKey = date.toDateString();
+        
+        const dayStats = this.dailyStats.get(dateKey) || { productive: 0, entertainment: 0, neutral: 0 };
+        const productive = Math.round(dayStats.productive / (1000 * 60)); // Convert to minutes
+        const distracted = Math.round((dayStats.entertainment + dayStats.neutral) / (1000 * 60));
+        
+        data.push({
+          label: dayLabel,
+          value: productive + distracted,
+          productiveTime: productive,
+          distractedTime: distracted,
+        });
+      }
+    }
+
+    return data;
+  }
+
+  /**
    * Start real-time monitoring
    */
   startRealTimeMonitoring() {
