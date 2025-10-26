@@ -44,12 +44,20 @@ interface AILanguageModel {
   destroy(): void;
 }
 
+interface AIExpectedContentDescriptor {
+  type: "text" | "image" | string;
+  [key: string]: unknown;
+}
+
 interface AILanguageModelCreateOptions {
   systemPrompt?: string;
   temperature?: number;
   topK?: number;
   signal?: AbortSignal;
   monitor?: (monitor: AICreateMonitor) => void;
+  expectedInputs?: AIExpectedContentDescriptor[];
+  expectedOutputs?: AIExpectedContentDescriptor[];
+  languages?: string[];
 }
 
 // ============================================================================
