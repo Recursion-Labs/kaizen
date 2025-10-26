@@ -25,13 +25,16 @@ export class IntegrationManager {
   private scheduler: InterventionScheduler;
   private lastActiveTabId: number | null = null;
   private cooldowns: Map<string, number> = new Map();
+  private lastHostByTab: Map<number, string> = new Map();
 
   constructor(scheduler: InterventionScheduler) {
     this.scheduler = scheduler;
 
     // Initialize detectors
     this.timeTracker = new TimeTracker();
-    this.shoppingDetector = new ShoppingDetector();
+    this.shoppingDetector = new ShoppingDetector({
+      monitoredDomains: [], // monitor all domains for burst detection
+    });
     // More responsive real-time checks for doomscrolling
     this.doomScrolling = new DoomScrolling({
       realTimeCheckInterval: 1000, // check every 1s so interventions trigger promptly at threshold
@@ -192,7 +195,7 @@ export class IntegrationManager {
       this.scheduleWithCooldown("shoppingImpulse-warning", 4000, 15 * 60 * 1000, `shop-warn:${event.domain}`);
     }
 
-    console.log(`Shopping event: ${event.domain} has ${event.severity} severity`);
+    console.log(`Shopping event: ${event.domain} has ${event.severity} severity; visitCount=${event.visitCount} timeSpent=${event.timeSpent}`);
 
     // Realtime in-page alert for the originating tab (throttled per tab)
     if (event.tabId && typeof chrome !== 'undefined' && chrome.tabs?.sendMessage) {
@@ -204,7 +207,7 @@ export class IntegrationManager {
             category: 'shopping',
             severity: event.severity,
             title: event.severity === 'high' ? 'Impulsive shopping detected' : 'Shopping pattern noticed',
-            message: `Multiple visits to ${event.domain} (${event.visitCount} visits).`,
+            message: 'Many product pages opened quickly — take a breath before continuing.',
             url: event.url,
             timestamp: event.timestamp,
           }, () => {
@@ -218,7 +221,7 @@ export class IntegrationManager {
                   category: 'shopping',
                   severity: event.severity,
                   title: event.severity === 'high' ? 'Impulsive shopping detected' : 'Shopping pattern noticed',
-                  message: `Multiple visits to ${event.domain} (${event.visitCount} visits).`,
+                  message: 'Many product pages opened quickly — take a breath before continuing.',
                   url: event.url,
                   timestamp: event.timestamp,
                 }, () => {
@@ -283,46 +286,49 @@ export class IntegrationManager {
       this.scheduleWithCooldown("doomscrolling-warning", 3000, 10 * 60 * 1000, `doom-warn:${event.tabId}`);
     }
 
-    console.log(`Doomscrolling event: Tab ${event.tabId} has ${event.severity} severity`);
+    console.log(`Doomscrolling event: Tab ${event.tabId} has ${event.severity} severity; scroll=${event.scrollAmount}`);
 
-    // Realtime in-page alert for the originating tab (throttled per tab)
+    // Realtime in-page alert for the originating tab (milestone-based, update-in-place via content UI)
     if (event.tabId && typeof chrome !== 'undefined' && chrome.tabs?.sendMessage) {
-      const toastKey = `toast:doom:${event.tabId}`;
-      if (this.canToast(toastKey, 90 * 1000)) { // 90s cooldown per tab/category
-        try {
-          chrome.tabs.sendMessage(event.tabId, {
-            type: 'BEHAVIOR_ALERT',
-            category: 'doomscrolling',
-            severity: event.severity,
-            title: event.severity === 'high' ? 'Doomscrolling detected' : 'Heavy scrolling detected',
-            message: `You've scrolled quite a bit. Consider a short break.`,
-            url: event.url,
-            timestamp: event.timestamp,
-          }, () => {
-            const e = chrome.runtime.lastError;
-            if (e) {
-              console.debug('[Kaizen] No content receiver for doomscrolling alert yet, will retry shortly:', e.message);
-              setTimeout(() => {
-                chrome.tabs.sendMessage(event.tabId!, {
-                  type: 'BEHAVIOR_ALERT',
-                  category: 'doomscrolling',
-                  severity: event.severity,
-                  title: event.severity === 'high' ? 'Doomscrolling detected' : 'Heavy scrolling detected',
-                  message: `You've scrolled quite a bit. Consider a short break.`,
-                  url: event.url,
-                  timestamp: event.timestamp,
-                }, () => {
-                  const e2 = chrome.runtime.lastError;
-                  if (e2) {
-                    console.debug('[Kaizen] Retry still has no receiver, skipping in-page toast.');
-                  }
-                });
-              }, 1200);
-            }
-          });
-        } catch (err) {
-          console.warn('[Kaizen] Failed to send doomscrolling alert to content script:', err);
-        }
+      // Only surface on-screen toast at 10k+ milestones (severity=high)
+      if (event.severity !== 'high') return;
+      try {
+        const milestone = this.doomScrolling.getMilestonePx?.() ? this.doomScrolling.getMilestonePx() : 10000;
+        const crossed = Math.floor((event.scrollAmount || 0) / milestone) * milestone;
+        chrome.tabs.sendMessage(event.tabId, {
+          type: 'BEHAVIOR_ALERT',
+          category: 'doomscrolling',
+          severity: 'high',
+          title: 'Doomscrolling detected',
+          message: 'You’ve been scrolling a lot — take a short mindful pause.',
+          url: event.url,
+          milestone: Math.floor((event.scrollAmount || 0) / milestone),
+          timestamp: event.timestamp,
+        }, () => {
+          const e = chrome.runtime.lastError;
+          if (e) {
+            console.debug('[Kaizen] No content receiver for doomscrolling alert yet, will retry shortly:', e.message);
+            setTimeout(() => {
+              chrome.tabs.sendMessage(event.tabId!, {
+                type: 'BEHAVIOR_ALERT',
+                category: 'doomscrolling',
+                severity: 'high',
+                title: 'Doomscrolling detected',
+                message: 'You’ve been scrolling a lot — take a short mindful pause.',
+                url: event.url,
+                milestone: Math.floor((event.scrollAmount || 0) / milestone),
+                timestamp: event.timestamp,
+              }, () => {
+                const e2 = chrome.runtime.lastError;
+                if (e2) {
+                  console.debug('[Kaizen] Retry still has no receiver, skipping in-page toast.');
+                }
+              });
+            }, 1200);
+          }
+        });
+      } catch (err) {
+        console.warn('[Kaizen] Failed to send doomscrolling alert to content script:', err);
       }
     }
   }
@@ -433,6 +439,16 @@ export class IntegrationManager {
     const tabId = tab.id;
     const url = tab.url;
 
+    // Reset doomscrolling session when hostname changes to avoid cross-site carryover
+    try {
+      const host = new URL(url).hostname;
+      const prevHost = this.lastHostByTab.get(tabId);
+      if (prevHost && prevHost !== host) {
+        this.doomScrolling.resetScroll(tabId);
+      }
+      this.lastHostByTab.set(tabId, host);
+    } catch {}
+
     // Start session if missing, else update
     const hasSession = this.timeTracker.getActiveSessions().has(tabId);
     if (!hasSession) {
@@ -441,13 +457,8 @@ export class IntegrationManager {
       this.timeTracker.updateTabUrl(tabId, url);
     }
 
-    // Check for shopping
+    // Check for shopping (record only once per navigation/update)
     this.shoppingDetector.recordVisit(tabId, url);
-
-    // Check for doomscrolling domain
-    if (this.doomScrolling.getMonitoredDomains().some((domain) => url.includes(domain))) {
-      // Domain is monitored, tracking will happen via content script
-    }
 
     // Update knowledge graph with domain
     this.knowledgeGraph.addNode({
