@@ -1,6 +1,5 @@
 // Single-file panels (simple components)
 export { Analytics } from "./Analytics";
-export { Engine } from "./Engine";
 export { Detection } from "./Detection";
 export { Settings } from "./Settings";
 export { Help } from "./Help";
