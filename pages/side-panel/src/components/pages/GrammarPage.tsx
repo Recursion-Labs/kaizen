@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AIOverlayManager } from "@extension/content-ui";
 import { cn } from "@extension/ui";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileCheck, 
   CheckCircle,
@@ -16,6 +16,7 @@ import {
   EyeOff,
   Zap
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import type React from "react";
 
 interface GrammarPageProps {
@@ -37,42 +38,77 @@ const GrammarPage: React.FC<GrammarPageProps> = ({ theme }) => {
   const [issues, setIssues] = useState<GrammarIssue[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [showIssues, setShowIssues] = useState(true);
+  const [aiManager, setAIManager] = useState<AIOverlayManager | null>(null);
 
-  const sampleIssues: GrammarIssue[] = [
-    {
-      id: "1",
-      type: "error",
-      message: "Spelling error",
-      suggestion: "grammar",
-      start: 45,
-      end: 52
-    },
-    {
-      id: "2",
-      type: "warning",
-      message: "Consider using a more specific word",
-      suggestion: "proofread",
-      start: 85,
-      end: 95
-    },
-    {
-      id: "3",
-      type: "suggestion",
-      message: "Consider adding a comma",
-      suggestion: "clarity, and",
-      start: 120,
-      end: 127
-    }
-  ];
+  // Initialize AI Manager
+  useEffect(() => {
+    const initAI = async () => {
+      try {
+        const manager = AIOverlayManager.getInstance();
+        await manager.initialize();
+        setAIManager(manager);
+        console.log("[GrammarPage] AI Manager ready");
+      } catch (error) {
+        console.error("[GrammarPage] Failed to initialize AI:", error);
+      }
+    };
+    initAI();
+  }, []);
 
   const handleCheckGrammar = async () => {
+    if (!inputText.trim() || !aiManager) return;
+
     setIsChecking(true);
-    // Simulate grammar check delay
-    setTimeout(() => {
-      setIssues(sampleIssues);
-      setCorrectedText("This is a sample text with some grammar errors and spelling mistakes. It needs to be proofread and corrected for better clarity and accuracy.");
+    setIssues([]);
+    setCorrectedText("");
+
+    try {
+      const prompt = `Please analyze the following text for grammar, spelling, punctuation, and style issues. Provide a detailed analysis in the following JSON format:
+
+{
+  "issues": [
+    {
+      "type": "error|warning|suggestion",
+      "message": "Brief description of the issue",
+      "suggestion": "Suggested correction or improvement",
+      "start": position_in_text,
+      "end": position_in_text
+    }
+  ],
+  "correctedText": "The fully corrected version of the text"
+}
+
+Text to analyze:
+"${inputText}"
+
+Please be thorough but concise. Focus on actual errors and meaningful improvements.`;
+
+      const response = await aiManager.prompt(prompt);
+      
+      // Parse the JSON response
+      const parsedResponse = JSON.parse(response);
+      
+      if (parsedResponse.issues && Array.isArray(parsedResponse.issues)) {
+        setIssues(parsedResponse.issues);
+      }
+      
+      if (parsedResponse.correctedText) {
+        setCorrectedText(parsedResponse.correctedText);
+      }
+    } catch (error) {
+      console.error("[GrammarPage] Grammar check error:", error);
+      // Fallback to basic error handling
+      setIssues([{
+        id: "error-1",
+        type: "error",
+        message: "Failed to analyze text",
+        suggestion: "Please try again",
+        start: 0,
+        end: 0
+      }]);
+    } finally {
       setIsChecking(false);
-    }, 2000);
+    }
   };
 
   const getIssueIcon = (type: string) => {

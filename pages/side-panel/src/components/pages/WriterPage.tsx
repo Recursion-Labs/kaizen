@@ -1,26 +1,24 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import RewriterPage from "./RewriterPage";
+import { AIOverlayManager } from "@extension/content-ui";
 import { cn } from "@extension/ui";
-import { 
+import { motion } from "framer-motion";
+import {
   PenTool, 
   FileText, 
   Sparkles,
   ChevronDown,
   Mic,
   Paperclip,
-  Send,
   Wand2,
   BookOpen,
   Lightbulb,
   Target,
-  Zap,
   Mail,
   List,
   Play,
-  RefreshCw
+  
 } from "lucide-react";
-import RewriterPage from "./RewriterPage";
-import type React from "react";
+import { useState } from "react";
 
 interface WriterPageProps {
   theme: "light" | "dark";
@@ -28,9 +26,10 @@ interface WriterPageProps {
 
 const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
   const [activeMode, setActiveMode] = useState<"write" | "rewriter">("write");
-  const [activeTab, setActiveTab] = useState<"write" | "reply">("write");
   const [selectedCategory, setSelectedCategory] = useState("Email");
   const [inputValue, setInputValue] = useState("");
+  const [outputValue, setOutputValue] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const categories = [
     { id: "Email", icon: Mail, color: "from-blue-500 to-cyan-500" },
@@ -75,56 +74,55 @@ const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
               <PenTool className="w-5 h-5 text-white" />
             </motion.div>
             <div>
-              <h1 className={cn(
-                "text-xl font-bold",
-                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text"
-              )}>
-                Writer
-              </h1>
-              <p className={cn(
-                "text-sm",
-                theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted"
-              )}>
-                AI-powered content creation
-              </p>
+              <div className="flex items-baseline space-x-6">
+                <div className="flex flex-col">
+                  <div className="flex items-center space-x-6">
+                    <button
+                      onClick={() => setActiveMode("write")}
+                      className={cn(
+                        "text-2xl font-bold leading-none focus:outline-none",
+                        activeMode === "write"
+                          ? theme === "light"
+                            ? "text-kaizen-light-text border-b-2 border-kaizen-accent pb-1"
+                            : "text-kaizen-dark-text border-b-2 border-kaizen-accent pb-1"
+                          : theme === "light"
+                            ? "text-kaizen-light-muted"
+                            : "text-kaizen-dark-muted"
+                      )}
+                    >
+                      Writer
+                    </button>
+                    <button
+                      onClick={() => setActiveMode("rewriter")}
+                      className={cn(
+                        "text-2xl font-bold leading-none focus:outline-none",
+                        activeMode === "rewriter"
+                          ? theme === "light"
+                            ? "text-kaizen-light-text border-b-2 border-kaizen-accent pb-1"
+                            : "text-kaizen-dark-text border-b-2 border-kaizen-accent pb-1"
+                          : theme === "light"
+                            ? "text-kaizen-light-muted"
+                            : "text-kaizen-dark-muted"
+                      )}
+                    >
+                      Rewriter
+                    </button>
+                  </div>
+
+                  <div className="mt-1">
+                    <p className={cn(
+                      "text-sm",
+                      theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-muted"
+                    )}>
+                      AI-powered content creation
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          {/* Mode Toggle */}
-          <div className="flex space-x-1 p-1 rounded-xl bg-kaizen-surface">
-            <motion.button
-              onClick={() => setActiveMode("write")}
-              className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                activeMode === "write"
-                  ? "bg-kaizen-accent text-white shadow-sm"
-                  : theme === "light" 
-                    ? "text-kaizen-light-muted hover:text-kaizen-light-text" 
-                    : "text-kaizen-dark-muted hover:text-kaizen-dark-text"
-              )}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Writer
-            </motion.button>
-            <motion.button
-              onClick={() => setActiveMode("rewriter")}
-              className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                activeMode === "rewriter"
-                  ? "bg-kaizen-accent text-white shadow-sm"
-                  : theme === "light" 
-                    ? "text-kaizen-light-muted hover:text-kaizen-light-text" 
-                    : "text-kaizen-dark-muted hover:text-kaizen-dark-text"
-              )}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Rewriter
-            </motion.button>
-          </div>
-          
-          {/* Model Selector */}
+
+          {/* Model Selector (right) */}
           <motion.div
             className={cn(
               "flex items-center space-x-2 px-3 py-2 rounded-lg",
@@ -135,8 +133,8 @@ const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
             whileTap={{ scale: 0.95 }}
           >
             <Sparkles className="w-4 h-4" />
-            <span>GPT-4</span>
-            <ChevronDown className="w-3 h-3" />
+            <span>Writer APi</span>
+            <span>Writer API</span>
           </motion.div>
         </div>
       </div>
@@ -147,45 +145,6 @@ const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
           <RewriterPage theme={theme} />
         ) : (
           <div className="p-6 space-y-6">
-        {/* Tabs */}
-        <motion.div 
-          className="flex space-x-1 p-1 rounded-xl bg-kaizen-surface"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <motion.button
-            onClick={() => setActiveTab("write")}
-            className={cn(
-              "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200",
-              activeTab === "write"
-                ? "bg-kaizen-accent text-white shadow-sm"
-                : theme === "light" 
-                  ? "text-kaizen-light-muted hover:text-kaizen-light-text" 
-                  : "text-kaizen-dark-muted hover:text-kaizen-dark-text"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Write
-          </motion.button>
-          <motion.button
-            onClick={() => setActiveTab("reply")}
-            className={cn(
-              "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200",
-              activeTab === "reply"
-                ? "bg-kaizen-accent text-white shadow-sm"
-                : theme === "light" 
-                  ? "text-kaizen-light-muted hover:text-kaizen-light-text" 
-                  : "text-kaizen-dark-muted hover:text-kaizen-dark-text"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Reply
-          </motion.button>
-        </motion.div>
-
         {/* Category Pills */}
         <motion.div 
           className="flex flex-wrap gap-2"
@@ -275,7 +234,17 @@ const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
           transition={{ delay: 0.4 }}
         >
           <div className="relative">
+            <label 
+              htmlFor="input-textarea"
+              className={cn(
+                "block text-sm font-medium mb-2",
+                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text"
+              )}
+            >
+              Input
+            </label>
             <textarea
+              id="input-textarea"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Start writing your content here..."
@@ -285,7 +254,7 @@ const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
                   ? "bg-kaizen-surface border-kaizen-border text-kaizen-light-text placeholder-kaizen-light-muted"
                   : "bg-kaizen-dark-surface border-kaizen-dark-border text-kaizen-dark-text placeholder-kaizen-dark-muted"
               )}
-              rows={8}
+              rows={6}
             />
             
             {/* Input Actions */}
@@ -313,48 +282,123 @@ const WriterPage: React.FC<WriterPageProps> = ({ theme }) => {
             </div>
           </div>
           
-          <motion.button 
+          <motion.button
+            onClick={async () => {
+              if (!inputValue.trim()) return;
+              setIsGenerating(true);
+              try {
+                const manager = AIOverlayManager.getInstance();
+                await manager.initialize();
+
+                // Build a simple task prompt for the writer API
+                const tone = "as-is"; // could be wired to UI later
+                const length = "as-is";
+                const task = `${selectedCategory} (${tone}, ${length}): ${inputValue}`;
+
+                let generated = "";
+                try {
+                  if (manager.isAvailable("writer")) {
+                    generated = await manager.write(task);
+                  } else {
+                    // Fallback to prompt API
+                    generated = await manager.prompt(task);
+                  }
+                } catch (err) {
+                  console.error("Writer API error:", err);
+                  generated = "";
+                }
+
+                if (generated) {
+                  // Fill the output with generated content
+                  setOutputValue(generated);
+                }
+              } finally {
+                setIsGenerating(false);
+              }
+            }}
             className={cn(
               "w-full py-3 rounded-xl font-medium flex items-center justify-center space-x-2",
               "bg-gradient-to-r from-kaizen-accent to-kaizen-primary text-white",
-              "hover:shadow-lg transition-all duration-200"
+              "hover:shadow-lg transition-all duration-200",
+              isGenerating && "opacity-60 cursor-wait"
             )}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            disabled={isGenerating}
           >
             <Wand2 className="w-4 h-4" />
-            <span>Generate Content</span>
+            <span>{isGenerating ? "Generating..." : "Generate Content"}</span>
           </motion.button>
         </motion.div>
 
-        {/* AI Note */}
-        <motion.div 
-          className={cn(
-            "p-4 rounded-xl border-2 border-dashed text-center",
-            theme === "light" ? "border-kaizen-border bg-kaizen-surface" : "border-kaizen-dark-border bg-kaizen-dark-surface"
-          )}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <p className={cn(
-            "text-sm mb-3",
-            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted"
-          )}>
-            Write side by side with AI
-          </p>
-          <motion.button 
-            className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium",
-              "bg-gradient-to-r from-kaizen-accent to-kaizen-primary text-white",
-              "hover:shadow-md transition-all duration-200"
-            )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+        {/* Output Area */}
+        {outputValue && (
+          <motion.div 
+            className="space-y-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
           >
-            Learn More
-          </motion.button>
-        </motion.div>
+            <div className="relative">
+              <label 
+                htmlFor="output-textarea"
+                className={cn(
+                  "block text-sm font-medium mb-2",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text"
+                )}
+              >
+                Generated Output
+              </label>
+              <textarea
+                id="output-textarea"
+                value={outputValue}
+                onChange={(e) => setOutputValue(e.target.value)}
+                placeholder="Generated content will appear here..."
+                className={cn(
+                  "w-full p-4 rounded-xl border-2 resize-none focus:outline-none focus:ring-2 focus:ring-kaizen-accent transition-all duration-200",
+                  theme === "light"
+                    ? "bg-kaizen-surface border-kaizen-border text-kaizen-light-text placeholder-kaizen-light-muted"
+                    : "bg-kaizen-dark-surface border-kaizen-dark-border text-kaizen-dark-text placeholder-kaizen-dark-muted"
+                )}
+                rows={8}
+              />
+              
+              {/* Output Actions */}
+              <div className="absolute bottom-3 left-3 flex space-x-2">
+                <motion.button
+                  onClick={() => {
+                    navigator.clipboard.writeText(outputValue);
+                  }}
+                  className={cn(
+                    "p-2 rounded-lg transition-all duration-200",
+                    theme === "light" ? "hover:bg-kaizen-light-bg" : "hover:bg-kaizen-dark-bg"
+                  )}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Copy to clipboard"
+                >
+                  <svg className="w-4 h-4 text-kaizen-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </motion.button>
+                <motion.button
+                  onClick={() => setOutputValue("")}
+                  className={cn(
+                    "p-2 rounded-lg transition-all duration-200",
+                    theme === "light" ? "hover:bg-kaizen-light-bg" : "hover:bg-kaizen-dark-bg"
+                  )}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Clear output"
+                >
+                  <svg className="w-4 h-4 text-kaizen-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
           </div>
         )}
       </div>

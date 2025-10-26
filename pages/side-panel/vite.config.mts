@@ -8,6 +8,11 @@ export default withPageConfig({
   resolve: {
     alias: {
       "@src": srcDir,
+      "@extension/ui": resolve(rootDir, "..", "..", "packages", "ui"),
+      "@extension/content-ui": resolve(rootDir, "..", "content-ui", "src"),
+      "@extension/shared": resolve(rootDir, "..", "..", "packages", "shared"),
+      "@extension/storage": resolve(rootDir, "..", "..", "packages", "storage"),
+      "@extension/i18n": resolve(rootDir, "..", "..", "packages", "i18n"),
     },
   },
   publicDir: resolve(rootDir, "public"),

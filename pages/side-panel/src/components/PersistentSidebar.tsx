@@ -1,23 +1,17 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@extension/ui";
-import { 
-  MessageCircle, 
-  PenTool, 
-  Languages, 
-  FileCheck,
+import { cn, ThemeToggle } from "@extension/ui";
+import { motion } from "framer-motion";
+import {
+  MessageCircle,
+  PenTool,
+  Languages,
   Settings,
-  ChevronUp,
-  ChevronDown,
-  MoreHorizontal,
   User,
   Mail,
   Heart,
   Gift,
   HelpCircle,
-  Sparkles
+  CheckCircle
 } from "lucide-react";
-import { ThemeToggle } from "@extension/ui";
 import type React from "react";
 
 type Section = "chat" | "write" | "translate" | "grammar" | "apis";
@@ -35,7 +29,6 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
   onSectionChange,
   onThemeToggle 
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
 
   const mainNavItems = [
     {
@@ -57,6 +50,12 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
       description: "Language Tools"
     },
     {
+      id: "grammar" as const,
+      icon: CheckCircle,
+      label: "Grammar",
+      description: "Grammar Check"
+    },
+    {
       id: "apis" as const,
       icon: Settings,
       label: "APIs",
@@ -76,18 +75,18 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
   return (
     <motion.div
       className={cn(
-        "w-30 flex flex-col items-center py-4 space-y-2 relative",
+        "w-20 max-w-[86px] flex flex-col items-center py-3 space-y-1.5 relative",
         theme === "light" 
           ? "bg-kaizen-light-bg border-l border-kaizen-border" 
           : "bg-kaizen-dark-bg border-l border-kaizen-dark-border"
       )}
-      initial={{ width: 120 }}
-      animate={{ width: 120 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      initial={{ width: 80 }}
+      animate={{ width: 80 }}
+      transition={{ duration: 0.25, ease: "easeInOut" }}
     >
 
       {/* Main Navigation */}
-      <div className="flex flex-col space-y-3 flex-1">
+      <div className="flex flex-col space-y-2.5 flex-1">
         {mainNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -97,7 +96,7 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
               key={item.id}
               onClick={() => onSectionChange(item.id)}
               className={cn(
-                "group flex flex-col items-center space-y-1 p-3 rounded-xl",
+                "group flex flex-col items-center space-y-1.5 p-2.5 rounded-xl",
                 "transition-all duration-200 hover:scale-105",
                 isActive
                   ? "bg-kaizen-accent text-white shadow-md"
@@ -108,9 +107,9 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Icon className="w-5 h-5 transition-colors duration-200" />
+              <Icon className="w-[18px] h-[18px] transition-colors duration-200" />
               
-              <span className="text-xs font-medium whitespace-nowrap transition-colors duration-200">
+              <span className="text-[11px] font-medium whitespace-nowrap transition-colors duration-200">
                 {item.label}
               </span>
             </motion.button>
@@ -120,7 +119,7 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
 
 
       {/* Bottom Navigation */}
-      <div className="flex flex-col space-y-2">
+      <div className="flex flex-col space-y-1.5">
         {bottomNavItems.map((item, index) => {
           const Icon = item.icon;
           
@@ -128,14 +127,14 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
             <motion.button
               key={index}
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center",
+                "w-7 h-7 rounded-lg flex items-center justify-center",
                 "transition-all duration-200 hover:scale-110",
                 theme === "light" ? "hover:bg-kaizen-surface text-kaizen-light-muted" : "hover:bg-kaizen-dark-surface text-kaizen-dark-muted"
               )}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-[14px] h-[14px]" />
             </motion.button>
           );
         })}
@@ -143,7 +142,7 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
 
       {/* Theme Toggle */}
       {onThemeToggle && (
-        <div className="mb-2">
+        <div className="mb-1.5">
           <ThemeToggle
             theme={theme}
             onToggle={onThemeToggle}
@@ -155,14 +154,14 @@ const PersistentSidebar: React.FC<PersistentSidebarProps> = ({
       {/* User Profile */}
       <motion.button
         className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center",
+          "w-7 h-7 rounded-full flex items-center justify-center",
           "bg-gradient-to-r from-kaizen-accent to-kaizen-primary text-white",
           "transition-all duration-200 hover:scale-110"
         )}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
-        <User className="w-4 h-4" />
+  <User className="w-[14px] h-[14px]" />
       </motion.button>
 
     </motion.div>

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AIOverlayManager } from "@extension/content-ui";
 import { cn } from "@extension/ui";
+import { motion } from "framer-motion";
 import { 
   Languages, 
   ArrowLeftRight,
@@ -14,6 +14,7 @@ import {
   Globe,
   Zap
 } from "lucide-react";
+import { useState } from "react";
 import type React from "react";
 
 interface TranslatePageProps {
@@ -26,19 +27,61 @@ const TranslatePage: React.FC<TranslatePageProps> = ({ theme }) => {
   const [sourceLanguage, setSourceLanguage] = useState("English (Detected)");
   const [targetLanguage, setTargetLanguage] = useState("Marathi");
   const [isTranslating, setIsTranslating] = useState(false);
+  const [aiManager, setAIManager] = useState<AIOverlayManager | null>(null);
 
   const languages = [
     "English", "Spanish", "French", "German", "Chinese", "Japanese", 
     "Korean", "Hindi", "Marathi", "Arabic", "Portuguese", "Russian"
   ];
 
+  // Initialize AI Manager
+  useEffect(() => {
+    const initAI = async () => {
+      try {
+        const manager = AIOverlayManager.getInstance();
+        await manager.initialize();
+        setAIManager(manager);
+        console.log("[TranslatePage] AI Manager ready");
+      } catch (error) {
+        console.error("[TranslatePage] Failed to initialize AI:", error);
+      }
+    };
+    initAI();
+  }, []);
+
   const handleTranslate = async () => {
+    if (!sourceText.trim() || !aiManager) return;
+
     setIsTranslating(true);
-    // Simulate translation delay
-    setTimeout(() => {
-      setTranslatedText("साइडर आपल्याला OpenAI, DeepSeek, Anthropic, Google आणि इतर अनेक कंपन्यांच्या अग्रगण्य AI मॉडेल्समध्ये वेगवान, विश्वासार्ह प्रवेश देतो—सर्व अधिकृत API द्वारे...");
+    try {
+      // Map display language names to ISO codes for the API
+      const languageMap: { [key: string]: string } = {
+        "English": "en",
+        "Spanish": "es",
+        "French": "fr",
+        "German": "de",
+        "Chinese": "zh",
+        "Japanese": "ja",
+        "Korean": "ko",
+        "Hindi": "hi",
+        "Marathi": "mr",
+        "Arabic": "ar",
+        "Portuguese": "pt",
+        "Russian": "ru"
+      };
+
+      const sourceLang = sourceLanguage.replace(" (Detected)", "");
+      const sourceCode = languageMap[sourceLang] || "en";
+      const targetCode = languageMap[targetLanguage] || "es";
+
+      const translated = await aiManager.translate(sourceText, sourceCode, targetCode);
+      setTranslatedText(translated);
+    } catch (error) {
+      console.error("[TranslatePage] Translation failed:", error);
+      setTranslatedText("Translation failed. Please try again.");
+    } finally {
       setIsTranslating(false);
-    }, 2000);
+    }
   };
 
   const handleSwapLanguages = () => {

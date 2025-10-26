@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn, ThemeToggle } from "@extension/ui";
-import { exampleThemeStorage } from "@extension/storage";
-import PersistentSidebar from "./PersistentSidebar";
 import ChatPage from "./pages/ChatPage";
-import WriterPage from "./pages/WriterPage";
-import TranslatePage from "./pages/TranslatePage";
 import ChromeAPIsPage from "./pages/ChromeAPIsPage";
 import GrammarPage from "./pages/GrammarPage";
+import TranslatePage from "./pages/TranslatePage";
+import WriterPage from "./pages/WriterPage";
+import PersistentSidebar from "./PersistentSidebar";
+import { exampleThemeStorage } from "@extension/storage";
+import { cn } from "@extension/ui";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import type React from "react";
 
 type Section = "chat" | "write" | "translate" | "grammar" | "apis";
@@ -18,7 +18,6 @@ interface RestructuredSidePanelProps {
 
 const RestructuredSidePanel: React.FC<RestructuredSidePanelProps> = ({ theme }) => {
   const [activeSection, setActiveSection] = useState<Section>("chat");
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleThemeToggle = () => {
     exampleThemeStorage.toggle();
@@ -26,12 +25,7 @@ const RestructuredSidePanel: React.FC<RestructuredSidePanelProps> = ({ theme }) 
 
   const handleSectionChange = (section: Section) => {
     if (section === activeSection) return;
-    
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setActiveSection(section);
-      setIsTransitioning(false);
-    }, 150);
+    setActiveSection(section);
   };
 
   const renderPage = () => {

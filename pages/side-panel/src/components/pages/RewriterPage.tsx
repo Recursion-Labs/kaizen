@@ -1,41 +1,78 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { AIOverlayManager } from "@extension/content-ui";
 import { cn } from "@extension/ui";
-import { 
-  RefreshCw, 
-  Sparkles,
-  ChevronDown,
-  Mic,
-  Plus,
-  Clock,
-  HelpCircle,
-  Menu,
-  CheckCircle
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Sparkles, ChevronDown, Mic } from "lucide-react";
+import { useEffect, useState } from "react";
 import type React from "react";
+
 
 interface RewriterPageProps {
   theme: "light" | "dark";
 }
 
 const RewriterPage: React.FC<RewriterPageProps> = ({ theme }) => {
-  const [activeTab, setActiveTab] = useState<"write" | "reply">("reply");
   const [selectedType, setSelectedType] = useState("Twitter");
   const [originalText, setOriginalText] = useState("");
   const [responseIdea, setResponseIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiManager, setAIManager] = useState<AIOverlayManager | null>(null);
 
   const contentTypes = ["Twitter", "Comment", "Email", "Message"];
-  const toneOptions = ["Formal", "Casual", "Professional", "Friendly"];
-  const lengthOptions = ["Short", "Medium", "Long"];
-  const languageOptions = ["English", "Spanish", "French", "German"];
+
+  // Initialize AI Manager
+  useEffect(() => {
+    const initAI = async () => {
+      try {
+        const manager = AIOverlayManager.getInstance();
+        await manager.initialize();
+        setAIManager(manager);
+        console.log("[RewriterPage] AI Manager ready");
+      } catch (error) {
+        console.error("[RewriterPage] Failed to initialize AI:", error);
+      }
+    };
+    initAI();
+  }, []);
 
   const handleGenerate = async () => {
+    if (!originalText.trim() || !responseIdea.trim() || !aiManager) return;
+
     setIsGenerating(true);
-    // Simulate generation delay
-    setTimeout(() => {
+    try {
+      // Build rewrite task
+      const task = `Rewrite this ${selectedType.toLowerCase()} response based on the original text and the response idea provided.
+
+Original text: "${originalText}"
+
+Response idea: "${responseIdea}"
+
+Please rewrite it as a ${selectedType.toLowerCase()} response.`;
+
+      let rewritten = "";
+      try {
+        if (aiManager.isAvailable("rewriter")) {
+          rewritten = await aiManager.rewrite(task, { tone: "as-is", length: "as-is" });
+        } else {
+          // Fallback to Prompt API
+          rewritten = await aiManager.prompt(task);
+        }
+      } catch (err) {
+        console.error("Rewriter API error:", err);
+        rewritten = "";
+      }
+
+      if (rewritten) {
+        // For now, just log the result - you might want to show it in a new field or replace the response idea
+        console.log("Rewritten response:", rewritten);
+        // TODO: Display the rewritten response to the user
+        alert(`Rewritten response:\n\n${rewritten}`);
+      }
+    } catch (error) {
+      console.error("[RewriterPage] Rewrite failed:", error);
+      alert("Failed to rewrite the response. Please try again.");
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -53,55 +90,7 @@ const RewriterPage: React.FC<RewriterPageProps> = ({ theme }) => {
         "px-6 py-4 border-b",
         theme === "light" ? "border-kaizen-border" : "border-kaizen-dark-border"
       )}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className={cn(
-              "text-sm",
-              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted"
-            )}>
-              Write
-            </span>
-            <span className={cn(
-              "text-sm font-medium underline",
-              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text"
-            )}>
-              Reply
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <motion.button
-              className={cn(
-                "p-2 rounded-lg transition-all duration-200",
-                theme === "light" ? "hover:bg-kaizen-surface" : "hover:bg-kaizen-dark-surface"
-              )}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Clock className="w-4 h-4 text-kaizen-muted" />
-            </motion.button>
-            <motion.button
-              className={cn(
-                "p-2 rounded-lg transition-all duration-200",
-                theme === "light" ? "hover:bg-kaizen-surface" : "hover:bg-kaizen-dark-surface"
-              )}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <HelpCircle className="w-4 h-4 text-kaizen-muted" />
-            </motion.button>
-            <motion.button
-              className={cn(
-                "p-2 rounded-lg transition-all duration-200",
-                theme === "light" ? "hover:bg-kaizen-surface" : "hover:bg-kaizen-dark-surface"
-              )}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Menu className="w-4 h-4 text-kaizen-muted" />
-            </motion.button>
-          </div>
-        </div>
+        {/* Intentionally left minimal: Writer/Rewrite large tabs are shown on the parent page header */}
       </div>
 
       {/* Content */}
@@ -238,93 +227,6 @@ const RewriterPage: React.FC<RewriterPageProps> = ({ theme }) => {
                 whileTap={{ scale: 0.98 }}
               >
                 {isGenerating ? "Generating..." : "Submit"}
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Footer Section */}
-        <motion.div 
-          className="space-y-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          {/* AI Writing Note */}
-          <div className="flex items-center space-x-3">
-            <span className={cn(
-              "text-sm",
-              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted"
-            )}>
-              Write side by side with AI
-            </span>
-          </div>
-          
-          {/* AI Essay Writer Button */}
-          <motion.button
-            className={cn(
-              "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-              theme === "light"
-                ? "bg-kaizen-light-bg border border-kaizen-border text-kaizen-light-text hover:bg-kaizen-surface"
-                : "bg-kaizen-dark-bg border border-kaizen-dark-border text-kaizen-dark-text hover:bg-kaizen-dark-surface"
-            )}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <CheckCircle className="w-4 h-4 text-kaizen-accent" />
-            <span>AI Essay Writer</span>
-          </motion.button>
-          
-          {/* Upgrade Section */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-kaizen-accent" />
-              <span className={cn(
-                "text-sm font-medium",
-                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text"
-              )}>
-                18
-              </span>
-              <motion.button
-                className="flex items-center space-x-1 text-sm font-medium text-kaizen-accent hover:text-kaizen-primary transition-colors duration-200"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <span>Upgrade 29% OFF</span>
-                <RefreshCw className="w-3 h-3" />
-              </motion.button>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <motion.button
-                className={cn(
-                  "p-2 rounded-lg transition-all duration-200",
-                  theme === "light" ? "hover:bg-kaizen-surface" : "hover:bg-kaizen-dark-surface"
-                )}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <CheckCircle className="w-4 h-4 text-kaizen-muted" />
-              </motion.button>
-              <motion.button
-                className={cn(
-                  "p-2 rounded-lg transition-all duration-200",
-                  theme === "light" ? "hover:bg-kaizen-surface" : "hover:bg-kaizen-dark-surface"
-                )}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <CheckCircle className="w-4 h-4 text-kaizen-muted" />
-              </motion.button>
-              <motion.button
-                className={cn(
-                  "p-2 rounded-lg transition-all duration-200",
-                  theme === "light" ? "hover:bg-kaizen-surface" : "hover:bg-kaizen-dark-surface"
-                )}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <CheckCircle className="w-4 h-4 text-kaizen-muted" />
               </motion.button>
             </div>
           </div>
