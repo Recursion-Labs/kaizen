@@ -92,34 +92,36 @@ const Nudges: React.FC<NudgesProps> = () => {
     <div className="space-y-8 p-8">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-3xl font-bold text-kaizen-light-text dark:text-kaizen-dark-text">
           Smart Nudges & Notifications
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-kaizen-light-muted dark:text-kaizen-dark-muted">
           Customize how Kaizen gently reminds you to stay balanced
         </p>
       </div>
 
       {/* Master Toggle */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="rounded-lg border border-kaizen-border bg-kaizen-surface p-6 shadow-sm dark:border-kaizen-border dark:bg-kaizen-dark-surface">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-lg font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
               Enable Nudges
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-kaizen-light-muted dark:text-kaizen-dark-muted">
               Turn all nudge notifications on or off
             </p>
           </div>
           <button
             onClick={() => updateSetting("enabled", !settings.enabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              settings.enabled ? "bg-blue-600" : "bg-gray-300"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-kaizen-accent focus:ring-offset-2 dark:focus:ring-kaizen-accent-dark ${
+              settings.enabled
+                ? "bg-kaizen-accent dark:bg-kaizen-accent-dark"
+                : "bg-kaizen-muted dark:bg-kaizen-dark-muted"
             }`}
             aria-label="Toggle nudge notifications"
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block h-4 w-4 transform rounded-full bg-kaizen-light-bg transition-transform dark:bg-kaizen-dark-bg ${
                 settings.enabled ? "translate-x-6" : "translate-x-1"
               }`}
             />
@@ -131,10 +133,10 @@ const Nudges: React.FC<NudgesProps> = () => {
         <>
           {/* Tone Selector */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
               Nudge Tone
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-kaizen-light-muted dark:text-kaizen-dark-muted">
               Choose how Kaizen communicates with you
             </p>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -153,15 +155,15 @@ const Nudges: React.FC<NudgesProps> = () => {
 
           {/* Timing Controls */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
               Timing & Frequency
             </h2>
-            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <div className="space-y-4 rounded-lg border border-kaizen-border bg-kaizen-surface p-6 dark:border-kaizen-border dark:bg-kaizen-dark-surface">
               {/* Timing Mode */}
               <div className="space-y-2">
                 <label
                   htmlFor="timing-select"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className="text-sm font-medium text-kaizen-light-text dark:text-kaizen-dark-text"
                 >
                   When to send nudges
                 </label>
@@ -174,7 +176,7 @@ const Nudges: React.FC<NudgesProps> = () => {
                       e.target.value as NudgeSettings["timing"],
                     )
                   }
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full rounded-lg border border-kaizen-border bg-kaizen-surface px-4 py-2 text-kaizen-light-text dark:border-kaizen-border dark:bg-kaizen-dark-surface dark:text-kaizen-dark-text"
                 >
                   <option value="immediate">
                     Immediate - Right when detected
@@ -193,11 +195,11 @@ const Nudges: React.FC<NudgesProps> = () => {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="max-per-hour-slider"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="text-sm font-medium text-kaizen-light-text dark:text-kaizen-dark-text"
                   >
                     Maximum nudges per hour
                   </label>
-                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <span className="text-sm font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
                     {settings.maxPerHour}
                   </span>
                 </div>
@@ -210,19 +212,19 @@ const Nudges: React.FC<NudgesProps> = () => {
                   onChange={(e) =>
                     updateSetting("maxPerHour", parseInt(e.target.value))
                   }
-                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-kaizen-muted dark:bg-kaizen-dark-muted"
                   aria-label="Maximum nudges per hour"
                 />
               </div>
 
               {/* Quiet Hours */}
-              <div className="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+              <div className="space-y-3 border-t border-kaizen-border pt-4 dark:border-kaizen-border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <h3 className="text-sm font-medium text-kaizen-light-text dark:text-kaizen-dark-text">
                       Quiet Hours
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-kaizen-light-muted dark:text-kaizen-dark-muted">
                       No nudges during specified hours
                     </p>
                   </div>
@@ -233,13 +235,15 @@ const Nudges: React.FC<NudgesProps> = () => {
                         !settings.quietHoursEnabled,
                       )
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      settings.quietHoursEnabled ? "bg-blue-600" : "bg-gray-300"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-kaizen-accent focus:ring-offset-2 dark:focus:ring-kaizen-accent-dark ${
+                      settings.quietHoursEnabled
+                        ? "bg-kaizen-accent dark:bg-kaizen-accent-dark"
+                        : "bg-kaizen-muted dark:bg-kaizen-dark-muted"
                     }`}
                     aria-label="Toggle quiet hours"
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      className={`inline-block h-4 w-4 transform rounded-full bg-kaizen-light-bg transition-transform dark:bg-kaizen-dark-bg ${
                         settings.quietHoursEnabled
                           ? "translate-x-6"
                           : "translate-x-1"
@@ -253,7 +257,7 @@ const Nudges: React.FC<NudgesProps> = () => {
                     <div>
                       <label
                         htmlFor="quiet-hours-start"
-                        className="mb-1 block text-xs text-gray-600 dark:text-gray-400"
+                        className="mb-1 block text-xs text-kaizen-light-muted dark:text-kaizen-dark-muted"
                       >
                         Start Time
                       </label>
@@ -266,7 +270,7 @@ const Nudges: React.FC<NudgesProps> = () => {
                             parseInt(e.target.value),
                           )
                         }
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+                        className="w-full rounded-lg border border-kaizen-border bg-kaizen-surface px-3 py-2 text-sm text-kaizen-light-text dark:border-kaizen-border dark:bg-kaizen-dark-surface dark:text-kaizen-dark-text"
                       >
                         {Array.from({ length: 24 }, (_, i) => (
                           <option key={i} value={i}>
@@ -278,7 +282,7 @@ const Nudges: React.FC<NudgesProps> = () => {
                     <div>
                       <label
                         htmlFor="quiet-hours-end"
-                        className="mb-1 block text-xs text-gray-600 dark:text-gray-400"
+                        className="mb-1 block text-xs text-kaizen-light-muted dark:text-kaizen-dark-muted"
                       >
                         End Time
                       </label>
@@ -291,7 +295,7 @@ const Nudges: React.FC<NudgesProps> = () => {
                             parseInt(e.target.value),
                           )
                         }
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+                        className="w-full rounded-lg border border-kaizen-border bg-kaizen-surface px-3 py-2 text-sm text-kaizen-light-text dark:border-kaizen-border dark:bg-kaizen-dark-surface dark:text-kaizen-dark-text"
                       >
                         {Array.from({ length: 24 }, (_, i) => (
                           <option key={i} value={i}>
@@ -308,10 +312,10 @@ const Nudges: React.FC<NudgesProps> = () => {
 
           {/* Category Filters */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
               Pattern Triggers
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-kaizen-light-muted dark:text-kaizen-dark-muted">
               Choose which patterns should trigger nudges
             </p>
             <div className="space-y-2">
@@ -328,11 +332,11 @@ const Nudges: React.FC<NudgesProps> = () => {
               ].map((category) => (
                 <label
                   key={category.id}
-                  className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700/50"
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-kaizen-border bg-kaizen-surface p-4 transition-colors hover:bg-kaizen-accent/5 dark:border-kaizen-border dark:bg-kaizen-dark-surface dark:hover:bg-kaizen-accent-dark/5"
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-xl">{category.icon}</span>
-                    <span className="text-gray-900 dark:text-gray-100">
+                    <span className="text-kaizen-light-text dark:text-kaizen-dark-text">
                       {category.label}
                     </span>
                   </div>
@@ -340,7 +344,7 @@ const Nudges: React.FC<NudgesProps> = () => {
                     type="checkbox"
                     checked={settings.categories.includes(category.id)}
                     onChange={() => toggleCategory(category.id)}
-                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-5 w-5 rounded border-kaizen-border text-kaizen-accent focus:ring-kaizen-accent dark:border-kaizen-border dark:text-kaizen-accent-dark dark:focus:ring-kaizen-accent-dark"
                     aria-label={`Toggle ${category.label}`}
                   />
                 </label>
@@ -349,19 +353,19 @@ const Nudges: React.FC<NudgesProps> = () => {
           </div>
 
           {/* Test Nudge */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <div className="rounded-lg border border-kaizen-border bg-kaizen-surface p-6 dark:border-kaizen-border dark:bg-kaizen-dark-surface">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
                   Test Your Nudge
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-kaizen-light-muted dark:text-kaizen-dark-muted">
                   Preview how nudges will appear
                 </p>
               </div>
               <button
                 onClick={testNudge}
-                className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+                className="rounded-lg bg-kaizen-accent px-6 py-2 font-medium text-kaizen-light-bg transition-colors hover:bg-kaizen-accent/80 dark:bg-kaizen-accent-dark dark:text-kaizen-dark-bg dark:hover:bg-kaizen-accent-dark/80"
               >
                 Send Test Nudge
               </button>
@@ -370,36 +374,36 @@ const Nudges: React.FC<NudgesProps> = () => {
 
           {/* Recent Nudges History */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
               Recent Nudges
             </h2>
             <div className="space-y-2">
               {recentNudges.map((nudge) => (
                 <div
                   key={nudge.id}
-                  className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                  className="rounded-lg border border-kaizen-border bg-kaizen-surface p-4 dark:border-kaizen-border dark:bg-kaizen-dark-surface"
                 >
                   <div className="mb-2 flex items-start justify-between">
                     <div className="flex-1">
                       <div className="mb-1 flex items-center space-x-2">
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span className="text-sm font-medium text-kaizen-light-text dark:text-kaizen-dark-text">
                           {nudge.pattern}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-kaizen-light-muted dark:text-kaizen-dark-muted">
                           {new Date(nudge.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <p className="text-sm text-kaizen-light-text dark:text-kaizen-dark-text">
                         {nudge.message}
                       </p>
                     </div>
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${
                         nudge.userAction === "acted"
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                          ? "bg-kaizen-success/10 text-kaizen-success dark:bg-kaizen-success/20"
                           : nudge.userAction === "acknowledged"
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
+                            ? "bg-kaizen-accent/10 text-kaizen-accent dark:bg-kaizen-accent-dark/10 dark:text-kaizen-accent-dark"
+                            : "bg-kaizen-muted text-kaizen-light-text dark:bg-kaizen-dark-muted dark:text-kaizen-dark-text"
                       }`}
                     >
                       {nudge.userAction}
@@ -453,15 +457,15 @@ const ToneCard: React.FC<ToneCardProps> = ({ tone, selected, onClick }) => {
       onClick={onClick}
       className={`rounded-lg border p-4 text-left transition-all ${
         selected
-          ? "border-blue-500 bg-blue-50 dark:border-blue-600 dark:bg-blue-900/30"
-          : "border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
+          ? "border-kaizen-accent bg-kaizen-accent/10 dark:border-kaizen-accent-dark dark:bg-kaizen-accent-dark/10"
+          : "border-kaizen-border bg-kaizen-surface hover:border-kaizen-accent/50 dark:border-kaizen-border dark:bg-kaizen-dark-surface dark:hover:border-kaizen-accent-dark/50"
       }`}
     >
-      <div className="mb-2 text-blue-600 dark:text-blue-400">{config.icon}</div>
-      <div className="font-semibold text-gray-900 dark:text-gray-100">
+      <div className="mb-2 text-kaizen-accent dark:text-kaizen-accent-dark">{config.icon}</div>
+      <div className="font-semibold text-kaizen-light-text dark:text-kaizen-dark-text">
         {config.label}
       </div>
-      <div className="text-xs text-gray-600 dark:text-gray-400">
+      <div className="text-xs text-kaizen-light-muted dark:text-kaizen-dark-muted">
         {config.example}
       </div>
     </button>

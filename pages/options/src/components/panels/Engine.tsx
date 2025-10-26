@@ -16,8 +16,8 @@ const FeatureSection: React.FC<{
     className={cn(
       "p-6 rounded-lg border",
       theme === "light"
-        ? "bg-white border-slate-200"
-        : "bg-gray-800 border-gray-700",
+        ? "bg-kaizen-surface border-kaizen-border"
+        : "bg-kaizen-dark-surface border-kaizen-border",
     )}
   >
     <div className="flex items-start space-x-4 mb-4">
@@ -26,7 +26,7 @@ const FeatureSection: React.FC<{
         <h3
           className={cn(
             "text-lg font-semibold mb-1",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           {title}
@@ -34,7 +34,7 @@ const FeatureSection: React.FC<{
         <p
           className={cn(
             "text-sm",
-            theme === "light" ? "text-gray-600" : "text-gray-300",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           {description}
@@ -47,7 +47,7 @@ const FeatureSection: React.FC<{
           <span
             className={cn(
               "text-sm mt-0.5",
-              theme === "light" ? "text-green-600" : "text-green-400",
+              theme === "light" ? "text-kaizen-success" : "text-kaizen-success",
             )}
           >
             ✓
@@ -55,7 +55,7 @@ const FeatureSection: React.FC<{
           <span
             className={cn(
               "text-sm",
-              theme === "light" ? "text-gray-700" : "text-gray-300",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             {item}
@@ -102,7 +102,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
         <h2
           className={cn(
             "text-3xl font-bold mb-2",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           🧠 Behavior Engine
@@ -110,7 +110,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
         <p
           className={cn(
             "text-base max-w-2xl",
-            theme === "light" ? "text-gray-600" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           Privacy-first behavior tracking system that monitors, analyzes, and
@@ -124,7 +124,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
         <h3
           className={cn(
             "text-2xl font-bold mb-6",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Core Subsystems
@@ -166,7 +166,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
         <h3
           className={cn(
             "text-2xl font-bold mb-6",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Data Models
@@ -175,8 +175,8 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
           className={cn(
             "p-6 rounded-lg border",
             theme === "light"
-              ? "bg-white border-slate-200"
-              : "bg-gray-800 border-gray-700",
+              ? "bg-kaizen-surface border-kaizen-border"
+              : "bg-kaizen-dark-surface border-kaizen-border",
           )}
         >
           <div className="space-y-4">
@@ -184,7 +184,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <h4
                 className={cn(
                   "font-semibold mb-2",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 BehaviorMetrics
@@ -192,7 +192,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <p
                 className={cn(
                   "text-sm",
-                  theme === "light" ? "text-gray-600" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Daily aggregated statistics: total time, productive time,
@@ -203,7 +203,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <h4
                 className={cn(
                   "font-semibold mb-2",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 SiteActivity
@@ -211,7 +211,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <p
                 className={cn(
                   "text-sm",
-                  theme === "light" ? "text-gray-600" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Domain-level tracking: duration spent, visit count, timestamp
@@ -222,7 +222,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <h4
                 className={cn(
                   "font-semibold mb-2",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 BehaviorPattern
@@ -230,7 +230,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <p
                 className={cn(
                   "text-sm",
-                  theme === "light" ? "text-gray-600" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Detected patterns: type (doomscroll, shopping, multitask),
@@ -241,7 +241,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <h4
                 className={cn(
                   "font-semibold mb-2",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 Remark & Report
@@ -249,7 +249,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
               <p
                 className={cn(
                   "text-sm",
-                  theme === "light" ? "text-gray-600" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 User notes, mood tracking, goal reflections, exportable
@@ -265,7 +265,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
         <h3
           className={cn(
             "text-2xl font-bold mb-6",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Privacy & Storage
@@ -275,14 +275,14 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
             className={cn(
               "p-6 rounded-lg border",
               theme === "light"
-                ? "bg-green-50 border-green-200"
-                : "bg-green-900/20 border-green-800",
+                ? "bg-kaizen-success/10 border-kaizen-success/20"
+                : "bg-kaizen-success/10 border-kaizen-success/20",
             )}
           >
             <h4
               className={cn(
                 "font-semibold mb-3 flex items-center space-x-2",
-                theme === "light" ? "text-green-900" : "text-green-300",
+                theme === "light" ? "text-kaizen-success" : "text-kaizen-success",
               )}
             >
               <span>🔒</span>
@@ -291,7 +291,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
             <ul
               className={cn(
                 "text-sm space-y-2",
-                theme === "light" ? "text-green-800" : "text-green-200",
+                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
               )}
             >
               <li>✓ All data stays local</li>
@@ -304,14 +304,14 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
             className={cn(
               "p-6 rounded-lg border",
               theme === "light"
-                ? "bg-blue-50 border-blue-200"
-                : "bg-blue-900/20 border-blue-800",
+                ? "bg-kaizen-accent/10 border-kaizen-accent/20"
+                : "bg-kaizen-accent-dark/10 border-kaizen-accent-dark/20",
             )}
           >
             <h4
               className={cn(
                 "font-semibold mb-3 flex items-center space-x-2",
-                theme === "light" ? "text-blue-900" : "text-blue-300",
+                theme === "light" ? "text-kaizen-accent" : "text-kaizen-accent-dark",
               )}
             >
               <span>💾</span>
@@ -320,7 +320,7 @@ export const Engine: React.FC<EngineProps> = ({ theme }) => {
             <ul
               className={cn(
                 "text-sm space-y-2",
-                theme === "light" ? "text-blue-800" : "text-blue-200",
+                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
               )}
             >
               <li>✓ IndexedDB for behaviors</li>

@@ -24,7 +24,8 @@
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
     "@extension/ui": "workspace:*",
-    "lucide-react": "^0.546.0"
+    "lucide-react": "^0.546.0",
+    "recharts": "^2.13.0"
   },
   "devDependencies": {
     "@extension/tailwindcss-config": "workspace:*",
