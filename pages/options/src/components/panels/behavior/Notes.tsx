@@ -1,31 +1,18 @@
 import { cn } from "@extension/ui";
 import { Plus, Search, Tag, Smile, Frown, Meh } from "lucide-react";
 import { useState } from "react";
+import type {
+  RemarksPanelProps,
+  BehaviorRemark,
+  RemarkMood,
+  RemarkCategory,
+  MoodButtonProps,
+  RemarkCardProps,
+} from "./types";
 import type React from "react";
 
-interface RemarksPanelProps {
-  theme: "light" | "dark";
-}
-
-type RemarkMood = "positive" | "neutral" | "negative";
-type RemarkCategory =
-  | "goal"
-  | "reflection"
-  | "achievement"
-  | "challenge"
-  | "note";
-
-interface Remark {
-  id: string;
-  timestamp: number;
-  content: string;
-  tags: string[];
-  mood?: RemarkMood;
-  category?: RemarkCategory;
-}
-
-export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
-  const [remarks, setRemarks] = useState<Remark[]>([
+const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
+  const [remarks, setRemarks] = useState<BehaviorRemark[]>([
     {
       id: "1",
       timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
@@ -52,7 +39,7 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
 
   const addRemark = () => {
     if (newRemark.trim()) {
-      const remark: Remark = {
+  const remark: BehaviorRemark = {
         id: Date.now().toString(),
         timestamp: Date.now(),
         content: newRemark,
@@ -285,14 +272,6 @@ export const Notes: React.FC<RemarksPanelProps> = ({ theme }) => {
 
 // Helper Components
 
-interface MoodButtonProps {
-  mood: RemarkMood;
-  icon: React.ReactNode;
-  selected: boolean;
-  onClick: () => void;
-  theme: "light" | "dark";
-}
-
 const MoodButton: React.FC<MoodButtonProps> = ({
   mood,
   icon,
@@ -323,11 +302,6 @@ const MoodButton: React.FC<MoodButtonProps> = ({
     </button>
   );
 };
-
-interface RemarkCardProps {
-  remark: Remark;
-  theme: "light" | "dark";
-}
 
 const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
   const formatDate = (timestamp: number) => {
@@ -400,3 +374,5 @@ const RemarkCard: React.FC<RemarkCardProps> = ({ remark, theme }) => {
     </div>
   );
 };
+
+export { Notes };

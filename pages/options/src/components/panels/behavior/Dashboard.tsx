@@ -13,22 +13,27 @@ import {
   Brain,
   Bell,
   TrendingUp,
-  Calendar,
+  ShoppingCart,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import type {
+  DashboardProps,
+  BehaviorView,
+  DashboardStats,
+  TodayMetrics,
+  ProductivityStatsResponse,
+  ThemeVariant,
+  InsightSummary,
+  StatCardProps,
+  MetricItemProps,
+} from "./types";
 import type React from "react";
-
-interface DashboardProps {
-  theme: "light" | "dark";
-}
-
-type BehaviorView = "overview" | "activity" | "reports" | "remarks" | "goals";
 
 /**
  * Dashboard - Main container that houses ALL behavior analytics features
  * All sub-components (Activity, Reports, Notes, Goals) are rendered here based on tabs
  */
-export const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
+const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
   const [activeView, setActiveView] = useState<BehaviorView>("overview");
 
   const tabs = [
@@ -132,71 +137,141 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
 // OVERVIEW TAB - Dashboard Stats & Quick Insights
 // ============================================================================
 
-interface DashboardStats {
-  totalTimeToday: number;
-  patternsDetected: number;
-  nudgesReceived: number;
-  productivityScore: number;
-  focusStreak: number;
-  goalsCompleted: number;
-}
-
-interface TodayMetrics {
-  date: string;
-  totalTime: number;
-  productiveTime: number;
-  distractedTime: number;
-  sitesVisited: number;
-  tabsSwitched: number;
-  interventionCount: number;
-}
-
-const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
+const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
   const [stats, setStats] = useState<DashboardStats>({
     totalTimeToday: 0,
     patternsDetected: 0,
     nudgesReceived: 0,
     productivityScore: 0,
-    focusStreak: 0,
-    goalsCompleted: 0,
+    activeFocusTabs: 0,
+    shoppingAlerts: 0,
   });
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [todayMetrics, setTodayMetrics] = useState<TodayMetrics | null>(null);
+  const [latestInsight, setLatestInsight] = useState<InsightSummary | null>(
+    null,
+  );
+  const isMountedRef = useRef(true);
+
+  const loadDashboardData = useCallback(
+    async (withSpinner = false) => {
+      if (withSpinner) {
+        setLoading(true);
+      }
+      setError(null);
+
+      try {
+        if (!chrome?.runtime?.sendMessage) {
+          throw new Error(
+            "Real-time data is unavailable outside of the extension context.",
+          );
+        }
+
+        const response = (await chrome.runtime.sendMessage({
+          type: "GET_PRODUCTIVITY_STATS",
+        })) as ProductivityStatsResponse;
+
+        if (!response?.success || !response.stats) {
+          throw new Error(
+            response?.error ?? "Unable to load productivity stats.",
+          );
+        }
+
+        const payload = response.stats;
+
+        const toMinutes = (value?: number, now?: number, startTime?: number) => {
+          if (typeof now === "number" && typeof startTime === "number") {
+            // Guard against negative durations due to clock skew or time zone issues
+            return Math.max(0, Math.round(Math.max(0, now - startTime) / 60000));
+          }
+          return Math.max(0, Math.round((value ?? 0) / 60000));
+        };
+
+        const productiveMinutes = toMinutes(payload.todayStats?.productive);
+        const entertainmentMinutes = toMinutes(
+          payload.todayStats?.entertainment,
+        );
+        const neutralMinutes = toMinutes(payload.todayStats?.neutral);
+        const distractedMinutes = entertainmentMinutes + neutralMinutes;
+        const totalMinutes = productiveMinutes + distractedMinutes;
+
+        const nodeTypes = payload.knowledgeGraphStats?.nodeTypes ?? {};
+        const sessionCounts = payload.sessionCounts ?? {
+          time: 0,
+          shopping: 0,
+          doomscrolling: 0,
+        };
+
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        setStats({
+          totalTimeToday: totalMinutes,
+          patternsDetected: nodeTypes.pattern ?? 0,
+          nudgesReceived: nodeTypes.nudge ?? 0,
+          productivityScore: Math.round(
+            Math.max(0, Math.min(1, payload.productivityScore ?? 0)) * 100,
+          ),
+          activeFocusTabs: sessionCounts.time,
+          shoppingAlerts: sessionCounts.shopping,
+        });
+
+        setTodayMetrics({
+          date: new Date().toISOString().split("T")[0],
+          totalTime: totalMinutes,
+          productiveTime: productiveMinutes,
+          distractedTime: distractedMinutes,
+          sitesVisited: nodeTypes.domain ?? 0,
+          focusSessions: sessionCounts.time,
+          shoppingAlerts: sessionCounts.shopping,
+          doomscrollSessions: sessionCounts.doomscrolling,
+        });
+
+        const newestInsight =
+          payload.insights && payload.insights.length > 0
+            ? payload.insights[payload.insights.length - 1]
+            : null;
+
+        setLatestInsight(
+          newestInsight
+            ? {
+                description: newestInsight.description,
+                severity: (newestInsight.severity || "low").toLowerCase(),
+              }
+            : null,
+        );
+      } catch (err) {
+        if (!isMountedRef.current) {
+          return;
+        }
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Failed to load dashboard data.";
+        setError(message);
+      } finally {
+        if (withSpinner && isMountedRef.current) {
+          setLoading(false);
+        }
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    void loadDashboardData(true);
+    const intervalId = window.setInterval(() => {
+      void loadDashboardData();
+    }, 15000);
 
-  const loadDashboardData = async () => {
-    try {
-      // TODO: Replace with actual BehaviorStorage calls
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setStats({
-        totalTimeToday: 147,
-        patternsDetected: 4,
-        nudgesReceived: 2,
-        productivityScore: 78,
-        focusStreak: 5,
-        goalsCompleted: 3,
-      });
-
-      setTodayMetrics({
-        date: new Date().toISOString().split("T")[0],
-        totalTime: 147,
-        productiveTime: 98,
-        distractedTime: 49,
-        sitesVisited: 23,
-        tabsSwitched: 45,
-        interventionCount: 2,
-      });
-    } catch (error) {
-      console.error("Failed to load dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      isMountedRef.current = false;
+      window.clearInterval(intervalId);
+    };
+  }, [loadDashboardData]);
 
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
@@ -204,6 +279,23 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
     if (hours === 0) return `${mins}m`;
     return `${hours}h ${mins}m`;
   };
+
+  const focusPercentage =
+    todayMetrics && todayMetrics.totalTime > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            Math.round(
+              (todayMetrics.productiveTime / todayMetrics.totalTime) * 100,
+            ),
+          ),
+        )
+      : 0;
+
+  const severityTone = latestInsight?.severity ?? "low";
+  const severityLabel =
+    severityTone.charAt(0).toUpperCase() + severityTone.slice(1);
 
   if (loading) {
     return (
@@ -219,7 +311,32 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Quick Stats Grid */}
+      {error && (
+        <div
+          className={cn(
+            "rounded-lg border p-4 text-sm",
+            theme === "light"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-red-800 bg-red-900/30 text-red-200",
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => loadDashboardData(true)}
+              className={cn(
+                "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                theme === "light"
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-red-500 text-white hover:bg-red-400",
+              )}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={<Clock className="h-5 w-5" />}
@@ -237,7 +354,7 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
         />
         <StatCard
           icon={<Bell className="h-5 w-5" />}
-          label="Nudges Received"
+          label="Nudges Triggered"
           value={stats.nudgesReceived.toString()}
           theme={theme}
           color="green"
@@ -251,21 +368,20 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
         />
         <StatCard
           icon={<Target className="h-5 w-5" />}
-          label="Focus Streak"
-          value={`${stats.focusStreak} days`}
+          label="Active Focus Tabs"
+          value={stats.activeFocusTabs.toString()}
           theme={theme}
           color="pink"
         />
         <StatCard
-          icon={<Calendar className="h-5 w-5" />}
-          label="Goals Completed"
-          value={`${stats.goalsCompleted}/5`}
+          icon={<ShoppingCart className="h-5 w-5" />}
+          label="Shopping Alerts"
+          value={stats.shoppingAlerts.toString()}
           theme={theme}
           color="indigo"
         />
       </div>
 
-      {/* Today's Breakdown */}
       {todayMetrics && (
         <div
           className={cn(
@@ -284,7 +400,6 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             Today's Activity
           </h3>
 
-          {/* Productive vs Distracted Time Bar */}
           <div className="mb-6 space-y-2">
             <div className="flex justify-between text-sm">
               <span
@@ -304,15 +419,12 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
               <div
-                className="h-full bg-green-500"
-                style={{
-                  width: `${(todayMetrics.productiveTime / todayMetrics.totalTime) * 100}%`,
-                }}
+                className="h-full bg-green-500 transition-all"
+                style={{ width: `${focusPercentage}%` }}
               />
             </div>
           </div>
 
-          {/* Additional Metrics */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <MetricItem
               label="Sites Visited"
@@ -320,25 +432,24 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
               theme={theme}
             />
             <MetricItem
-              label="Tabs Switched"
-              value={todayMetrics.tabsSwitched}
+              label="Focus Tabs"
+              value={todayMetrics.focusSessions}
               theme={theme}
             />
             <MetricItem
-              label="Interventions"
-              value={todayMetrics.interventionCount}
+              label="Shopping Alerts"
+              value={todayMetrics.shoppingAlerts}
               theme={theme}
             />
             <MetricItem
-              label="Focus Time"
-              value={`${Math.round((todayMetrics.productiveTime / todayMetrics.totalTime) * 100)}%`}
+              label="Doomscroll Tabs"
+              value={todayMetrics.doomscrollSessions}
               theme={theme}
             />
           </div>
         </div>
       )}
 
-      {/* AI Insight */}
       <div
         className={cn(
           "rounded-lg border p-6",
@@ -370,34 +481,52 @@ const OverviewTab: React.FC<{ theme: "light" | "dark" }> = ({ theme }) => {
             >
               AI Insight
             </h4>
-            <p
-              className={cn(
-                "text-sm",
-                theme === "light" ? "text-blue-800" : "text-blue-200",
-              )}
-            >
-              You're most productive between 9-11 AM. Consider scheduling
-              important tasks during this window. Your focus streak of 5 days is
-              impressive - keep it up!
-            </p>
+            {latestInsight ? (
+              <>
+                <span
+                  className={cn(
+                    "mb-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold",
+                    severityTone === "high"
+                      ? theme === "light"
+                        ? "bg-red-100 text-red-600"
+                        : "bg-red-900/40 text-red-200"
+                      : severityTone === "medium"
+                        ? theme === "light"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-yellow-900/40 text-yellow-200"
+                        : theme === "light"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-green-900/40 text-green-200",
+                  )}
+                >
+                  {severityLabel} priority
+                </span>
+                <p
+                  className={cn(
+                    "text-sm",
+                    theme === "light" ? "text-blue-800" : "text-blue-200",
+                  )}
+                >
+                  {latestInsight.description}
+                </p>
+              </>
+            ) : (
+              <p
+                className={cn(
+                  "text-sm",
+                  theme === "light" ? "text-blue-800" : "text-blue-200",
+                )}
+              >
+                No insights yet — keep browsing to generate personalized
+                guidance.
+              </p>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-// ============================================================================
-// HELPER COMPONENTS
-// ============================================================================
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  theme: "light" | "dark";
-  color: "blue" | "purple" | "green" | "orange" | "pink" | "indigo";
-}
 
 const StatCard: React.FC<StatCardProps> = ({
   icon,
@@ -445,12 +574,6 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-interface MetricItemProps {
-  label: string;
-  value: number | string;
-  theme: "light" | "dark";
-}
-
 const MetricItem: React.FC<MetricItemProps> = ({ label, value, theme }) => (
   <div>
     <p
@@ -471,3 +594,5 @@ const MetricItem: React.FC<MetricItemProps> = ({ label, value, theme }) => (
     </p>
   </div>
 );
+
+export { Dashboard };

@@ -1,30 +1,18 @@
 import { cn } from "@extension/ui";
 import { Plus, CheckCircle2, Circle, Trash2 } from "lucide-react";
 import { useState } from "react";
+import type {
+  GoalsPanelProps,
+  BehaviorGoal,
+  GoalFrequency,
+  GoalUnit,
+  GoalCardProps,
+  NewGoalDraft,
+} from "./types";
 import type React from "react";
 
-interface GoalsPanelProps {
-  theme: "light" | "dark";
-}
-
-type GoalType = "daily" | "weekly" | "monthly";
-type GoalUnit = "minutes" | "hours" | "sessions" | "sites";
-
-interface Goal {
-  id: string;
-  title: string;
-  description: string;
-  type: GoalType;
-  target: number;
-  current: number;
-  unit: GoalUnit;
-  createdAt: number;
-  deadline?: number;
-  completed: boolean;
-}
-
-export const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
-  const [goals, setGoals] = useState<Goal[]>([
+const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
+  const [goals, setGoals] = useState<BehaviorGoal[]>([
     {
       id: "1",
       title: "Focus Time",
@@ -50,17 +38,17 @@ export const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
   ]);
 
   const [showAddGoal, setShowAddGoal] = useState(false);
-  const [newGoal, setNewGoal] = useState({
+  const [newGoal, setNewGoal] = useState<NewGoalDraft>({
     title: "",
     description: "",
-    type: "daily" as GoalType,
+    type: "daily",
     target: 0,
-    unit: "minutes" as GoalUnit,
+    unit: "minutes",
   });
 
   const addGoal = () => {
     if (newGoal.title && newGoal.target > 0) {
-      const goal: Goal = {
+      const goal: BehaviorGoal = {
         id: Date.now().toString(),
         ...newGoal,
         current: 0,
@@ -218,7 +206,7 @@ export const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                   onChange={(e) =>
                     setNewGoal({
                       ...newGoal,
-                      type: e.target.value as GoalType,
+                      type: e.target.value as GoalFrequency,
                     })
                   }
                   className={cn(
@@ -391,13 +379,6 @@ export const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
 
 // Helper Components
 
-interface GoalCardProps {
-  goal: Goal;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-  theme: "light" | "dark";
-}
-
 const GoalCard: React.FC<GoalCardProps> = ({
   goal,
   onToggle,
@@ -521,3 +502,5 @@ const GoalCard: React.FC<GoalCardProps> = ({
     </div>
   );
 };
+
+export { Goals };

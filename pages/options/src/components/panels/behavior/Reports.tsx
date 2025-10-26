@@ -1,28 +1,17 @@
 import { cn } from "@extension/ui";
 import { FileText, Download, Calendar, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import type {
+  BehaviorReport,
+  ExportFormat,
+  ReportCardProps,
+  ReportsPanelProps,
+  ReportType,
+  ReportTypeButtonProps,
+} from "./types";
 import type React from "react";
 
-interface ReportsPanelProps {
-  theme: "light" | "dark";
-}
-
-type ReportType = "daily" | "weekly" | "monthly";
-type ExportFormat = "pdf" | "html" | "json";
-
-interface BehaviorReport {
-  id: string;
-  type: ReportType;
-  generatedAt: number;
-  period: { start: string; end: string };
-  summary: {
-    totalTime: number;
-    productiveTime: number;
-    topSites: Array<{ url: string; time: number }>;
-  };
-}
-
-export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
+const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
   const [selectedType, setSelectedType] = useState<ReportType>("weekly");
   const [generating, setGenerating] = useState(false);
   const [recentReports, setRecentReports] = useState<BehaviorReport[]>([
@@ -203,16 +192,6 @@ export const Reports: React.FC<ReportsPanelProps> = ({ theme }) => {
   );
 };
 
-// Helper Components
-
-interface ReportTypeButtonProps {
-  label: string;
-  icon: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-  theme: "light" | "dark";
-}
-
 const ReportTypeButton: React.FC<ReportTypeButtonProps> = ({
   label,
   icon,
@@ -235,12 +214,6 @@ const ReportTypeButton: React.FC<ReportTypeButtonProps> = ({
     <span className="font-medium">{label}</span>
   </button>
 );
-
-interface ReportCardProps {
-  report: BehaviorReport;
-  onExport: (reportId: string, format: ExportFormat) => void;
-  theme: "light" | "dark";
-}
 
 const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
   const formatDate = (timestamp: number) =>
@@ -302,3 +275,5 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onExport, theme }) => {
     </div>
   );
 };
+
+export { Reports };

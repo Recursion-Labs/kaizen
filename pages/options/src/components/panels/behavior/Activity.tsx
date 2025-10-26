@@ -1,33 +1,23 @@
 import { cn } from "@extension/ui";
 import { TrendingUp, Calendar, BarChart3 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import type {
+  ActivityChartProps,
+  ChartDataPoint,
+  ChartType,
+  SummaryItemProps,
+  TimeRange,
+  TimeRangeButtonProps,
+} from "./types";
 import type React from "react";
 
-interface ActivityChartProps {
-  theme: "light" | "dark";
-}
-
-type TimeRange = "day" | "week" | "month";
-type ChartType = "line" | "bar" | "area";
-
-interface ChartDataPoint {
-  label: string;
-  value: number;
-  productiveTime: number;
-  distractedTime: number;
-}
-
-export const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
+const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadChartData();
-  }, [timeRange]);
-
-  const loadChartData = async () => {
+  const loadChartData = useCallback(async () => {
     setLoading(true);
     try {
       // TODO: Replace with actual BehaviorStorage calls
@@ -53,7 +43,11 @@ export const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]);
+
+  useEffect(() => {
+    void loadChartData();
+  }, [loadChartData]);
 
   const maxValue = Math.max(...chartData.map((d) => d.value), 1);
 
@@ -287,13 +281,6 @@ export const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
 
 // Helper Components
 
-interface TimeRangeButtonProps {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  theme: "light" | "dark";
-}
-
 const TimeRangeButton: React.FC<TimeRangeButtonProps> = ({
   label,
   active,
@@ -315,12 +302,6 @@ const TimeRangeButton: React.FC<TimeRangeButtonProps> = ({
   </button>
 );
 
-interface SummaryItemProps {
-  label: string;
-  value: string;
-  theme: "light" | "dark";
-}
-
 const SummaryItem: React.FC<SummaryItemProps> = ({ label, value, theme }) => (
   <div>
     <p
@@ -341,3 +322,5 @@ const SummaryItem: React.FC<SummaryItemProps> = ({ label, value, theme }) => (
     </p>
   </div>
 );
+
+export { Activity };
