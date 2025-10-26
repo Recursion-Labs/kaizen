@@ -134,11 +134,56 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_PRODUCTIVITY_STATS') {
     console.log('Productivity stats requested from UI');
     try {
+      const productivityScore = integrationManager.getProductivityScore();
+      const todayStats = integrationManager.getTodayStats();
+      const knowledgeGraphStats = integrationManager.getKnowledgeGraphStats();
+      const insights = integrationManager.getRecentInsights(5);
+      const activeSessions = integrationManager.getActiveSessions();
+
+      const sessionCounts = {
+        time: activeSessions.time?.size ?? 0,
+        shopping: activeSessions.shopping?.size ?? 0,
+        doomscrolling: activeSessions.doomscrolling?.size ?? 0,
+      };
+
+      const sessionSummaries = {
+        time: Array.from(activeSessions.time?.entries() ?? []).map(
+          ([tabId, session]) => ({
+            tabId,
+            url: session.url,
+            domain: session.domain,
+            category: session.category,
+            startTime: session.startTime,
+            accumulatedTime: session.accumulatedTime,
+            lastActiveTime: session.lastActiveTime,
+          }),
+        ),
+        shopping: Array.from(activeSessions.shopping?.entries() ?? []).map(
+          ([domain, session]) => ({
+            domain,
+            visitCount: session.visitCount,
+            lastVisitTime: session.lastVisitTime,
+            totalTimeSpent: session.totalTimeSpent,
+          }),
+        ),
+        doomscrolling: Array.from(activeSessions.doomscrolling?.entries() ?? []).map(
+          ([tabId, session]) => ({
+            tabId,
+            accumulatedScroll: session.accumulatedScroll,
+            startTime: session.startTime,
+            lastScrollTime: session.lastScrollTime,
+            scrollEvents: session.scrollEvents,
+          }),
+        ),
+      };
+
       const stats = {
-        productivityScore: integrationManager.getProductivityScore(),
-        todayStats: integrationManager.getTodayStats(),
-        knowledgeGraphStats: integrationManager.getKnowledgeGraphStats(),
-        activeSessions: integrationManager.getActiveSessions(),
+        productivityScore,
+        todayStats,
+        knowledgeGraphStats,
+        sessionCounts,
+        sessionSummaries,
+        insights,
       };
       sendResponse({ success: true, stats });
     } catch (error) {

@@ -38,6 +38,7 @@ import type {
   AILanguageDetector,
   AIProofreader,
   AIProofreaderResult,
+  AILanguageModelCreateOptions,
 } from "@extension/shared";
 
 class AIOverlayManager {
@@ -80,6 +81,18 @@ class AIOverlayManager {
 
     this.initPromise = this._initialize();
     await this.initPromise;
+  }
+
+  private _defaultPromptOptions(): AILanguageModelCreateOptions {
+    return {
+      systemPrompt:
+        "You are a helpful assistant that provides concise, accurate answers.",
+      temperature: 0.8,
+      topK: 40,
+      expectedInputs: [{ type: "text" }, { type: "image" }],
+      expectedOutputs: [{ type: "text" }],
+      languages: ["en"],
+    };
   }
 
   private async _initialize(): Promise<void> {
@@ -130,15 +143,9 @@ class AIOverlayManager {
       if (availability === "available") {
         console.log("[Kaizen AI] Creating LanguageModel session with multimodal support...");
          
-        const session = await LanguageModel.create({
-          systemPrompt:
-            "You are a helpful assistant that provides concise, accurate answers.",
-          temperature: 0.8,
-          topK: 40,
-          expectedInputs: [{ type: "text" }, { type: "image" }],
-          expectedOutputs: [{ type: "text" }],
-          languages: ["en"],
-        } as any);
+        const session = await LanguageModel.create(
+          this._defaultPromptOptions(),
+        );
 
         this.sessions.set("prompt", session);
         console.log("[Kaizen AI] ✓ Prompt API ready");
@@ -148,12 +155,9 @@ class AIOverlayManager {
         );
         // Try to create session anyway - it might work if download completes
         try {
-          const session = await LanguageModel.create({
-            systemPrompt:
-              "You are a helpful assistant that provides concise, accurate answers.",
-            temperature: 0.8,
-            topK: 40,
-          });
+          const session = await LanguageModel.create(
+            this._defaultPromptOptions(),
+          );
           this.sessions.set("prompt", session);
           console.log(
             "[Kaizen AI] ✓ Prompt API ready (downloaded during init)",
@@ -343,15 +347,9 @@ class AIOverlayManager {
           const availability = await LanguageModel.availability();
           if (availability === "available") {
              
-            session = await LanguageModel.create({
-              systemPrompt:
-                "You are a helpful assistant that provides concise, accurate answers.",
-              temperature: 0.8,
-              topK: 40,
-              expectedInputs: [{ type: "text" }, { type: "image" }],
-              expectedOutputs: [{ type: "text" }],
-              languages: ["en"],
-            } as any);
+            session = await LanguageModel.create(
+              this._defaultPromptOptions(),
+            );
             this.sessions.set("prompt", session);
             console.log("[Kaizen AI] ✓ Prompt session created on-demand");
           } else {
@@ -790,12 +788,9 @@ class AIOverlayManager {
       if (availability === "available") {
         console.log("[Kaizen AI] Creating test session...");
          
-        const session = await LanguageModel.create({
-          systemPrompt: "You are a helpful assistant.",
-          expectedInputs: [{ type: "text" }, { type: "image" }],
-          expectedOutputs: [{ type: "text" }],
-          languages: ["en"],
-        } as any);
+        const session = await LanguageModel.create(
+          this._defaultPromptOptions(),
+        );
         console.log("[Kaizen AI] ✓ Session created successfully");
 
         console.log("[Kaizen AI] Testing prompt...");
