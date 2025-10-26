@@ -55,7 +55,13 @@ const openSidePanelForTab = (tabId: number) => {
 
 const handleIntervention = (alarm: chrome.alarms.Alarm) => {
   console.log("Executing intervention logic for:", alarm.name);
-  
+
+  // Handle nudge alarms first
+  if (alarm.name.startsWith("nudge-")) {
+    integrationManager.handleNudgeAlarm(alarm.name);
+    return;
+  }
+
   // Handle different intervention types
   if (alarm.name === "limitExceeded") {
     notifyIfAllowed(alarm.name, {
