@@ -201,7 +201,13 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
               <div
                 className={cn(
                   "flex-shrink-0",
-                  theme === "light" ? "text-blue-600" : "text-blue-400",
+                  activeSection === item.id
+                    ? theme === "light"
+                      ? "text-kaizen-accent"
+                      : "text-kaizen-dark-text"
+                    : theme === "light"
+                      ? "text-kaizen-light-muted"
+                      : "text-kaizen-dark-muted",
                 )}
               >
                 {item.icon}

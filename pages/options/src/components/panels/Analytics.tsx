@@ -51,8 +51,8 @@ const MetricCard: React.FC<{
     className={cn(
       "p-6 rounded-lg border",
       theme === "light"
-        ? "bg-white border-slate-200"
-        : "bg-gray-800 border-gray-700",
+        ? "border-kaizen-border bg-kaizen-surface"
+        : "border-kaizen-border bg-kaizen-dark-surface",
     )}
   >
     <div className="flex items-start justify-between">
@@ -60,7 +60,7 @@ const MetricCard: React.FC<{
         <p
           className={cn(
             "text-sm font-medium mb-2",
-            theme === "light" ? "text-gray-600" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           {label}
@@ -68,7 +68,7 @@ const MetricCard: React.FC<{
         <p
           className={cn(
             "text-2xl font-bold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           {value}
@@ -78,7 +78,7 @@ const MetricCard: React.FC<{
           <p
             className={cn(
               "text-xs mt-2",
-              trend > 0 ? "text-red-500" : "text-green-500",
+              trend > 0 ? "text-kaizen-error" : "text-kaizen-success",
             )}
           >
             {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}% vs last period
@@ -88,7 +88,9 @@ const MetricCard: React.FC<{
       <div
         className={cn(
           "p-3 rounded-lg",
-          theme === "light" ? "bg-blue-50" : "bg-blue-900/20",
+          theme === "light"
+            ? "bg-kaizen-accent/10"
+            : "bg-kaizen-accent-dark/10",
         )}
       >
         {icon}
@@ -108,14 +110,14 @@ const BehaviorChart: React.FC<{
       className={cn(
         "p-6 rounded-lg border",
         theme === "light"
-          ? "bg-white border-slate-200"
-          : "bg-gray-800 border-gray-700",
+          ? "border-kaizen-border bg-kaizen-surface"
+          : "border-kaizen-border bg-kaizen-dark-surface",
       )}
     >
       <h3
         className={cn(
           "text-lg font-semibold mb-4",
-          theme === "light" ? "text-gray-900" : "text-white",
+          theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
         )}
       >
         Behavior Patterns Today
@@ -127,7 +129,7 @@ const BehaviorChart: React.FC<{
               <span
                 className={cn(
                   "text-sm font-medium capitalize",
-                  theme === "light" ? "text-gray-700" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 {item.type}
@@ -135,7 +137,7 @@ const BehaviorChart: React.FC<{
               <span
                 className={cn(
                   "text-sm",
-                  theme === "light" ? "text-gray-500" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 {item.count}× ({item.duration}m)
@@ -144,11 +146,11 @@ const BehaviorChart: React.FC<{
             <div
               className={cn(
                 "h-2 rounded-full overflow-hidden",
-                theme === "light" ? "bg-slate-100" : "bg-gray-700",
+                theme === "light" ? "bg-kaizen-muted" : "bg-kaizen-dark-muted",
               )}
             >
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-kaizen-accent to-kaizen-primary"
                 style={{ width: `${(item.count / maxCount) * 100}%` }}
               />
             </div>
@@ -167,14 +169,14 @@ const TopSitesCard: React.FC<{
     className={cn(
       "p-6 rounded-lg border",
       theme === "light"
-        ? "bg-white border-slate-200"
-        : "bg-gray-800 border-gray-700",
+        ? "border-kaizen-border bg-kaizen-surface"
+        : "border-kaizen-border bg-kaizen-dark-surface",
     )}
   >
     <h3
       className={cn(
         "text-lg font-semibold mb-4",
-        theme === "light" ? "text-gray-900" : "text-white",
+        theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
       )}
     >
       Top Sites Today
@@ -192,14 +194,14 @@ const TopSitesCard: React.FC<{
           }}
         >
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
+            <div className="w-8 h-8 rounded bg-gradient-to-br from-kaizen-accent to-kaizen-primary flex items-center justify-center text-white text-sm font-semibold">
               {idx + 1}
             </div>
             <div>
               <p
                 className={cn(
                   "text-sm font-medium",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 {site.name}
@@ -207,7 +209,7 @@ const TopSitesCard: React.FC<{
               <p
                 className={cn(
                   "text-xs",
-                  theme === "light" ? "text-gray-500" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 {site.count} visits
@@ -217,7 +219,7 @@ const TopSitesCard: React.FC<{
           <span
             className={cn(
               "text-sm font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             {site.duration}m
@@ -238,7 +240,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
         <h2
           className={cn(
             "text-3xl font-bold mb-2",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Analytics Dashboard
@@ -246,7 +248,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
         <p
           className={cn(
             "text-sm",
-            theme === "light" ? "text-gray-500" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           Comprehensive insights about your browsing behavior and productivity
@@ -362,14 +364,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
         className={cn(
           "p-6 rounded-lg border",
           theme === "light"
-            ? "bg-white border-slate-200"
-            : "bg-gray-800 border-gray-700",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         <h3
           className={cn(
             "text-lg font-semibold mb-4",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Time Period Comparison
@@ -384,13 +386,13 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
               key={period.label}
               className={cn(
                 "p-4 rounded-lg",
-                theme === "light" ? "bg-slate-50" : "bg-gray-700/50",
+                theme === "light" ? "bg-kaizen-muted/20" : "bg-kaizen-dark-muted/20",
               )}
             >
               <p
                 className={cn(
                   "text-sm font-medium mb-3",
-                  theme === "light" ? "text-gray-600" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 {period.label}
@@ -400,7 +402,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
                   <span
                     className={cn(
                       "text-xs",
-                      theme === "light" ? "text-gray-500" : "text-gray-400",
+                      theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                     )}
                   >
                     Total
@@ -408,7 +410,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
                   <span
                     className={cn(
                       "text-sm font-semibold",
-                      theme === "light" ? "text-gray-900" : "text-white",
+                      theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                     )}
                   >
                     {Math.round(period.data.totalTime / 60)}h
@@ -418,15 +420,15 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
                   <span
                     className={cn(
                       "text-xs",
-                      theme === "light" ? "text-gray-500" : "text-gray-400",
+                      theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                     )}
                   >
                     Productive
                   </span>
                   <span
                     className={cn(
-                      "text-sm font-semibold text-green-600",
-                      theme === "light" ? "" : "text-green-400",
+                      "text-sm font-semibold text-kaizen-success",
+                      theme === "light" ? "" : "text-kaizen-success-dark",
                     )}
                   >
                     {Math.round(period.data.productiveTime / 60)}h
@@ -436,15 +438,15 @@ export const Analytics: React.FC<AnalyticsProps> = ({ theme }) => {
                   <span
                     className={cn(
                       "text-xs",
-                      theme === "light" ? "text-gray-500" : "text-gray-400",
+                      theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                     )}
                   >
                     Distractions
                   </span>
                   <span
                     className={cn(
-                      "text-sm font-semibold text-orange-600",
-                      theme === "light" ? "" : "text-orange-400",
+                      "text-sm font-semibold text-kaizen-error",
+                      theme === "light" ? "" : "text-kaizen-error-dark",
                     )}
                   >
                     {Math.round(period.data.distractionTime / 60)}h

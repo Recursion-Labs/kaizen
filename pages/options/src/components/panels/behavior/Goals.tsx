@@ -89,7 +89,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
           <h2
             className={cn(
               "text-2xl font-bold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Goals Tracking
@@ -97,7 +97,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
           <p
             className={cn(
               "text-sm",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             Set and track your browsing wellness objectives
@@ -105,7 +105,12 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
         </div>
         <button
           onClick={() => setShowAddGoal(!showAddGoal)}
-          className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+          className={cn(
+            "flex items-center space-x-2 rounded-lg px-4 py-2 font-semibold transition-colors",
+            theme === "light"
+              ? "bg-kaizen-accent text-kaizen-light-bg hover:bg-kaizen-accent/80"
+              : "bg-kaizen-accent-dark text-kaizen-dark-text hover:bg-kaizen-accent/80",
+          )}
         >
           <Plus className="h-5 w-5" />
           <span>New Goal</span>
@@ -118,14 +123,14 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
           className={cn(
             "rounded-lg border p-6",
             theme === "light"
-              ? "border-gray-200 bg-white"
-              : "border-gray-700 bg-gray-800",
+              ? "border-kaizen-border bg-kaizen-surface"
+              : "border-kaizen-border bg-kaizen-dark-surface",
           )}
         >
           <h3
             className={cn(
               "mb-4 text-lg font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Create New Goal
@@ -138,7 +143,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 htmlFor="goal-title"
                 className={cn(
                   "mb-2 block text-sm font-medium",
-                  theme === "light" ? "text-gray-700" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 Goal Title
@@ -152,10 +157,10 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 }
                 placeholder="E.g., Focus Time"
                 className={cn(
-                  "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                  "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2",
                   theme === "light"
-                    ? "border-gray-300 bg-white text-gray-900"
-                    : "border-gray-600 bg-gray-700 text-white",
+                    ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text focus:ring-kaizen-accent"
+                    : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text focus:ring-kaizen-accent",
                 )}
               />
             </div>
@@ -166,7 +171,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 htmlFor="goal-description"
                 className={cn(
                   "mb-2 block text-sm font-medium",
-                  theme === "light" ? "text-gray-700" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 Description
@@ -179,10 +184,10 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 }
                 placeholder="Describe your goal..."
                 className={cn(
-                  "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                  "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2",
                   theme === "light"
-                    ? "border-gray-300 bg-white text-gray-900"
-                    : "border-gray-600 bg-gray-700 text-white",
+                    ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text focus:ring-kaizen-accent"
+                    : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text focus:ring-kaizen-accent",
                 )}
                 rows={3}
               />
@@ -195,7 +200,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                   htmlFor="goal-type"
                   className={cn(
                     "mb-2 block text-sm font-medium",
-                    theme === "light" ? "text-gray-700" : "text-gray-300",
+                    theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                   )}
                 >
                   Type
@@ -212,8 +217,8 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                   className={cn(
                     "w-full rounded-lg border px-3 py-2 text-sm",
                     theme === "light"
-                      ? "border-gray-300 bg-white text-gray-900"
-                      : "border-gray-600 bg-gray-700 text-white",
+                      ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text"
+                      : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text",
                   )}
                 >
                   <option value="daily">Daily</option>
@@ -227,7 +232,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                   htmlFor="goal-target"
                   className={cn(
                     "mb-2 block text-sm font-medium",
-                    theme === "light" ? "text-gray-700" : "text-gray-300",
+                    theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                   )}
                 >
                   Target
@@ -246,8 +251,8 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                   className={cn(
                     "w-full rounded-lg border px-3 py-2 text-sm",
                     theme === "light"
-                      ? "border-gray-300 bg-white text-gray-900"
-                      : "border-gray-600 bg-gray-700 text-white",
+                      ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text"
+                      : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text",
                   )}
                 />
               </div>
@@ -259,7 +264,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 htmlFor="goal-unit"
                 className={cn(
                   "mb-2 block text-sm font-medium",
-                  theme === "light" ? "text-gray-700" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 Unit
@@ -273,8 +278,8 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 className={cn(
                   "w-full rounded-lg border px-3 py-2 text-sm",
                   theme === "light"
-                    ? "border-gray-300 bg-white text-gray-900"
-                    : "border-gray-600 bg-gray-700 text-white",
+                    ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text"
+                    : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text",
                 )}
               >
                 <option value="minutes">Minutes</option>
@@ -292,8 +297,10 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 className={cn(
                   "flex-1 rounded-lg px-4 py-2 font-semibold transition-colors",
                   newGoal.title && newGoal.target > 0
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "cursor-not-allowed bg-gray-400 text-gray-200",
+                    ? theme === "light"
+                      ? "bg-kaizen-accent text-kaizen-light-bg hover:bg-kaizen-accent/80"
+                      : "bg-kaizen-accent-dark text-kaizen-dark-text hover:bg-kaizen-accent/80"
+                    : "cursor-not-allowed bg-kaizen-muted text-kaizen-light-muted",
                 )}
               >
                 Create Goal
@@ -303,8 +310,8 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
                 className={cn(
                   "rounded-lg border px-4 py-2 font-semibold transition-colors",
                   theme === "light"
-                    ? "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    : "border-gray-600 text-gray-300 hover:bg-gray-700",
+                    ? "border-kaizen-border text-kaizen-light-text hover:bg-kaizen-surface"
+                    : "border-kaizen-border text-kaizen-dark-text hover:bg-kaizen-dark-surface",
                 )}
               >
                 Cancel
@@ -319,7 +326,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
         <h3
           className={cn(
             "mb-4 text-lg font-semibold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Active Goals ({activeGoals.length})
@@ -329,7 +336,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
           <p
             className={cn(
               "text-center text-sm",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             No active goals. Create your first goal above!
@@ -355,7 +362,7 @@ const Goals: React.FC<GoalsPanelProps> = ({ theme }) => {
           <h3
             className={cn(
               "mb-4 text-lg font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Completed Goals ({completedGoals.length})
@@ -394,11 +401,11 @@ const GoalCard: React.FC<GoalCardProps> = ({
         "rounded-lg border p-4",
         isComplete
           ? theme === "light"
-            ? "border-green-200 bg-green-50"
-            : "border-green-800 bg-green-900/20"
+            ? "border-kaizen-success bg-kaizen-success/10"
+            : "border-kaizen-success-dark bg-kaizen-success-dark/10"
           : theme === "light"
-            ? "border-gray-200 bg-white"
-            : "border-gray-700 bg-gray-800",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
       )}
     >
       <div className="flex items-start justify-between">
@@ -406,7 +413,10 @@ const GoalCard: React.FC<GoalCardProps> = ({
           {/* Checkbox */}
           <button
             onClick={() => onToggle(goal.id)}
-            className="mt-1 text-blue-600 dark:text-blue-400"
+            className={cn(
+              "mt-1",
+              theme === "light" ? "text-kaizen-accent" : "text-kaizen-accent-dark",
+            )}
           >
             {isComplete ? (
               <CheckCircle2 className="h-5 w-5" />
@@ -422,7 +432,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
                 className={cn(
                   "font-semibold",
                   isComplete && "line-through",
-                  theme === "light" ? "text-gray-900" : "text-white",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 {goal.title}
@@ -431,8 +441,8 @@ const GoalCard: React.FC<GoalCardProps> = ({
                 className={cn(
                   "rounded-full px-2 py-0.5 text-xs",
                   theme === "light"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-blue-900/30 text-blue-300",
+                    ? "bg-kaizen-accent/20 text-kaizen-accent"
+                    : "bg-kaizen-accent-dark/20 text-kaizen-accent-dark",
                 )}
               >
                 {goal.type}
@@ -443,7 +453,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
               <p
                 className={cn(
                   "mt-1 text-sm",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 {goal.description}
@@ -455,7 +465,7 @@ const GoalCard: React.FC<GoalCardProps> = ({
               <div className="flex items-center justify-between text-sm">
                 <span
                   className={cn(
-                    theme === "light" ? "text-gray-700" : "text-gray-300",
+                    theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                   )}
                 >
                   {goal.current} / {goal.target} {goal.unit}
@@ -464,20 +474,33 @@ const GoalCard: React.FC<GoalCardProps> = ({
                   className={cn(
                     "font-semibold",
                     isComplete
-                      ? "text-green-600 dark:text-green-400"
+                      ? theme === "light"
+                        ? "text-kaizen-success"
+                        : "text-kaizen-success-dark"
                       : theme === "light"
-                        ? "text-blue-600"
-                        : "text-blue-400",
+                      ? "text-kaizen-accent"
+                      : "text-kaizen-accent-dark",
                   )}
                 >
                   {Math.round(progress)}%
                 </span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+              <div
+                className={cn(
+                  "h-2 w-full overflow-hidden rounded-full",
+                  theme === "light" ? "bg-kaizen-muted" : "bg-kaizen-dark-muted",
+                )}
+              >
                 <div
                   className={cn(
                     "h-full transition-all",
-                    isComplete ? "bg-green-500" : "bg-blue-500",
+                    isComplete
+                      ? theme === "light"
+                        ? "bg-kaizen-success"
+                        : "bg-kaizen-success-dark"
+                      : theme === "light"
+                      ? "bg-kaizen-accent"
+                      : "bg-kaizen-accent-dark",
                   )}
                   style={{ width: `${Math.min(progress, 100)}%` }}
                 />

@@ -11,7 +11,7 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
       <h2
         className={cn(
           "text-3xl font-bold mb-2",
-          theme === "light" ? "text-gray-900" : "text-white",
+          theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
         )}
       >
         General Settings
@@ -19,7 +19,7 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
       <p
         className={cn(
           "text-sm",
-          theme === "light" ? "text-gray-500" : "text-gray-400",
+          theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
         )}
       >
         Configure your preferences and extension behavior
@@ -32,14 +32,14 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
         className={cn(
           "p-6 rounded-lg border",
           theme === "light"
-            ? "bg-white border-slate-200"
-            : "bg-gray-800 border-gray-700",
+            ? "bg-kaizen-surface border-kaizen-border"
+            : "bg-kaizen-dark-surface border-kaizen-border",
         )}
       >
         <h3
           className={cn(
             "text-lg font-semibold mb-2",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Appearance
@@ -47,7 +47,7 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
         <p
           className={cn(
             "text-sm mb-4",
-            theme === "light" ? "text-gray-500" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           Customize how Kaizen looks
@@ -57,8 +57,8 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
             className={cn(
               "px-4 py-2 rounded-md text-sm font-medium transition-colors",
               theme === "light"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-700 text-gray-300",
+                ? "bg-kaizen-accent text-kaizen-light-bg"
+                : "bg-kaizen-dark-muted text-kaizen-dark-text",
             )}
           >
             Light
@@ -67,8 +67,8 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
             className={cn(
               "px-4 py-2 rounded-md text-sm font-medium transition-colors",
               theme === "dark"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 text-gray-700",
+                ? "bg-kaizen-accent text-kaizen-light-bg"
+                : "bg-kaizen-surface text-kaizen-light-text dark:bg-kaizen-dark-surface dark:text-kaizen-dark-text",
             )}
           >
             Dark
@@ -76,7 +76,7 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
           <button
             className={cn(
               "px-4 py-2 rounded-md text-sm font-medium transition-colors",
-              "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+              "bg-kaizen-surface text-kaizen-light-text dark:bg-kaizen-dark-surface dark:text-kaizen-dark-text",
             )}
           >
             Auto
@@ -89,14 +89,14 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
         className={cn(
           "p-6 rounded-lg border",
           theme === "light"
-            ? "bg-white border-slate-200"
-            : "bg-gray-800 border-gray-700",
+            ? "bg-kaizen-surface border-kaizen-border"
+            : "bg-kaizen-dark-surface border-kaizen-border",
         )}
       >
         <h3
           className={cn(
             "text-lg font-semibold mb-2",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           Privacy
@@ -104,7 +104,7 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
         <p
           className={cn(
             "text-sm mb-4",
-            theme === "light" ? "text-gray-500" : "text-gray-400",
+            theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
           )}
         >
           All AI processing happens locally on your device
@@ -113,15 +113,15 @@ export const Settings: React.FC<SettingsProps> = ({ theme }) => (
           <span
             className={cn(
               "text-sm font-medium",
-              theme === "light" ? "text-gray-700" : "text-gray-300",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Local AI Processing
           </span>
           <div className="relative inline-block w-12 h-6">
             <input type="checkbox" checked readOnly className="sr-only" />
-            <div className="block bg-blue-500 w-12 h-6 rounded-full"></div>
-            <div className="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform translate-x-6"></div>
+            <div className="block bg-kaizen-accent w-12 h-6 rounded-full"></div>
+            <div className="dot absolute left-1 top-1 bg-kaizen-light-bg w-4 h-4 rounded-full transition transform translate-x-6"></div>
           </div>
         </div>
       </div>

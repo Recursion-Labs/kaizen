@@ -78,7 +78,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
     return (
       <div className="flex h-64 items-center justify-center">
         <div
-          className={cn(theme === "light" ? "text-gray-500" : "text-gray-400")}
+          className={cn(theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted")}
         >
           Loading chart...
         </div>
@@ -94,7 +94,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           <h2
             className={cn(
               "text-2xl font-bold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Activity Chart
@@ -102,7 +102,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           <p
             className={cn(
               "text-sm",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           >
             Visualize your browsing patterns over time
@@ -112,7 +112,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           <BarChart3
             className={cn(
               "h-6 w-6",
-              theme === "light" ? "text-blue-600" : "text-blue-400",
+              theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
             )}
           />
         </div>
@@ -135,8 +135,8 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-medium transition-colors",
                 theme === "light"
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "bg-red-500 text-white hover:bg-red-400",
+                  ? "bg-kaizen-accent text-kaizen-light-bg hover:bg-kaizen-accent/80"
+                  : "bg-kaizen-accent-dark text-kaizen-dark-text hover:bg-kaizen-accent/80",
               )}
             >
               Retry
@@ -152,10 +152,13 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           <Calendar
             className={cn(
               "h-5 w-5",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           />
-          <div className="flex rounded-lg border border-gray-300 dark:border-gray-600">
+          <div className={cn(
+            "flex rounded-lg border",
+            theme === "light" ? "border-kaizen-border" : "border-kaizen-border"
+          )}>
             <TimeRangeButton
               label="Day"
               active={timeRange === "day"}
@@ -182,7 +185,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
           <TrendingUp
             className={cn(
               "h-5 w-5",
-              theme === "light" ? "text-gray-600" : "text-gray-400",
+              theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
             )}
           />
           <select
@@ -191,8 +194,8 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
             className={cn(
               "rounded-lg border px-3 py-1.5 text-sm",
               theme === "light"
-                ? "border-gray-300 bg-white text-gray-900"
-                : "border-gray-600 bg-gray-800 text-white",
+                ? "border-kaizen-border bg-kaizen-surface text-kaizen-light-text"
+                : "border-kaizen-border bg-kaizen-dark-surface text-kaizen-dark-text",
             )}
           >
             <option value="bar">Bar Chart</option>
@@ -207,8 +210,8 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-6",
           theme === "light"
-            ? "border-gray-200 bg-white"
-            : "border-gray-700 bg-gray-800",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         {/* Chart Legend */}
@@ -218,7 +221,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
             <span
               className={cn(
                 "text-sm",
-                theme === "light" ? "text-gray-700" : "text-gray-300",
+                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
               )}
             >
               Productive
@@ -229,7 +232,7 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
             <span
               className={cn(
                 "text-sm",
-                theme === "light" ? "text-gray-700" : "text-gray-300",
+                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
               )}
             >
               Distracted
@@ -244,25 +247,25 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
               <BarChart data={chartData}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                  stroke={theme === "light" ? "#A1A2AB" : "#3B3A4A"} 
                 />
                 <XAxis 
                   dataKey="label" 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <YAxis 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
-                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    backgroundColor: theme === "light" ? "#F5F9F8" : "#3B3A4A",
+                    border: theme === "light" ? "1px solid #A1A2AB" : "1px solid #575669",
                     borderRadius: "6px",
-                    color: theme === "light" ? "#111827" : "#f9fafb",
+                    color: theme === "light" ? "#575669" : "#F5F9F8",
                   }}
-                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                  labelStyle={{ color: theme === "light" ? "#575669" : "#F5F9F8" }}
                 />
                 <Bar dataKey="productiveTime" stackId="a" fill="#10b981" name="Productive (min)" />
                 <Bar dataKey="distractedTime" stackId="a" fill="#ef4444" name="Distracted (min)" />
@@ -271,25 +274,25 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
               <LineChart data={chartData}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                  stroke={theme === "light" ? "#A1A2AB" : "#3B3A4A"} 
                 />
                 <XAxis 
                   dataKey="label" 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <YAxis 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
-                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    backgroundColor: theme === "light" ? "#F5F9F8" : "#3B3A4A",
+                    border: theme === "light" ? "1px solid #A1A2AB" : "1px solid #575669",
                     borderRadius: "6px",
-                    color: theme === "light" ? "#111827" : "#f9fafb",
+                    color: theme === "light" ? "#575669" : "#F5F9F8",
                   }}
-                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                  labelStyle={{ color: theme === "light" ? "#575669" : "#F5F9F8" }}
                 />
                 <Line 
                   type="monotone" 
@@ -310,25 +313,25 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
               <AreaChart data={chartData}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                  stroke={theme === "light" ? "#A1A2AB" : "#3B3A4A"} 
                 />
                 <XAxis 
                   dataKey="label" 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <YAxis 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
-                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    backgroundColor: theme === "light" ? "#F5F9F8" : "#3B3A4A",
+                    border: theme === "light" ? "1px solid #A1A2AB" : "1px solid #575669",
                     borderRadius: "6px",
-                    color: theme === "light" ? "#111827" : "#f9fafb",
+                    color: theme === "light" ? "#575669" : "#F5F9F8",
                   }}
-                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                  labelStyle={{ color: theme === "light" ? "#575669" : "#F5F9F8" }}
                 />
                 <Area 
                   type="monotone" 
@@ -359,14 +362,14 @@ const Activity: React.FC<ActivityChartProps> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-4",
           theme === "light"
-            ? "border-gray-200 bg-gray-50"
-            : "border-gray-700 bg-gray-800/50",
+            ? "border-kaizen-border bg-kaizen-light-bg"
+            : "border-kaizen-border bg-kaizen-dark-bg",
         )}
       >
         <h3
           className={cn(
             "mb-3 font-semibold",
-            theme === "light" ? "text-gray-900" : "text-white",
+            theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
           )}
         >
           {timeRange === "week"
@@ -416,10 +419,12 @@ const TimeRangeButton: React.FC<TimeRangeButtonProps> = ({
     className={cn(
       "px-4 py-1.5 text-sm font-medium transition-colors",
       active
-        ? "bg-blue-600 text-white"
+        ? theme === "light"
+          ? "bg-kaizen-accent text-kaizen-light-bg"
+          : "bg-kaizen-accent-dark text-kaizen-dark-text"
         : theme === "light"
-          ? "text-gray-700 hover:bg-gray-100"
-          : "text-gray-300 hover:bg-gray-700",
+          ? "text-kaizen-light-text hover:bg-kaizen-surface"
+          : "text-kaizen-dark-text hover:bg-kaizen-dark-surface",
     )}
   >
     {label}
@@ -431,7 +436,7 @@ const SummaryItem: React.FC<SummaryItemProps> = ({ label, value, theme }) => (
     <p
       className={cn(
         "text-xs",
-        theme === "light" ? "text-gray-600" : "text-gray-400",
+        theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
       )}
     >
       {label}
@@ -439,7 +444,7 @@ const SummaryItem: React.FC<SummaryItemProps> = ({ label, value, theme }) => (
     <p
       className={cn(
         "text-lg font-semibold",
-        theme === "light" ? "text-gray-900" : "text-white",
+        theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
       )}
     >
       {value}

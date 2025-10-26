@@ -12,7 +12,7 @@ const Options = () => {
     <div
       className={cn(
         "w-screen h-screen overflow-hidden",
-        isLight ? "bg-slate-50" : "bg-gray-900",
+        isLight ? "bg-kaizen-light-bg" : "bg-kaizen-dark-bg",
         isDark && "dark",
       )}
     >

@@ -101,15 +101,15 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         className={cn(
           "sticky top-0 z-10 border-b",
           theme === "light"
-            ? "bg-white border-gray-200"
-            : "bg-gray-800 border-gray-700",
+            ? "bg-kaizen-light-bg border-kaizen-border"
+            : "bg-kaizen-dark-bg border-kaizen-border",
         )}
       >
         <div className="px-6 py-4">
           <h1
             className={cn(
               "text-2xl font-bold mb-4",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Behavior Analytics
@@ -123,11 +123,11 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
                   "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   activeView === tab.id
                     ? theme === "light"
-                      ? "bg-blue-50 text-blue-600"
-                      : "bg-blue-900/30 text-blue-400"
+                      ? "bg-kaizen-accent/10 text-kaizen-accent border-kaizen-accent/20"
+                      : "bg-kaizen-accent-dark/30 text-kaizen-dark-text border-kaizen-accent/30"
                     : theme === "light"
-                      ? "text-gray-600 hover:bg-gray-50"
-                      : "text-gray-400 hover:bg-gray-700/50",
+                      ? "text-kaizen-light-muted hover:bg-kaizen-surface border-transparent"
+                      : "text-kaizen-dark-muted hover:bg-kaizen-dark-surface/50 border-transparent",
                 )}
               >
                 {tab.icon}
@@ -340,7 +340,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
     return (
       <div className="flex h-96 items-center justify-center">
         <div
-          className={cn(theme === "light" ? "text-gray-500" : "text-gray-400")}
+          className={cn(theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted")}
         >
           Loading...
         </div>
@@ -366,8 +366,8 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-medium transition-colors",
                 theme === "light"
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "bg-red-500 text-white hover:bg-red-400",
+                  ? "bg-kaizen-accent text-kaizen-light-bg hover:bg-kaizen-accent/80"
+                  : "bg-kaizen-accent-dark text-kaizen-dark-text hover:bg-kaizen-accent/80",
               )}
             >
               Retry
@@ -435,14 +435,14 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
           className={cn(
             "rounded-lg border p-6",
             theme === "light"
-              ? "border-gray-200 bg-white"
-              : "border-gray-700 bg-gray-800",
+              ? "border-kaizen-border bg-kaizen-surface"
+              : "border-kaizen-border bg-kaizen-dark-surface",
           )}
         >
           <h3
             className={cn(
               "mb-4 text-lg font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Today's Activity
@@ -452,22 +452,22 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
             <div className="flex justify-between text-sm">
               <span
                 className={cn(
-                  theme === "light" ? "text-gray-700" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                 )}
               >
                 Productive: {formatTime(todayMetrics.productiveTime)}
               </span>
               <span
                 className={cn(
-                  theme === "light" ? "text-gray-700" : "text-gray-300",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Distracted: {formatTime(todayMetrics.distractedTime)}
               </span>
             </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-kaizen-muted">
               <div
-                className="h-full bg-green-500 transition-all"
+                className="h-full bg-kaizen-accent transition-all"
                 style={{ width: `${focusPercentage}%` }}
               />
             </div>
@@ -516,21 +516,21 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
         className={cn(
           "rounded-lg border p-6",
           theme === "light"
-            ? "border-blue-200 bg-blue-50"
-            : "border-blue-800 bg-blue-900/20",
+            ? "border-kaizen-border bg-kaizen-surface"
+            : "border-kaizen-border bg-kaizen-dark-surface",
         )}
       >
         <div className="flex items-start space-x-3">
           <div
             className={cn(
               "mt-1 rounded-full p-2",
-              theme === "light" ? "bg-blue-100" : "bg-blue-900/40",
+              theme === "light" ? "bg-kaizen-accent/10" : "bg-kaizen-accent-dark/30",
             )}
           >
             <Brain
               className={cn(
                 "h-5 w-5",
-                theme === "light" ? "text-blue-600" : "text-blue-400",
+                theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
               )}
             />
           </div>
@@ -538,7 +538,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
             <h4
               className={cn(
                 "mb-2 font-semibold",
-                theme === "light" ? "text-blue-900" : "text-blue-100",
+                theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
               )}
             >
               AI Insight
@@ -557,8 +557,8 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
                           ? "bg-yellow-100 text-yellow-700"
                           : "bg-yellow-900/40 text-yellow-200"
                         : theme === "light"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-green-900/40 text-green-200",
+                          ? "bg-kaizen-accent/10 text-kaizen-accent"
+                          : "bg-kaizen-accent-dark/30 text-kaizen-dark-text",
                   )}
                 >
                   {severityLabel} priority
@@ -566,7 +566,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
                 <p
                   className={cn(
                     "text-sm",
-                    theme === "light" ? "text-blue-800" : "text-blue-200",
+                    theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
                   )}
                 >
                   {latestInsight.description}
@@ -576,7 +576,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               <p
                 className={cn(
                   "text-sm",
-                  theme === "light" ? "text-blue-800" : "text-blue-200",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 No insights yet — keep browsing to generate personalized
@@ -593,14 +593,14 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
           className={cn(
             "rounded-lg border p-6",
             theme === "light"
-              ? "border-gray-200 bg-white"
-              : "border-gray-700 bg-gray-800",
+              ? "border-kaizen-border bg-kaizen-surface"
+              : "border-kaizen-border bg-kaizen-dark-surface",
           )}
         >
           <h3
             className={cn(
               "mb-4 text-lg font-semibold",
-              theme === "light" ? "text-gray-900" : "text-white",
+              theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
             )}
           >
             Real-time Doomscrolling Activity
@@ -611,25 +611,25 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               <AreaChart data={doomscrollChartData}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
-                  stroke={theme === "light" ? "#e5e7eb" : "#374151"} 
+                  stroke={theme === "light" ? "#A1A2AB" : "#3B3A4A"} 
                 />
                 <XAxis 
                   dataKey="time" 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <YAxis 
-                  stroke={theme === "light" ? "#6b7280" : "#9ca3af"}
+                  stroke={theme === "light" ? "#575669" : "#A1A2AB"}
                   fontSize={12}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
-                    border: theme === "light" ? "1px solid #e5e7eb" : "1px solid #374151",
+                    backgroundColor: theme === "light" ? "#F5F9F8" : "#3B3A4A",
+                    border: theme === "light" ? "1px solid #A1A2AB" : "1px solid #575669",
                     borderRadius: "6px",
-                    color: theme === "light" ? "#111827" : "#f9fafb",
+                    color: theme === "light" ? "#575669" : "#F5F9F8",
                   }}
-                  labelStyle={{ color: theme === "light" ? "#111827" : "#f9fafb" }}
+                  labelStyle={{ color: theme === "light" ? "#575669" : "#F5F9F8" }}
                 />
                 <Area
                   type="monotone"
@@ -658,7 +658,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               <p
                 className={cn(
                   "text-xs",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Current Sessions
@@ -676,7 +676,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               <p
                 className={cn(
                   "text-xs",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Total Scroll
@@ -694,7 +694,7 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               <p
                 className={cn(
                   "text-xs",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 High Severity
@@ -712,15 +712,15 @@ const OverviewTab: React.FC<{ theme: ThemeVariant }> = ({ theme }) => {
               <p
                 className={cn(
                   "text-xs",
-                  theme === "light" ? "text-gray-600" : "text-gray-400",
+                  theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
                 )}
               >
                 Peak Sessions
               </p>
               <p
                 className={cn(
-                  "text-xl font-semibold text-blue-500",
-                  theme === "light" ? "text-blue-600" : "text-blue-400",
+                  "text-xl font-semibold",
+                  theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
                 )}
               >
                 {Math.max(...doomscrollChartData.map(d => d.activeSessions), 0)}
@@ -741,12 +741,13 @@ const StatCard: React.FC<StatCardProps> = ({
   color,
 }) => {
   const colorClasses = {
-    blue: "text-blue-600 dark:text-blue-400",
-    purple: "text-purple-600 dark:text-purple-400",
-    green: "text-green-600 dark:text-green-400",
-    orange: "text-orange-600 dark:text-orange-400",
-    pink: "text-pink-600 dark:text-pink-400",
-    indigo: "text-indigo-600 dark:text-indigo-400",
+    blue: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
+    purple: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
+    green: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
+    orange: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
+    pink: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
+    indigo: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
+    red: theme === "light" ? "text-kaizen-accent" : "text-kaizen-dark-text",
   };
 
   return (
@@ -754,15 +755,15 @@ const StatCard: React.FC<StatCardProps> = ({
       className={cn(
         "rounded-lg border p-4 transition-shadow hover:shadow-md",
         theme === "light"
-          ? "border-gray-200 bg-white"
-          : "border-gray-700 bg-gray-800",
+          ? "border-kaizen-border bg-kaizen-surface"
+          : "border-kaizen-border bg-kaizen-dark-surface",
       )}
     >
       <div className={cn("mb-2", colorClasses[color])}>{icon}</div>
       <p
         className={cn(
           "mb-1 text-sm",
-          theme === "light" ? "text-gray-600" : "text-gray-400",
+          theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
         )}
       >
         {label}
@@ -770,7 +771,7 @@ const StatCard: React.FC<StatCardProps> = ({
       <p
         className={cn(
           "text-2xl font-bold",
-          theme === "light" ? "text-gray-900" : "text-white",
+          theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
         )}
       >
         {value}
@@ -784,7 +785,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ label, value, theme }) => (
     <p
       className={cn(
         "text-sm",
-        theme === "light" ? "text-gray-600" : "text-gray-400",
+        theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
       )}
     >
       {label}
@@ -792,7 +793,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ label, value, theme }) => (
     <p
       className={cn(
         "text-xl font-semibold",
-        theme === "light" ? "text-gray-900" : "text-white",
+        theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
       )}
     >
       {value}
