@@ -10,7 +10,7 @@ export class NotificationManager {
     if (typeof chrome !== "undefined" && chrome.notifications) {
       try {
         const icon = chrome.runtime?.getURL?.("icon-128.png") ?? "icon-128.png";
-        chrome.notifications.create(undefined, {
+        chrome.notifications.create({
           type: "basic",
           iconUrl: icon,
           title: nudge.title,
