@@ -1,3 +1,4 @@
+import { NudgeManager } from "./nudge-manager";
 import { DoomScrolling } from "../../../../packages/detectors/Doomscrolling";
 import { PatternAnalyzer } from "../../../../packages/detectors/PatternAnalyzer";
 import { ShoppingDetector } from "../../../../packages/detectors/ShoppingDetector";
@@ -6,7 +7,6 @@ import { EmbeddingService } from "../../../../packages/knowledge/EmbeddingServic
 import { KnowledgeGraph } from "../../../../packages/knowledge/KnowledgeGraph";
 import { RAGEngine } from "../../../../packages/knowledge/RAGEngine";
 import type { InterventionScheduler } from "./intervention-scheduler";
-import { NudgeManager } from "./nudge-manager";
 import type { DoomScrollingEvent, ScrollSession } from "../../../../packages/detectors/Doomscrolling";
 import type { PatternInsight } from "../../../../packages/detectors/PatternAnalyzer";
 import type { ShoppingEvent } from "../../../../packages/detectors/ShoppingDetector";
