@@ -251,9 +251,10 @@ export class NudgeManager {
 
     // Schedule the nudge
     if (delay > 0) {
-      this.scheduler.scheduleIntervention(`nudge-${context.category}-${Date.now()}`, delay);
+      const alarmId = `nudge-${context.category}-${Date.now()}`;
+      this.scheduler.scheduleIntervention(alarmId, delay);
       // Store nudge data for when alarm fires
-      this.pendingNudges.set(`nudge-${context.category}-${Date.now()}`, {
+      this.pendingNudges.set(alarmId, {
         type: nudgeType,
         context,
         message,
