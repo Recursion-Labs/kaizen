@@ -747,6 +747,7 @@ const StatCard: React.FC<StatCardProps> = ({
     orange: "text-orange-600 dark:text-orange-400",
     pink: "text-pink-600 dark:text-pink-400",
     indigo: "text-indigo-600 dark:text-indigo-400",
+    red: "text-red-600 dark:text-red-400",
   };
 
   return (

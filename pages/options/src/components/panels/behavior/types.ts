@@ -95,6 +95,12 @@ export interface StatCardProps {
   color: "blue" | "purple" | "green" | "orange" | "pink" | "indigo" | "red";
 }
 
+export interface MetricItemProps {
+  label: string;
+  value: string | number;
+  theme: ThemeVariant;
+}
+
 export interface TimeSessionSummary {
   tabId: number;
   url: string;
