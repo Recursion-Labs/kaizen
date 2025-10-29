@@ -1,0 +1,60 @@
+name: Build Extension
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [22.x]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Type check
+        run: pnpm type-check
+      
+      - name: Build extension (Chrome)
+        run: pnpm build
+      
+      - name: Build extension (Firefox)
+        run: pnpm build:firefox
+      
+      - name: Create extension package
+        run: pnpm zip
+      
+      - name: Upload Chrome build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: dist-zip/*.zip
+          retention-days: 30
+      
+      - name: Upload Firefox build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension
+          path: dist-zip/*.zip
+          retention-days: 30
