@@ -40,8 +40,8 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     loadStats();
     
-    // Refresh stats every 30 seconds
-    const interval = setInterval(loadStats, 30000);
+    // Refresh stats every 2 seconds for a live feel
+    const interval = setInterval(loadStats, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -90,7 +90,7 @@ const DashboardPage: React.FC = () => {
       low: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
       high: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    };
+    } as const;
     return colors[severity as keyof typeof colors] || colors.low;
   };
 
@@ -134,7 +134,7 @@ const DashboardPage: React.FC = () => {
       <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
         <h2 className="text-xl font-semibold mb-2">Today's Mindfulness Score</h2>
         <div className="flex items-baseline gap-2">
-          <span className="text-6xl font-bold">{stats.productivityScore}</span>
+          <span className="text-6xl font-bold">{Math.round(stats.productivityScore)}</span>
           <span className="text-2xl opacity-80">/100</span>
         </div>
         <p className="mt-4 text-indigo-100">
