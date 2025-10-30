@@ -265,9 +265,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_PRODUCTIVITY_STATS') {
     console.log('Productivity stats requested from UI');
     try {
-      const productivityScore = integrationManager.getProductivityScore();
-      const todayStats = integrationManager.getTodayStats();
-      const knowledgeGraphStats = integrationManager.getKnowledgeGraphStats();
+      const productivity0to1 = integrationManager.getProductivityScore();
+      const today = integrationManager.getTodayStats();
+      const kgStats = integrationManager.getKnowledgeGraphStats();
       const insights = integrationManager.getRecentInsights(5);
       const activeSessions = integrationManager.getActiveSessions();
 
@@ -325,15 +325,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         highSeveritySessions,
       };
 
+      // Build top domains from active time sessions (best-effort live view)
+      const domainTimeMap = new Map<string, number>();
+      const now = Date.now();
+      for (const s of sessionSummaries.time) {
+        const liveTime = s.accumulatedTime + Math.max(0, now - s.startTime);
+        domainTimeMap.set(s.domain, (domainTimeMap.get(s.domain) || 0) + liveTime);
+      }
+      const topDomains = Array.from(domainTimeMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([domain, time]) => ({ domain, time, category: (sessionSummaries.time.find(t => t.domain === domain)?.category) || 'neutral' }));
+
+      // Compose today stats DTO expected by UI
+      const totalTime = today.productive + today.entertainment + today.neutral;
+      const distractedTime = today.entertainment + today.neutral;
+
+      // Enrich KG stats with domainCount for UI convenience
+      const domainCount = typeof kgStats.nodeTypes?.domain === 'number' 
+        ? kgStats.nodeTypes.domain 
+        : 0;
+
       const stats = {
-        productivityScore,
-        todayStats,
-        knowledgeGraphStats,
+        productivityScore: Math.round(productivity0to1 * 100),
+        todayStats: {
+          totalTime,
+          productiveTime: today.productive,
+          distractedTime,
+          topDomains,
+        },
+        knowledgeGraphStats: {
+          ...kgStats,
+          domainCount,
+        },
         sessionCounts,
         sessionSummaries,
         doomscrollMetrics,
         insights,
-      };
+      } as const;
       sendResponse({ success: true, stats });
     } catch (error) {
       console.error('Failed to get productivity stats:', error);
@@ -346,8 +375,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('Historical activity data requested from UI');
     try {
       const timeRange = message.timeRange || 'week';
-      const activityData = integrationManager.getHistoricalActivity(timeRange);
-      sendResponse({ success: true, data: activityData });
+      const raw = integrationManager.getHistoricalActivity(timeRange);
+      const hourly = integrationManager.getHistoricalActivity('day');
+      const today = integrationManager.getTodayStats();
+
+      // Map raw arrays to chart-friendly DTO
+      const weeklyTrend = raw.map((d: { label: string; value: number }) => ({ label: d.label, value: d.value }));
+      const hourlyPattern = hourly.map((d: { label: string; value: number }) => ({ label: d.label, value: d.value }));
+
+      const minutes = (ms: number) => Math.round(ms / (1000 * 60));
+      const categoryBreakdown = [
+        { label: 'Productive', value: minutes(today.productive), color: '#10b981' },
+        { label: 'Entertainment', value: minutes(today.entertainment), color: '#ef4444' },
+        { label: 'Neutral', value: minutes(today.neutral), color: '#6366f1' },
+      ];
+
+      sendResponse({ success: true, data: { weeklyTrend, hourlyPattern, categoryBreakdown, range: timeRange } });
     } catch (error) {
       console.error('Failed to get historical activity data:', error);
       sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
