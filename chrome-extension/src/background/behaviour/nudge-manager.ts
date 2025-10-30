@@ -310,7 +310,9 @@ export class NudgeManager {
 
     switch (type) {
       case "chrome-notification":
+        // For high severity, deliver both OS notification and in-page alert for visibility
         this.sendChromeNotification(context, message);
+        this.sendInPageAlert(context, message);
         break;
       case "in-page-alert":
         this.sendInPageAlert(context, message);
