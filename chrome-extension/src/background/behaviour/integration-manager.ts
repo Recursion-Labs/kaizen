@@ -40,8 +40,8 @@ export class IntegrationManager {
     // More responsive real-time checks for doomscrolling
     this.doomScrolling = new DoomScrolling({
       realTimeCheckInterval: 1000, // check every 1s so interventions trigger promptly at threshold
-      minDurationMs: 60 * 1000, // keep 1 minute minimum duration
-      // keep default scrollThreshold (5000px) so 10k in 1 min => high severity
+      minDurationMs: 15 * 1000, // reduce to 15s for more responsive detection
+      // keep default scrollThreshold (5000px) so 10k in short time => high severity after 15s
       monitoredDomains: [], // empty => monitor ALL sites dynamically
     });
 
