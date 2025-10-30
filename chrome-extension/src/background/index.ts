@@ -5,6 +5,29 @@ import {
 } from "./behaviour";
 import { IntegrationManager } from "./behaviour/integration-manager";
 
+// Ensure session storage is accessible from content scripts when needed (MV3 SW can sleep)
+const ensureSessionAccessLevel = () => {
+  try {
+    // Only available on Chromium 121+
+    if (chrome?.storage?.session?.setAccessLevel) {
+      chrome.storage.session.setAccessLevel({
+        // TRUSTED_AND_UNTRUSTED_CONTEXTS => extension pages + content scripts
+        accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS",
+      }).catch((e: unknown) => {
+        console.warn("[Kaizen] setAccessLevel failed:", e);
+      });
+    }
+  } catch {
+    // ignore on unsupported browsers/environments
+  }
+};
+
+// Run once on SW start
+ensureSessionAccessLevel();
+
+// Also configure on install/update events
+chrome.runtime?.onInstalled?.addListener?.(() => ensureSessionAccessLevel());
+
 // Simple rate limiter: max 3 notifications per hour
 const notificationHistory: number[] = [];
 const notifyIfAllowed = (
