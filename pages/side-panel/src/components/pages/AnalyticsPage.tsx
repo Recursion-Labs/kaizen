@@ -15,6 +15,8 @@ const AnalyticsPage: React.FC = () => {
 
   useEffect(() => {
     loadAnalytics();
+    const interval = setInterval(loadAnalytics, 5000);
+    return () => clearInterval(interval);
   }, [timeRange]);
 
   const loadAnalytics = async () => {
@@ -30,55 +32,20 @@ const AnalyticsPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
-      // Generate mock data for demonstration
-      setData(generateMockData());
+      // Do not use mock data in production; keep last known data or empty
+      setData((prev) => prev);
     } finally {
       setLoading(false);
     }
   };
 
   const transformData = (rawData: any): AnalyticsData => {
-    // Transform backend data to chart format
+    // Transform backend data to chart format (no simulations)
     return {
-      weeklyTrend: rawData.weeklyTrend || generateMockWeeklyTrend(),
-      categoryBreakdown: rawData.categoryBreakdown || generateMockCategoryBreakdown(),
-      hourlyPattern: rawData.hourlyPattern || generateMockHourlyPattern(),
+      weeklyTrend: rawData.weeklyTrend ?? [],
+      categoryBreakdown: rawData.categoryBreakdown ?? [],
+      hourlyPattern: rawData.hourlyPattern ?? [],
     };
-  };
-
-  const generateMockData = (): AnalyticsData => {
-    return {
-      weeklyTrend: generateMockWeeklyTrend(),
-      categoryBreakdown: generateMockCategoryBreakdown(),
-      hourlyPattern: generateMockHourlyPattern(),
-    };
-  };
-
-  const generateMockWeeklyTrend = () => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map(day => ({
-      label: day,
-      value: Math.random() * 120 + 30, // 30-150 minutes
-    }));
-  };
-
-  const generateMockCategoryBreakdown = () => {
-    return [
-      { label: 'Social Media', value: 120, color: '#3b82f6' },
-      { label: 'Development', value: 180, color: '#8b5cf6' },
-      { label: 'Shopping', value: 45, color: '#f97316' },
-      { label: 'Video', value: 90, color: '#ef4444' },
-      { label: 'News', value: 60, color: '#6b7280' },
-      { label: 'Other', value: 75, color: '#10b981' },
-    ];
-  };
-
-  const generateMockHourlyPattern = () => {
-    const hours = ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'];
-    return hours.map(hour => ({
-      label: hour,
-      value: Math.random() * 100 + 20,
-    }));
   };
 
   return (
