@@ -33,6 +33,8 @@ const KnowledgeGraphPage: React.FC = () => {
 
   useEffect(() => {
     loadGraphData();
+    const interval = setInterval(loadGraphData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadGraphData = async () => {
