@@ -3,7 +3,8 @@
 export interface ShoppingDetectorConfig {
   visitThreshold: number; // number of visits within time window to trigger nudge
   timeWindow: number; // time window in ms to count visits
-  monitoredDomains: string[]; // domains to monitor for shopping activity
+  monitoredDomains: string[]; // registrable domains (eTLD+1) to monitor
+  excludedDomains: string[]; // domains to ignore even if matched (work/company portals, etc.)
   realTimeCheckInterval: number; // interval in ms for real-time checks
   sessionTimeout: number; // timeout for inactive sessions
   childBurstWindowMs: number; // window for child-link burst detection (e.g., 60s)
@@ -22,7 +23,7 @@ export interface ShoppingSession {
 }
 
 export interface ShoppingEvent {
-  domain: string;
+  domain: string; // registrable domain (eTLD+1)
   url: string;
   tabId: number;
   severity: "low" | "medium" | "high";
@@ -64,6 +65,11 @@ export class ShoppingDetector {
         "overstock.com",
         "wayfair.com",
       ],
+      excludedDomains: [
+        // Common non-shopping properties that could be misclassified
+        "amazonaws.com",
+        "cloudfront.net",
+      ],
       ...config,
     };
   }
@@ -86,12 +92,17 @@ export class ShoppingDetector {
    * @param url - current tab URL
    */
   recordVisit(tabId: number, url: string) {
-    const domain = this.extractDomain(url);
-    // If monitoredDomains is empty, monitor ALL domains; else restrict to the list
-    if (this.config.monitoredDomains.length > 0 && !this.config.monitoredDomains.includes(domain)) return;
+    const registrable = this.getRegistrableDomain(url);
+    if (!registrable) return;
+
+    // Enforce allow/deny lists to avoid false positives
+    if (!this.isShoppingDomain(registrable)) return;
+    if (this.isExcludedDomain(registrable)) return;
+
+    const domain = registrable;
 
     const now = Date.now();
-    const session = this.sessions.get(domain) || {
+    const session = this.sessions.get(registrable) || {
       visitCount: 0,
       startTime: now,
       lastVisitTime: now,
@@ -111,7 +122,7 @@ export class ShoppingDetector {
 
     // Track time spent if this is a continuation of a tab session
     const tabSession = this.tabSessions.get(tabId);
-    if (tabSession && tabSession.domain === domain) {
+    if (tabSession && tabSession.domain === registrable) {
       const timeSpent = now - tabSession.startTime;
       session.totalTimeSpent += timeSpent;
     }
@@ -119,10 +130,10 @@ export class ShoppingDetector {
     session.visitCount += 1;
     session.lastVisitTime = now;
     session.urls.push(url);
-    this.sessions.set(domain, session);
+    this.sessions.set(registrable, session);
 
     // Update tab session
-    this.tabSessions.set(tabId, { domain, startTime: now });
+    this.tabSessions.set(tabId, { domain: registrable, startTime: now });
 
     // Track child-link bursts within time window
     const path = this.extractPath(url);
@@ -151,7 +162,7 @@ export class ShoppingDetector {
     }
 
     // Check for impulsive behavior in real-time
-    this.checkImpulsiveBehaviorRealTime(domain, url, tabId);
+    this.checkImpulsiveBehaviorRealTime(registrable, url, tabId);
   }
 
   /**
@@ -160,10 +171,9 @@ export class ShoppingDetector {
    * @param url - current tab URL
    */
   startTabSession(tabId: number, url: string) {
-    const domain = this.extractDomain(url);
-    const allow = this.config.monitoredDomains.length === 0 || this.config.monitoredDomains.includes(domain);
-    if (allow) {
-      this.tabSessions.set(tabId, { domain, startTime: Date.now() });
+    const registrable = this.getRegistrableDomain(url);
+    if (registrable && this.isShoppingDomain(registrable) && !this.isExcludedDomain(registrable)) {
+      this.tabSessions.set(tabId, { domain: registrable, startTime: Date.now() });
     }
   }
 
@@ -199,7 +209,7 @@ export class ShoppingDetector {
 
   /**
    * Get shopping severity level
-   * @param domain - domain to check
+   * @param domain - registrable domain to check
    */
   getShoppingSeverity(domain: string): "low" | "medium" | "high" | null {
     const session = this.sessions.get(domain);
@@ -303,20 +313,27 @@ export class ShoppingDetector {
     url: string,
     tabId: number,
   ) {
+    const session = this.sessions.get(domain);
+    if (!session) return;
+
+    // Reduce false positives: require clear intent OR stronger evidence
+    const hasIntent = this.isShoppingIntent(url);
     const severity = this.getShoppingSeverity(domain);
-    if (severity) {
-      const session = this.sessions.get(domain)!;
-      const event: ShoppingEvent = {
-        domain,
-        url,
-        tabId,
-        severity,
-        timestamp: Date.now(),
-        visitCount: session.visitCount,
-        timeSpent: session.totalTimeSpent,
-      };
-      this.eventListeners.forEach((listener) => listener(event));
-    }
+    if (!severity) return;
+
+    // If no explicit intent, require one extra visit beyond threshold
+    if (!hasIntent && session.visitCount < this.config.visitThreshold + 1) return;
+
+    const event: ShoppingEvent = {
+      domain,
+      url,
+      tabId,
+      severity,
+      timestamp: Date.now(),
+      visitCount: session.visitCount,
+      timeSpent: session.totalTimeSpent,
+    };
+    this.eventListeners.forEach((listener) => listener(event));
   }
 
   /**
@@ -328,9 +345,13 @@ export class ShoppingDetector {
       if (this.isImpulsive(domain)) {
         const severity = this.getShoppingSeverity(domain);
         if (severity) {
+          const lastUrl = session.urls[session.urls.length - 1] || "";
+          const hasIntent = lastUrl ? this.isShoppingIntent(lastUrl) : false;
+          if (!hasIntent && session.visitCount < this.config.visitThreshold + 1) continue;
+
           const event: ShoppingEvent = {
             domain,
-            url: session.urls[session.urls.length - 1] || "",
+            url: lastUrl,
             tabId: 0, // Not available in periodic check
             severity,
             timestamp: Date.now(),
@@ -343,11 +364,68 @@ export class ShoppingDetector {
     }
   }
 
-  private extractDomain(url: string): string {
+  /**
+   * Extract registrable domain (eTLD+1) with a pragmatic fallback (handles common multi-part TLDs)
+   */
+  private getRegistrableDomain(url: string): string | null {
     try {
-      return new URL(url).hostname.replace("www.", "");
+      const hostname = new URL(url).hostname.replace("www.", "");
+      const parts = hostname.split(".");
+      if (parts.length <= 2) return hostname;
+
+      const multiPartTLDs = new Set([
+        "co.uk",
+        "com.au",
+        "co.in",
+        "com.br",
+        "co.jp",
+        "com.mx",
+      ]);
+
+      const lastTwo = parts.slice(-2).join(".");
+      const lastThree = parts.slice(-3).join(".");
+      if (multiPartTLDs.has(lastTwo)) {
+        return parts.slice(-3).join(".");
+      }
+      if (multiPartTLDs.has(lastThree)) {
+        return parts.slice(-4).join(".");
+      }
+      return lastTwo;
     } catch {
-      return "";
+      return null;
+    }
+  }
+
+  private isShoppingDomain(registrable: string): boolean {
+    return this.config.monitoredDomains.includes(registrable);
+  }
+
+  private isExcludedDomain(registrable: string): boolean {
+    return this.config.excludedDomains.includes(registrable);
+  }
+
+  /**
+   * Lightweight intent heuristic based on URL path/query
+   */
+  private isShoppingIntent(url: string): boolean {
+    try {
+      const u = new URL(url);
+      const s = `${u.pathname} ${u.search}`.toLowerCase();
+      const keywords = [
+        "cart",
+        "checkout",
+        "add-to-cart",
+        "buy",
+        "order",
+        "wishlist",
+        "product",
+        "item",
+        "basket",
+        "payment",
+      ];
+      return keywords.some((k) => s.includes(k));
+    } catch {
+      return false;
     }
   }
 

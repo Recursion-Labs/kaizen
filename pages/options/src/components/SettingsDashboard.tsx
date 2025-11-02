@@ -155,16 +155,14 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
               <div>
                 <h1
                   className={cn(
-                    "text-xl font-bold",
-                    theme === "light" ? "text-kaizen-light-text" : "text-kaizen-dark-text",
+                    "text-xl font-bold text-blue-700 dark:text-blue-300",
                   )}
                 >
                   Kaizen
                 </h1>
                 <p
                   className={cn(
-                    "text-xs",
-                    theme === "light" ? "text-kaizen-light-muted" : "text-kaizen-dark-muted",
+                    "text-xs text-blue-600 dark:text-blue-400",
                   )}
                 >
                   Settings
@@ -215,7 +213,7 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
               <div className="flex-1 text-left">
                 <div
                   className={cn(
-                    "text-sm font-medium",
+                    "text-sm font-medium text-blue-600 dark:text-blue-400",
                     activeSection === item.id && "font-semibold",
                   )}
                 >
@@ -223,14 +221,8 @@ export const SettingsDashboard: React.FC<SettingsDashboardProps> = ({
                 </div>
                 <div
                   className={cn(
-                    "text-xs mt-0.5",
-                    activeSection === item.id
-                      ? theme === "light"
-                        ? "text-kaizen-accent"
-                        : "text-kaizen-accent"
-                      : theme === "light"
-                        ? "text-kaizen-light-muted"
-                        : "text-kaizen-dark-muted",
+                    "text-xs mt-0.5 text-blue-500 dark:text-blue-300",
+                    activeSection === item.id && "text-blue-700 dark:text-blue-200",
                   )}
                 >
                   {item.description}

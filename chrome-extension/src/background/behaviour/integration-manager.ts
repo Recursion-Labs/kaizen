@@ -1,3 +1,4 @@
+import { NudgeManager } from "./nudge-manager";
 import { DoomScrolling } from "../../../../packages/detectors/Doomscrolling";
 import { PatternAnalyzer } from "../../../../packages/detectors/PatternAnalyzer";
 import { ShoppingDetector } from "../../../../packages/detectors/ShoppingDetector";
@@ -23,12 +24,16 @@ export class IntegrationManager {
   private embeddingService: EmbeddingService;
   private ragEngine: RAGEngine;
   private scheduler: InterventionScheduler;
+  private nudgeManager: NudgeManager;
   private lastActiveTabId: number | null = null;
   private cooldowns: Map<string, number> = new Map();
   private lastHostByTab: Map<number, string> = new Map();
 
   constructor(scheduler: InterventionScheduler) {
     this.scheduler = scheduler;
+
+    // Initialize nudge manager
+    this.nudgeManager = new NudgeManager(scheduler);
 
     // Initialize detectors
     this.timeTracker = new TimeTracker();
@@ -38,8 +43,8 @@ export class IntegrationManager {
     // More responsive real-time checks for doomscrolling
     this.doomScrolling = new DoomScrolling({
       realTimeCheckInterval: 1000, // check every 1s so interventions trigger promptly at threshold
-      minDurationMs: 60 * 1000, // keep 1 minute minimum duration
-      // keep default scrollThreshold (5000px) so 10k in 1 min => high severity
+      minDurationMs: 15 * 1000, // reduce to 15s for more responsive detection
+      // keep default scrollThreshold (5000px) so 10k in short time => high severity after 15s
       monitoredDomains: [], // empty => monitor ALL sites dynamically
     });
 
@@ -145,6 +150,22 @@ export class IntegrationManager {
     }
 
     console.log(`Time tracking event: ${event.domain} spent ${event.timeSpent}ms`);
+
+    // Send nudge for excessive time spent
+    if (event.severity === "high") {
+      this.nudgeManager.sendNudge({
+        category: "binge-watching",
+        severity: event.severity,
+        tabId: event.tabId,
+        url: event.url,
+        domain: event.domain,
+        metadata: {
+          timeSpent: event.timeSpent,
+          category: event.category,
+        },
+        timestamp: event.timestamp,
+      });
+    }
   }
 
   /**
@@ -197,10 +218,24 @@ export class IntegrationManager {
 
     console.log(`Shopping event: ${event.domain} has ${event.severity} severity; visitCount=${event.visitCount} timeSpent=${event.timeSpent}`);
 
+    // Send nudge using NudgeManager
+    this.nudgeManager.sendNudge({
+      category: "shopping-loops",
+      severity: event.severity,
+      tabId: event.tabId,
+      url: event.url,
+      domain: event.domain,
+      metadata: {
+        visitCount: event.visitCount,
+        timeSpent: event.timeSpent,
+      },
+      timestamp: event.timestamp,
+    });
+
     // Realtime in-page alert for the originating tab (throttled per tab)
     if (event.tabId && typeof chrome !== 'undefined' && chrome.tabs?.sendMessage) {
       const toastKey = `toast:shop:${event.tabId}`;
-      if (this.canToast(toastKey, 5 * 60 * 1000)) { // 5 min cooldown per tab/category
+      if (this.canToast(toastKey, 5 * 60 * 1000)) {
         try {
           chrome.tabs.sendMessage(event.tabId, {
             type: 'BEHAVIOR_ALERT',
@@ -214,7 +249,6 @@ export class IntegrationManager {
             const e = chrome.runtime.lastError;
             if (e) {
               console.debug('[Kaizen] No content receiver for shopping alert yet, will retry shortly:', e.message);
-              // Retry once after a short delay (content scripts may still be loading)
               setTimeout(() => {
                 chrome.tabs.sendMessage(event.tabId!, {
                   type: 'BEHAVIOR_ALERT',
@@ -288,13 +322,24 @@ export class IntegrationManager {
 
     console.log(`Doomscrolling event: Tab ${event.tabId} has ${event.severity} severity; scroll=${event.scrollAmount}`);
 
-    // Realtime in-page alert for the originating tab (milestone-based, update-in-place via content UI)
+    // Send nudge using NudgeManager
+    this.nudgeManager.sendNudge({
+      category: "doomscrolling",
+      severity: event.severity,
+      tabId: event.tabId,
+      url: event.url,
+      domain: new URL(event.url).hostname,
+      metadata: {
+        scrollAmount: event.scrollAmount,
+      },
+      timestamp: event.timestamp,
+    });
+
+    // Realtime in-page alert for the originating tab (milestone-based)
     if (event.tabId && typeof chrome !== 'undefined' && chrome.tabs?.sendMessage) {
-      // Only surface on-screen toast at 10k+ milestones (severity=high)
       if (event.severity !== 'high') return;
       try {
         const milestone = this.doomScrolling.getMilestonePx?.() ? this.doomScrolling.getMilestonePx() : 10000;
-        const crossed = Math.floor((event.scrollAmount || 0) / milestone) * milestone;
         chrome.tabs.sendMessage(event.tabId, {
           type: 'BEHAVIOR_ALERT',
           category: 'doomscrolling',
@@ -379,6 +424,24 @@ export class IntegrationManager {
     }
 
     console.log(`Pattern insight: ${insight.type} - ${insight.description}`);
+
+    // Send nudge for pattern insights
+    if (insight.severity === "high" || insight.severity === "medium") {
+      // Map pattern types to nudge categories
+      const nudgeCategory = this.mapPatternToNudgeCategory(insight.type);
+
+      this.nudgeManager.sendNudge({
+        category: nudgeCategory,
+        severity: insight.severity,
+        metadata: {
+          patternType: insight.type,
+          description: insight.description,
+          confidence: insight.confidence,
+          ...insight.metadata,
+        },
+        timestamp: insight.timestamp,
+      });
+    }
   }
 
   /**
@@ -566,7 +629,6 @@ export class IntegrationManager {
             const tabId = Number(key.split(':')[1]);
             if (typeof tabId === 'number' && value && typeof value === 'object') {
               this.doomScrolling.restoreSession(tabId, value as ScrollSession);
-              this.doomScrolling.restoreSession(tabId, value as any);
             }
           }
         });
@@ -599,15 +661,35 @@ export class IntegrationManager {
     this.scheduler.scheduleIntervention(name, delayMs);
   }
 
-  /**
-   * Throttle UI toast messages per key
-   */
+  // Simple toast cooldown helper (separate keys from intervention cooldowns if desired)
   private canToast(key: string, cooldownMs: number): boolean {
     const now = Date.now();
-    const nextAllowed = this.cooldowns.get(key) || 0;
-    if (now < nextAllowed) return false;
+    const next = this.cooldowns.get(key) || 0;
+    if (now < next) return false;
     this.cooldowns.set(key, now + cooldownMs);
     return true;
+  }
+
+  /**
+   * Map pattern types to nudge categories
+   */
+  private mapPatternToNudgeCategory(patternType: string): string {
+    const patternMap: Record<string, string> = {
+      "tab-hoarding": "tab-hoarding",
+      "distracted-browsing": "distracted-browsing",
+      "doomscrolling-pattern": "doomscrolling",
+      "shopping-pattern": "shopping-loops",
+      "time-wasting": "binge-watching",
+    };
+
+    return patternMap[patternType] || "distracted-browsing";
+  }
+
+  /**
+   * Handle alarm firing for nudges
+   */
+  public handleNudgeAlarm(alarmName: string): void {
+    this.nudgeManager.handleAlarm(alarmName);
   }
 }
 

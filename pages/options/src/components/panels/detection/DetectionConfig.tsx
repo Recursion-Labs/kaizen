@@ -7,23 +7,13 @@ import {
   Info,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import type {
+  DetectionConfigProps,
+  PatternConfig,
+  EngineMetrics,
+} from "./types";
 
-interface DetectionProps {
-  theme: "light" | "dark";
-}
-
-interface PatternConfig {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  confidence: number;
-  threshold: number;
-  enabled: boolean;
-  detectedToday: number;
-}
-
-const Detection: React.FC<DetectionProps> = () => {
+export const DetectionConfig: React.FC<DetectionConfigProps> = () => {
   const [patterns, setPatterns] = useState<PatternConfig[]>([
     {
       id: "doomscrolling",
@@ -81,6 +71,26 @@ const Detection: React.FC<DetectionProps> = () => {
     "active",
   );
 
+  const [engineMetrics, setEngineMetrics] = useState<EngineMetrics>({
+    isMonitoring: true,
+    activeDetectors: {
+      timeTracker: false,
+      shoppingDetector: false,
+      doomScrolling: false,
+      patternAnalyzer: false,
+    },
+    sessionCounts: {
+      time: 0,
+      shopping: 0,
+      doomscrolling: 0,
+    },
+    productivityScore: 0,
+    recentInsights: 0,
+    knowledgeNodes: 0,
+  });
+
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
+
   const togglePattern = (id: string) => {
     setPatterns((prev) =>
       prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)),
@@ -93,12 +103,71 @@ const Detection: React.FC<DetectionProps> = () => {
     );
   };
 
+  // Fetch engine metrics from background script
+  const fetchEngineMetrics = useCallback(async () => {
+    try {
+      setIsLoadingMetrics(true);
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_PRODUCTIVITY_STATS'
+      });
+
+      if (response.success) {
+        const stats = response.stats;
+        const insightsResponse = await chrome.runtime.sendMessage({
+          type: 'GET_RECENT_INSIGHTS'
+        });
+
+        const insights = insightsResponse.success ? insightsResponse.insights : [];
+
+        setEngineMetrics({
+          isMonitoring: true,
+          activeDetectors: {
+            timeTracker: stats.sessionCounts.time > 0,
+            shoppingDetector: stats.sessionCounts.shopping > 0,
+            doomScrolling: stats.sessionCounts.doomscrolling > 0,
+            patternAnalyzer: insights.length > 0,
+          },
+          sessionCounts: stats.sessionCounts,
+          productivityScore: Math.round(stats.productivityScore * 100),
+          recentInsights: insights.length,
+          knowledgeNodes: stats.knowledgeGraphStats.nodes,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch engine metrics:', error);
+    } finally {
+      setIsLoadingMetrics(false);
+    }
+  }, []);
+
+  const toggleEngineStatus = useCallback(async () => {
+    const newStatus = engineStatus === "active" ? "paused" : "active";
+    setEngineStatus(newStatus);
+
+    try {
+      await chrome.runtime.sendMessage({
+        type: 'TOGGLE_ENGINE_STATUS',
+        status: newStatus,
+      });
+    } catch (error) {
+      console.error("Failed to toggle engine status:", error);
+    }
+  }, [engineStatus]);
+
   const saveSettings = useCallback(async () => {
     try {
       await chrome.storage.local.set({
         behaviorPatterns: patterns,
         engineStatus,
       });
+
+      // Send pattern configuration to background script
+      await chrome.runtime.sendMessage({
+        type: 'UPDATE_PATTERN_CONFIG',
+        patterns: patterns,
+        engineStatus: engineStatus,
+      });
+
       console.log("Behavior settings saved");
     } catch (error) {
       console.error("Failed to save settings:", error);
@@ -109,12 +178,21 @@ const Detection: React.FC<DetectionProps> = () => {
     saveSettings();
   }, [saveSettings]);
 
+  useEffect(() => {
+    fetchEngineMetrics();
+
+    // Refresh metrics every 30 seconds
+    const interval = setInterval(fetchEngineMetrics, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchEngineMetrics]);
+
   return (
     <div className="space-y-8 p-8">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-kaizen-light-text dark:text-kaizen-dark-text">
-          Behavior Recognition Engine
+          Pattern Detection Settings
         </h1>
         <p className="text-kaizen-light-muted dark:text-kaizen-dark-muted">
           Configure which patterns Kaizen should detect and monitor
@@ -144,11 +222,7 @@ const Detection: React.FC<DetectionProps> = () => {
             </div>
           </div>
           <button
-            onClick={() =>
-              setEngineStatus((prev) =>
-                prev === "active" ? "paused" : "active",
-              )
-            }
+            onClick={toggleEngineStatus}
             className={`rounded-lg px-4 py-2 font-medium transition-colors ${
               engineStatus === "active"
                 ? "bg-kaizen-error text-kaizen-light-bg hover:bg-kaizen-error/80"
@@ -157,6 +231,55 @@ const Detection: React.FC<DetectionProps> = () => {
           >
             {engineStatus === "active" ? "Pause Detection" : "Resume Detection"}
           </button>
+        </div>
+      </div>
+
+      {/* Engine Metrics */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Engine Metrics
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {engineMetrics.productivityScore}%
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Productivity Score
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {engineMetrics.sessionCounts.time + engineMetrics.sessionCounts.shopping + engineMetrics.sessionCounts.doomscrolling}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Active Sessions
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {engineMetrics.recentInsights}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Recent Insights
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {engineMetrics.knowledgeNodes}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Knowledge Nodes
+              </div>
+            </div>
+          </div>
+          {isLoadingMetrics && (
+            <div className="flex items-center justify-center py-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Updating metrics...</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -321,5 +444,3 @@ const PatternCard: React.FC<PatternCardProps> = ({
     )}
   </div>
 );
-
-export { Detection };

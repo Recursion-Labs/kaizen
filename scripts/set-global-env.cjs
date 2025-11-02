@@ -1,99 +1,91 @@
 #!/usr/bin/env node
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-let CLI_CEB_DEV = "false";
-let CLI_CEB_FIREFOX = "false";
-const cli_values = [];
-
-function validate_is_boolean(val, name) {
-  if (val !== "true" && val !== "false") {
+function validateIsBoolean(value, name) {
+  if (value !== 'true' && value !== 'false') {
     console.error(`Invalid value for <${name}>. Please use 'true' or 'false'.`);
     process.exit(1);
   }
 }
 
-function validate_key(key, is_editable_section = false) {
-  if (!key || key.startsWith("#")) return;
-  if (is_editable_section) {
-    if (!key.startsWith("CEB_")) {
-      console.error(
-        `Invalid key: <${key}>. All keys in the editable section must start with 'CEB_'.`,
-      );
+function validateKey(key, isEditable = false) {
+  if (!key || key.startsWith('#')) return;
+  if (isEditable) {
+    if (!key.startsWith('CEB_')) {
+      console.error(`Invalid key: <${key}>. All keys in the editable section must start with 'CEB_'.`);
       process.exit(1);
     }
   } else {
-    if (!key.startsWith("CLI_CEB_")) {
-      console.error(
-        `Invalid key: <${key}>. All CLI keys must start with 'CLI_CEB_'.`,
-      );
+    if (!key.startsWith('CLI_CEB_')) {
+      console.error(`Invalid key: <${key}>. All CLI keys must start with 'CLI_CEB_'.`);
       process.exit(1);
     }
   }
 }
 
-function parse_arguments(argv) {
-  argv.forEach((arg) => {
-    const [key, ...rest] = arg.split("=");
-    const value = rest.join("=");
-    validate_key(key);
+function parseArguments(argv) {
+  const cliValues = [];
+  let CLI_CEB_DEV = 'false';
+  let CLI_CEB_FIREFOX = 'false';
+
+  argv.forEach(arg => {
+    const [key, ...rest] = arg.split('=');
+    const value = rest.join('=');
+    validateKey(key);
     switch (key) {
-      case "CLI_CEB_DEV":
+      case 'CLI_CEB_DEV':
         CLI_CEB_DEV = value;
-        validate_is_boolean(CLI_CEB_DEV, "CLI_CEB_DEV");
+        validateIsBoolean(CLI_CEB_DEV, 'CLI_CEB_DEV');
         break;
-      case "CLI_CEB_FIREFOX":
+      case 'CLI_CEB_FIREFOX':
         CLI_CEB_FIREFOX = value;
-        validate_is_boolean(CLI_CEB_FIREFOX, "CLI_CEB_FIREFOX");
+        validateIsBoolean(CLI_CEB_FIREFOX, 'CLI_CEB_FIREFOX');
         break;
       default:
-        cli_values.push(`${key}=${value}`);
-        break;
+        cliValues.push(`${key}=${value}`);
     }
   });
+
+  return { CLI_CEB_DEV, CLI_CEB_FIREFOX, cliValues };
 }
 
-function validate_env_keys(envPath) {
-  if (!fs.existsSync(envPath)) return;
-  const content = fs.readFileSync(envPath, "utf8");
+function validateEnvKeys(envPath) {
+  const content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
   const lines = content.split(/\r?\n/);
-  let editable_section_starts = false;
+  let editableStarted = false;
   for (const line of lines) {
     if (!line) continue;
-    const key = line.split("=")[0];
-    if (key.startsWith("CLI_CEB_")) {
-      editable_section_starts = true;
-    } else if (editable_section_starts) {
-      validate_key(key, true);
-    }
+    const key = line.split('=')[0];
+    if (key.startsWith('CLI_CEB_')) editableStarted = true;
+    else if (editableStarted) validateKey(key, true);
   }
 }
 
-function create_new_file(envPath) {
-  const tempPath = envPath + ".tmp";
-  const outLines = [];
-  outLines.push("# THOSE VALUES ARE EDITABLE ONLY VIA CLI");
-  outLines.push(`CLI_CEB_DEV=${CLI_CEB_DEV}`);
-  outLines.push(`CLI_CEB_FIREFOX=${CLI_CEB_FIREFOX}`);
-  for (const value of cli_values) outLines.push(value);
-  outLines.push("");
-  outLines.push("# THOSE VALUES ARE EDITABLE");
+function createNewFile(envPath, cliState) {
+  const lines = [];
+  lines.push('# THOSE VALUES ARE EDITABLE ONLY VIA CLI');
+  lines.push(`CLI_CEB_DEV=${cliState.CLI_CEB_DEV}`);
+  lines.push(`CLI_CEB_FIREFOX=${cliState.CLI_CEB_FIREFOX}`);
+  for (const v of cliState.cliValues) lines.push(v);
+  lines.push('');
+  lines.push('# THOSE VALUES ARE EDITABLE');
 
-  // append existing CEB_ keys from .env
-  if (fs.existsSync(envPath)) {
-    const content = fs.readFileSync(envPath, "utf8");
-    const ces = content.split(/\r?\n/).filter((l) => l.startsWith("CEB_"));
-    outLines.push(...ces);
+  const existing = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+  const existingLines = existing.split(/\r?\n/);
+  for (const line of existingLines) {
+    if (!line) continue;
+    if (line.startsWith('CEB_')) lines.push(line);
   }
 
-  fs.writeFileSync(tempPath, outLines.join("\n"), "utf8");
-  fs.renameSync(tempPath, envPath);
+  fs.writeFileSync(envPath, lines.join('\n'));
 }
 
 // Main
 const args = process.argv.slice(2);
-parse_arguments(args);
-const envPath = path.join(process.cwd(), ".env");
-validate_env_keys(envPath);
-create_new_file(envPath);
-console.log("Updated .env");
+const cliState = parseArguments(args);
+const envPath = path.join(process.cwd(), '.env');
+validateEnvKeys(envPath);
+createNewFile(envPath, cliState);
+
+console.log('.env updated');
